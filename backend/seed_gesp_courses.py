@@ -806,6 +806,8 @@ print(nums[3:])   # [3, 4, 5] (直到最后)
 """
 )
 
+# 5 MCQs + 2 True/False
+# MCQ 1
 Quiz.objects.create(
     lesson=l2_1_1,
     question="a = [10, 20, 30, 40]，a[-1] 的值是？",
@@ -816,6 +818,73 @@ Quiz.objects.create(
     correct_answer="B",
     explanation="负数索引 -1 表示列表的最后一个元素。"
 )
+# MCQ 2
+Quiz.objects.create(
+    lesson=l2_1_1,
+    question="fruits = ['apple', 'banana', 'orange']，fruits[1] 是？",
+    option_a="apple",
+    option_b="banana",
+    option_c="orange",
+    option_d="报错",
+    correct_answer="B",
+    explanation="索引从0开始，1代表第二个元素。"
+)
+# MCQ 3
+Quiz.objects.create(
+    lesson=l2_1_1,
+    question="lst = [1, 2, 3, 4, 5]，lst[1:3] 的结果是？",
+    option_a="[2, 3]",
+    option_b="[1, 2, 3]",
+    option_c="[2, 3, 4]",
+    option_d="[1, 2]",
+    correct_answer="A",
+    explanation="切片是左闭右开区间，索引1和2的元素被取出。"
+)
+# MCQ 4
+Quiz.objects.create(
+    lesson=l2_1_1,
+    question="空列表如何定义？",
+    option_a="list()",
+    option_b="[]",
+    option_c="{}",
+    option_d="A和B都可以",
+    correct_answer="D",
+    explanation="[] 和 list() 都可以创建空列表，{} 是空字典。"
+)
+# MCQ 5
+Quiz.objects.create(
+    lesson=l2_1_1,
+    question="lst = [1, 2, 3]，len(lst) 的值是？",
+    option_a="2",
+    option_b="3",
+    option_c="4",
+    option_d="0",
+    correct_answer="B",
+    explanation="len() 函数返回列表的元素个数。"
+)
+# T/F 1
+Quiz.objects.create(
+    lesson=l2_1_1,
+    question="判断题：Python 列表的索引可以是从 1 开始。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="B",
+    explanation="错误，Python 列表索引总是从 0 开始。"
+)
+# T/F 2
+Quiz.objects.create(
+    lesson=l2_1_1,
+    question="判断题：列表可以包含不同类型的数据，例如 [1, 'hello', True]。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="A",
+    explanation="正确，Python 列表是异构的，可以存储不同类型的数据。"
+)
+
 
 # 1.2 列表操作
 l2_1_2 = Lesson.objects.create(
@@ -868,6 +937,8 @@ print(nums.count(1)) # 2
 """
 )
 
+# 5 MCQs + 2 T/F
+# MCQ 1
 Quiz.objects.create(
     lesson=l2_1_2,
     question="列表 list = [1, 2, 3]，执行 list.append(4) 后，list 是？",
@@ -877,6 +948,72 @@ Quiz.objects.create(
     option_d="报错",
     correct_answer="B",
     explanation="append() 方法会将元素添加到列表的末尾。"
+)
+# MCQ 2
+Quiz.objects.create(
+    lesson=l2_1_2,
+    question="lst = [10, 20, 30]，执行 lst.pop() 后，lst 是？",
+    option_a="[20, 30]",
+    option_b="[10, 20]",
+    option_c="[10]",
+    option_d="[]",
+    correct_answer="B",
+    explanation="pop() 默认删除并返回最后一个元素。"
+)
+# MCQ 3
+Quiz.objects.create(
+    lesson=l2_1_2,
+    question="lst = [1, 2, 3]，执行 lst.insert(1, 9) 后，lst 是？",
+    option_a="[1, 9, 2, 3]",
+    option_b="[9, 1, 2, 3]",
+    option_c="[1, 2, 9, 3]",
+    option_d="报错",
+    correct_answer="A",
+    explanation="insert(1, 9) 在索引 1 的位置插入 9。"
+)
+# MCQ 4
+Quiz.objects.create(
+    lesson=l2_1_2,
+    question="lst = ['a', 'b', 'c', 'b']，执行 lst.remove('b') 后，lst 是？",
+    option_a="['a', 'c', 'b']",
+    option_b="['a', 'b', 'c']",
+    option_c="['a', 'c']",
+    option_d="报错",
+    correct_answer="A",
+    explanation="remove() 只删除第一个匹配的元素。"
+)
+# MCQ 5
+Quiz.objects.create(
+    lesson=l2_1_2,
+    question="如何判断 5 是否在列表 nums 中？",
+    option_a="nums.has(5)",
+    option_b="5 in nums",
+    option_c="nums.contains(5)",
+    option_d="exist(5, nums)",
+    correct_answer="B",
+    explanation="in 关键字用于判断元素是否存在。"
+)
+# T/F 1
+Quiz.objects.create(
+    lesson=l2_1_2,
+    question="判断题：使用 remove(x) 删除元素时，如果 x 不在列表中，程序会报错。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="A",
+    explanation="正确，remove 不存在的元素会抛出 ValueError。"
+)
+# T/F 2
+Quiz.objects.create(
+    lesson=l2_1_2,
+    question="判断题：列表是不可变的，一旦创建就不能修改。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="B",
+    explanation="错误，列表是可变的 (Mutable)。"
 )
 
 ch2_2, _ = Chapter.objects.get_or_create(course=c2, title="第2章：字符串进阶", defaults={'order': 2})
@@ -929,6 +1066,8 @@ print(s.strip()) # "hello"
 """
 )
 
+# 5 MCQs + 2 T/F
+# MCQ 1
 Quiz.objects.create(
     lesson=l2_2_1,
     question="'1,2,3'.split(',') 的结果是？",
@@ -939,6 +1078,73 @@ Quiz.objects.create(
     correct_answer="B",
     explanation="split 返回一个列表，且元素都是字符串类型。"
 )
+# MCQ 2
+Quiz.objects.create(
+    lesson=l2_2_1,
+    question="s = 'Hello World'，s.find('o') 返回？",
+    option_a="4",
+    option_b="5",
+    option_c="7",
+    option_d="4 和 7",
+    correct_answer="A",
+    explanation="find 返回第一个匹配项的索引，'o' 在索引 4。"
+)
+# MCQ 3
+Quiz.objects.create(
+    lesson=l2_2_1,
+    question="'--'.join(['a', 'b', 'c']) 的结果是？",
+    option_a="'abc'",
+    option_b="'a-b-c'",
+    option_c="'a--b--c'",
+    option_d="['a--b--c']",
+    correct_answer="C",
+    explanation="join 使用指定的连接符连接列表元素。"
+)
+# MCQ 4
+Quiz.objects.create(
+    lesson=l2_2_1,
+    question="' Hello '.strip() 的结果是？",
+    option_a="'Hello '",
+    option_b="' Hello'",
+    option_c="'Hello'",
+    option_d="报错",
+    correct_answer="C",
+    explanation="strip() 去除首尾的空白字符。"
+)
+# MCQ 5
+Quiz.objects.create(
+    lesson=l2_2_1,
+    question="'abc'.upper() 的结果是？",
+    option_a="'Abc'",
+    option_b="'ABC'",
+    option_c="'abc'",
+    option_d="报错",
+    correct_answer="B",
+    explanation="upper() 将所有字符转换为大写。"
+)
+# T/F 1
+Quiz.objects.create(
+    lesson=l2_2_1,
+    question="判断题：字符串是不可变的，不能通过 s[0] = 'a' 修改。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="A",
+    explanation="正确，字符串是不可变类型 (Immutable)。"
+)
+# T/F 2
+Quiz.objects.create(
+    lesson=l2_2_1,
+    question="判断题：s.find('z') 如果找不到 'z' 会报错。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="B",
+    explanation="错误，find 找不到时返回 -1，不会报错。"
+)
+
 
 # 2.2 ASCII 码
 l2_2_2 = Lesson.objects.create(
@@ -977,6 +1183,8 @@ print('apple' > 'banana') # False (比较第一个字母 'a' < 'b')
 """
 )
 
+# 5 MCQs + 2 T/F
+# MCQ 1
 Quiz.objects.create(
     lesson=l2_2_2,
     question="ord('A') 的值是 65，那么 ord('C') 是多少？",
@@ -987,6 +1195,73 @@ Quiz.objects.create(
     correct_answer="B",
     explanation="ASCII 码是连续的，A=65, B=66, C=67。"
 )
+# MCQ 2
+Quiz.objects.create(
+    lesson=l2_2_2,
+    question="chr(97) 返回的是？",
+    option_a="'A'",
+    option_b="'a'",
+    option_c="'0'",
+    option_d="97",
+    correct_answer="B",
+    explanation="97 是小写字母 'a' 的 ASCII 码。"
+)
+# MCQ 3
+Quiz.objects.create(
+    lesson=l2_2_2,
+    question="'b' > 'a' 的结果是？",
+    option_a="True",
+    option_b="False",
+    option_c="Error",
+    option_d="None",
+    correct_answer="A",
+    explanation="字符比较是比较 ASCII 码，'b'(98) > 'a'(97)。"
+)
+# MCQ 4
+Quiz.objects.create(
+    lesson=l2_2_2,
+    question="数字字符 '0' 的 ASCII 码是？",
+    option_a="0",
+    option_b="10",
+    option_c="48",
+    option_d="65",
+    correct_answer="C",
+    explanation="'0' 的 ASCII 码是 48。"
+)
+# MCQ 5
+Quiz.objects.create(
+    lesson=l2_2_2,
+    question="小写字母 'a' 和大写字母 'A' 的 ASCII 码差值是多少？",
+    option_a="26",
+    option_b="32",
+    option_c="48",
+    option_d="10",
+    correct_answer="B",
+    explanation="97 - 65 = 32。"
+)
+# T/F 1
+Quiz.objects.create(
+    lesson=l2_2_2,
+    question="判断题：'10' > '2' 的结果是 True。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="B",
+    explanation="错误，字符串比较是逐个字符比较，'1' < '2'，所以 '10' < '2'。"
+)
+# T/F 2
+Quiz.objects.create(
+    lesson=l2_2_2,
+    question="判断题：ord() 函数可以将数字转换为对应的字符。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="B",
+    explanation="错误，ord() 是字符转数字，chr() 才是数字转字符。"
+)
+
 
 # ==========================================
 # Course 3: GESP 3级 - 函数与模块
@@ -1041,6 +1316,8 @@ print(result + 10) # 35
 """
 )
 
+# 5 MCQs + 2 T/F
+# MCQ 1
 Quiz.objects.create(
     lesson=l3_1_1,
     question="如果不写 return 语句，函数默认返回什么？",
@@ -1051,6 +1328,73 @@ Quiz.objects.create(
     correct_answer="C",
     explanation="Python 函数默认返回 None。"
 )
+# MCQ 2
+Quiz.objects.create(
+    lesson=l3_1_1,
+    question="定义函数使用哪个关键字？",
+    option_a="function",
+    option_b="def",
+    option_c="func",
+    option_d="define",
+    correct_answer="B",
+    explanation="Python 使用 def 关键字定义函数。"
+)
+# MCQ 3
+Quiz.objects.create(
+    lesson=l3_1_1,
+    question="def foo(): return 1\nprint(foo()) 输出什么？",
+    option_a="foo",
+    option_b="1",
+    option_c="None",
+    option_d="报错",
+    correct_answer="B",
+    explanation="函数返回 1，print 打印返回值。"
+)
+# MCQ 4
+Quiz.objects.create(
+    lesson=l3_1_1,
+    question="下列关于函数参数说法正确的是？",
+    option_a="函数必须有参数",
+    option_b="函数可以没有参数",
+    option_c="参数必须是整数",
+    option_d="参数数量有限制",
+    correct_answer="B",
+    explanation="函数可以定义为不需要任何参数。"
+)
+# MCQ 5
+Quiz.objects.create(
+    lesson=l3_1_1,
+    question="return 语句的作用是？",
+    option_a="打印结果",
+    option_b="结束函数并返回值",
+    option_c="暂停函数",
+    option_d="定义变量",
+    correct_answer="B",
+    explanation="return 用于结束函数执行并将结果返回给调用者。"
+)
+# T/F 1
+Quiz.objects.create(
+    lesson=l3_1_1,
+    question="判断题：一个函数可以写多个 return 语句。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="A",
+    explanation="正确，函数可以有多个 return，但只会执行其中一个。"
+)
+# T/F 2
+Quiz.objects.create(
+    lesson=l3_1_1,
+    question="判断题：函数必须有返回值，否则会报错。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="B",
+    explanation="错误，没有 return 的函数也是合法的，默认返回 None。"
+)
+
 
 # 1.2 变量作用域
 l3_1_2 = Lesson.objects.create(
@@ -1101,6 +1445,8 @@ print(score) # 10
 """
 )
 
+# 5 MCQs + 2 T/F
+# MCQ 1
 Quiz.objects.create(
     lesson=l3_1_2,
     question="如何在函数内部修改全局变量 x？",
@@ -1111,6 +1457,73 @@ Quiz.objects.create(
     correct_answer="B",
     explanation="使用 global 关键字声明全局变量。"
 )
+# MCQ 2
+Quiz.objects.create(
+    lesson=l3_1_2,
+    question="x = 1\ndef func():\n    x = 2\n    print(x)\nfunc()\nprint(x)\n输出什么？",
+    option_a="2 2",
+    option_b="2 1",
+    option_c="1 1",
+    option_d="1 2",
+    correct_answer="B",
+    explanation="函数内部的 x 是局部变量，不会影响全局 x。函数内打印 2，函数外打印 1。"
+)
+# MCQ 3
+Quiz.objects.create(
+    lesson=l3_1_2,
+    question="局部变量的作用域是？",
+    option_a="整个程序",
+    option_b="函数内部",
+    option_c="类内部",
+    option_d="文件内部",
+    correct_answer="B",
+    explanation="局部变量只在定义它的函数内部有效。"
+)
+# MCQ 4
+Quiz.objects.create(
+    lesson=l3_1_2,
+    question="def func():\n    y = 5\nprint(y) 会发生什么？",
+    option_a="输出 5",
+    option_b="输出 None",
+    option_c="报错",
+    option_d="输出 0",
+    correct_answer="C",
+    explanation="y 是局部变量，在函数外部无法访问，会报 NameError。"
+)
+# MCQ 5
+Quiz.objects.create(
+    lesson=l3_1_2,
+    question="关于 global 关键字，说法正确的是？",
+    option_a="用于定义局部变量",
+    option_b="用于在函数内部声明全局变量",
+    option_c="用于导入模块",
+    option_d="用于定义类",
+    correct_answer="B",
+    explanation="global 用于在函数内部指示变量引用的是全局变量。"
+)
+# T/F 1
+Quiz.objects.create(
+    lesson=l3_1_2,
+    question="判断题：在函数内部可以直接读取全局变量的值。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="A",
+    explanation="正确，读取全局变量不需要 global 关键字。"
+)
+# T/F 2
+Quiz.objects.create(
+    lesson=l3_1_2,
+    question="判断题：局部变量和全局变量不能重名。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="B",
+    explanation="错误，可以重名，此时函数内部会优先使用局部变量（遮蔽）。"
+)
+
 
 # ==========================================
 # Course 4: GESP 4级 - 数据结构
@@ -1179,6 +1592,8 @@ for k, v in student.items():
 """
 )
 
+# 5 MCQs + 2 T/F
+# MCQ 1
 Quiz.objects.create(
     lesson=l4_1_1,
     question="d = {'a': 1, 'b': 2}，执行 d['c'] = 3 后，d 是？",
@@ -1189,6 +1604,73 @@ Quiz.objects.create(
     correct_answer="B",
     explanation="给不存在的键赋值会自动添加该键值对。"
 )
+# MCQ 2
+Quiz.objects.create(
+    lesson=l4_1_1,
+    question="d = {'a': 1, 'b': 2}，执行 d['a'] = 10 后，d 是？",
+    option_a="{'a': 1, 'b': 2, 'a': 10}",
+    option_b="{'a': 10, 'b': 2}",
+    option_c="报错",
+    option_d="{'b': 2}",
+    correct_answer="B",
+    explanation="键是唯一的，赋值给已存在的键会更新对应的值。"
+)
+# MCQ 3
+Quiz.objects.create(
+    lesson=l4_1_1,
+    question="如何安全地获取字典的值，如果键不存在不报错？",
+    option_a="d[key]",
+    option_b="d.get(key)",
+    option_c="d.value(key)",
+    option_d="d.find(key)",
+    correct_answer="B",
+    explanation="get() 方法在键不存在时返回 None，而不会报错。"
+)
+# MCQ 4
+Quiz.objects.create(
+    lesson=l4_1_1,
+    question="下列哪个可以作为字典的键？",
+    option_a="[1, 2]",
+    option_b="{'a': 1}",
+    option_c="'name'",
+    option_d="[1]",
+    correct_answer="C",
+    explanation="字典的键必须是不可变类型，字符串是不可变的，列表是可变的。"
+)
+# MCQ 5
+Quiz.objects.create(
+    lesson=l4_1_1,
+    question="d.keys() 返回的是什么？",
+    option_a="所有值",
+    option_b="所有键",
+    option_c="键值对",
+    option_d="字典长度",
+    correct_answer="B",
+    explanation="keys() 返回字典中所有的键。"
+)
+# T/F 1
+Quiz.objects.create(
+    lesson=l4_1_1,
+    question="判断题：字典中的键值对是有序的（Python 3.7+）。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="A",
+    explanation="正确，Python 3.7+ 字典保持插入顺序。"
+)
+# T/F 2
+Quiz.objects.create(
+    lesson=l4_1_1,
+    question="判断题：同一个字典中可以有两个相同的键。",
+    option_a="正确",
+    option_b="错误",
+    option_c="",
+    option_d="",
+    correct_answer="B",
+    explanation="错误，字典的键必须唯一。"
+)
+
 
 # ==========================================
 # Course 5: Head First Python
