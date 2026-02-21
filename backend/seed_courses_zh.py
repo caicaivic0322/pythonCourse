@@ -7,6 +7,10 @@ django.setup()
 from courses.models import Course, Chapter, Lesson
 
 # 1. Update or Create Course (Chinese) - Safe operation
+print("正在清理旧数据...")
+# Delete the old course title if it exists to avoid duplicates
+Course.objects.filter(title="Python 基础：发射台").delete()
+
 print("正在更新课程数据...")
 
 # 2. Create Course (Chinese)
