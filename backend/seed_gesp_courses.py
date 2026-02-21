@@ -6,1888 +6,1264 @@ django.setup()
 
 from courses.models import Course, Chapter, Lesson, Quiz
 
-# 1. 清理旧数据 (Clean all data)
 print("正在清理旧数据...")
 Course.objects.all().delete()
 
 # ==========================================
 # Course 1: GESP 1级 - 编程启蒙
 # ==========================================
+print("正在创建 GESP 1级 课程...")
 c1, _ = Course.objects.get_or_create(
     title="GESP 1级：编程启蒙",
-    description="Python 编程基础：变量、运算符与基本逻辑。",
+    description="专为零基础设计的 Python 入门课程。涵盖变量、数据类型、输入输出、运算符、分支结构与循环基础。结合 GESP 一级考点，帮助学生轻松迈入编程大门。",
     defaults={'order': 1}
 )
-print(f"创建课程: {c1.title}")
 
-# Ch1: 初识 Python
-ch1_1, _ = Chapter.objects.get_or_create(course=c1, title="第1章：初识 Python", defaults={'order': 1})
+# --- 第1章：初识 Python ---
+ch1, _ = Chapter.objects.get_or_create(course=c1, title="第1章：初识 Python 与变量", defaults={'order': 1})
+
+# 1.1 什么是 Python
 l1_1 = Lesson.objects.create(
-    chapter=ch1_1, title="1.1 什么是 Python？", order=1, lesson_type='text',
-    code_challenge_prompt="""# 1.1 什么是 Python - 代码验证题
-# 题目：请使用 print() 函数输出 "Hello, GESP!"
+    chapter=ch1, title="1.1 什么是 Python？", order=1, lesson_type='text',
+    code_challenge_prompt="# 请在下方编写代码，输出 Hello GESP\nprint('Hello GESP')",
+    content="""# 1.1 什么是 Python？
 
-# 你的代码:
+## 1. 概念讲解
+Python 是一种高级编程语言，就像我们用英语和电脑交流一样。它由荷兰人 Guido van Rossum（吉多·范罗苏姆）发明。
 
-# 验证提示：运行后，终端输出应为 Hello, GESP!
-""",
-    content="""
-## 什么是 Python？
-Python 是一种广泛使用的高级编程语言，以简洁、易读著称。
+### 为什么选择 Python？
+- **简单易学**：语法接近英语，没有复杂的符号。
+- **功能强大**：可以用来做网站、人工智能、数据分析、自动化脚本等。
+- **解释型语言**：写完代码可以直接运行，不需要像 C++ 那样先编译成机器码。
 
-### 核心特性
-1. **解释型**：代码逐行执行，无需像 C++ 那样先编译成机器码。
-2. **动态类型**：变量在运行时确定类型，无需显式声明（如 `int a`）。
-3. **强类型**：虽然不需要声明，但类型之间不会随意隐式转换（例如字符串和数字不能直接相加）。
+## 2. 核心特性（GESP 考点）
+1.  **解释型**：Python 代码由解释器逐行翻译执行。
+2.  **文件扩展名**：Python 源代码文件的后缀名是 `.py`。
+3.  **区分大小写**：`Print` 和 `print` 是不一样的，Python 只有 `print`。
 
-### Python vs C++
-| 特性 | C++ | Python |
-| :--- | :--- | :--- |
-| **运行方式** | 编译执行 (Compile) | 解释执行 (Interpret) |
-| **代码块** | 大括号 `{}` | **缩进 (Indentation)** |
-| **语句结尾** | 分号 `;` | 换行符 |
-| **变量声明** | 必须声明类型 | 直接赋值 |
+## 3. 第一个程序
+在编程界，大家学习新语言的第一个程序通常是输出 "Hello, World!"。
 
-### 第一个程序
 ```python
 print("Hello, World!")
 ```
+
+- `print` 是 Python 的**函数**，意思是“打印”或“输出”。
+- `()` 里面放我们要输出的内容。
+- `""` 双引号表示里面的是**字符串**（文本）。
+
+## 4. 易错点与考点
+- **错误 1**：使用中文符号。
+    - ❌ `print（"Hello"）` （使用了中文括号）
+    - ✅ `print("Hello")` （必须是英文括号）
+- **错误 2**：忘记引号。
+    - ❌ `print(Hello)` （Python 会以为 Hello 是一个变量）
+    - ✅ `print("Hello")`
+- **考点**：Python 程序的文件后缀是什么？（答案：`.py`）
+
+## 5. 小练习
+尝试修改代码，输出你自己的名字，例如：`print("我是小明")`。
 """
 )
+
 Quiz.objects.create(
     lesson=l1_1,
-    question="Python 是一种什么类型的语言？",
-    option_a="编译型语言",
-    option_b="解释型语言",
-    option_c="汇编语言",
-    option_d="机器语言",
+    question="Python 源代码文件的后缀名是什么？",
+    option_a=".python",
+    option_b=".py",
+    option_c=".pt",
+    option_d=".txt",
     correct_answer="B",
-    explanation="Python 是解释型语言，代码逐行执行，不需要预先编译成机器码。"
-)
-Quiz.objects.create(
-    lesson=l1_1,
-    question="在 Python 中，如何表示代码块？",
-    option_a="大括号 {}",
-    option_b="begin 和 end",
-    option_c="缩进 (Indentation)",
-    option_d="分号 ;",
-    correct_answer="C",
-    explanation="Python 使用缩进（通常是4个空格）来划分代码块，这是 Python 的核心特色。"
+    explanation="Python 文件的标准后缀名是 .py。"
 )
 
+Quiz.objects.create(
+    lesson=l1_1,
+    question="下列哪个是正确的 Python 输出语句？",
+    option_a="Print('Hello')",
+    option_b="print('Hello')",
+    option_c="print（'Hello'）",
+    option_d="output('Hello')",
+    correct_answer="B",
+    explanation="Python 区分大小写，函数名是 print（小写），且必须使用英文括号。"
+)
+
+# 1.2 变量与命名
 l1_2 = Lesson.objects.create(
-    chapter=ch1_1, title="1.2 变量与命名规则", order=2, lesson_type='text',
-    code_challenge_prompt="""# 1.2 变量与命名规则 - 代码验证题
-# 题目：定义一个变量 my_score 并赋值为 100，然后打印它。
-
-# 你的代码:
-
-# 验证提示：终端应输出 100
-""",
-    content="""
-## 变量 (Variable)
-变量是存储数据的容器。在 Python 中，变量更像是一个**标签**，贴在数据上。
-
-### 命名规则 (标识符)
-1. **组成**：只能包含**字母** (a-z, A-Z)、**数字** (0-9) 和**下划线** (_)。
-2. **开头**：**不能以数字开头**。
-   - ✅ `name1`, `_score`, `student_id`
-   - ❌ `1name` (数字开头), `my-name` (包含连字符), `class` (关键字)
-3. **大小写敏感**：`Score` 和 `score` 是两个不同的变量。
-4. **关键字**：不能使用 Python 的保留字（如 `if`, `for`, `while`, `True` 等）。
-
-### 命名习惯
-- **蛇形命名法 (Snake Case)**：单词之间用下划线连接，全小写。这是 Python 推荐的变量和函数命名方式。
-  - 例如：`student_score`, `max_value`
-- **驼峰命名法 (Camel Case)**：第二个单词首字母大写。Python 中通常用于类名。
-  - 例如：`StudentScore`
-
-### 赋值
-使用 `=` 进行赋值。
-```python
-x = 10
-x = x + 5  # 现在 x 是 15
-```
-"""
-)
-Quiz.objects.create(
-    lesson=l1_2,
-    question="以下哪个是合法的 Python 变量名？",
-    option_a="1st_place",
-    option_b="my-name",
-    option_c="_score",
-    option_d="if",
-    correct_answer="C",
-    explanation="变量名不能以数字开头（排除A），不能包含连字符（排除B），不能是关键字（排除D）。_score 符合规则。"
-)
-Quiz.objects.create(
-    lesson=l1_2,
-    question="Python 中推荐使用什么命名风格来命名变量？",
-    option_a="驼峰命名法 (myScore)",
-    option_b="蛇形命名法 (my_score)",
-    option_c="匈牙利命名法 (iScore)",
-    option_d="帕斯卡命名法 (MyScore)",
-    correct_answer="B",
-    explanation="Python 官方 PEP 8 规范推荐使用蛇形命名法（全小写，下划线分隔）来命名变量和函数。"
-)
-
-l1_3 = Lesson.objects.create(
-    chapter=ch1_1, title="1.3 基本数据类型", order=3, lesson_type='text',
-    code_challenge_prompt="""# 1.3 基本数据类型 - 代码验证题
-# 题目：将字符串 "123" 转换为整数，并加上 10，然后打印结果。
-
-# 你的代码:
-
-# 验证提示：终端应输出 133
-""",
-    content="""
-## 基本数据类型详解
-Python 中的变量可以存储不同类型的数据。
-
-### 1. 整数 (int)
-- **定义**：没有小数点的数字。
-- **特性**：
-    - **无大小限制**：只要内存允许，可以存储任意大的整数（如 `10**100`）。这是 Python 的一大优势。
-    - **进制表示**：
-        - 二进制：`0b` 开头，如 `0b1010` (10)
-        - 八进制：`0o` 开头，如 `0o12` (10)
-        - 十六进制：`0x` 开头，如 `0xA` (10)
-
-### 2. 浮点数 (float)
-- **定义**：带有小数点的数字。
-- **特性**：
-    - **科学计数法**：`1.23e9` 表示 $1.23 \\times 10^9$，`1.5e-3` 表示 $0.0015$。
-    - **精度误差**：基于 IEEE 754 标准，存在浮点数精度问题。
-    ```python
-    print(0.1 + 0.2)  # 输出 0.30000000000000004
-    ```
-
-### 3. 字符串 (str)
-- **定义**：文本数据。
-- **引号**：单引号 `'` 和双引号 `"` 完全等价。三引号 `'''` 用于多行字符串。
-- **不可变性**：字符串创建后不能修改。
-- **转义字符**：
-    - `\\n`: 换行
-    - `\\t`: 制表符 (Tab)
-    - `\\\\`: 反斜杠本身
-    - `\\' / \\"`: 引号
-
-### 4. 布尔值 (bool)
-- **定义**：逻辑真假。
-- **值**：`True` 和 `False` (**首字母大写**)。
-- **本质**：是 `int` 的子类，`True == 1`, `False == 0`。
-
-### 类型查询与转换
-- `type(x)`: 查看 x 的类型。
-- `int(x)`: 转为整数（截断小数部分）。
-- `float(x)`: 转为浮点数。
-- `str(x)`: 转为字符串。
-"""
-)
-Quiz.objects.create(
-    lesson=l1_3,
-    question="type(10 / 2) 的结果是？",
-    option_a="<class 'int'>",
-    option_b="<class 'float'>",
-    option_c="<class 'str'>",
-    option_d="5",
-    correct_answer="B",
-    explanation="在 Python 3 中，除法运算符 / 总是返回浮点数 (float)，即使能整除。"
-)
-Quiz.objects.create(
-    lesson=l1_3,
-    question="以下哪个字符串表示包含一个双引号？",
-    option_a="'\"'",
-    option_b="\"\"\"",
-    option_c="'",
-    option_d="\"'\"",
-    correct_answer="A",
-    explanation="可以使用单引号包裹双引号 '\"'，或者使用转义字符 \"\\\"\"。"
-)
-
-# 1.4 输入与输出 (IO)
-l1_4 = Lesson.objects.create(
-    chapter=ch1_1, title="1.4 输入与输出 (IO)", order=4, lesson_type='code',
-    content="""
-## 输入与输出详解
-
-### 输出：print()
-函数原型：`print(*objects, sep=' ', end='\\n')`
-1. **多个参数**：可以用逗号隔开，默认用空格连接。
-   ```python
-   print("Hello", "World")  # 输出: Hello World
-   ```
-2. **sep 参数**：指定分隔符。
-   ```python
-   print("2023", "10", "01", sep="-")  # 输出: 2023-10-01
-   ```
-3. **end 参数**：指定结尾符号，默认为换行符 `\\n`。
-   ```python
-   print("Hello", end=" ")
-   print("World")
-   # 输出: Hello World (在同一行)
-   ```
-4. **格式化输出 (f-string)**：推荐使用。
-   ```python
-   name = "Alice"
-   age = 12
-   print(f"我是 {name}，今年 {age} 岁")
-   ```
-
-### 输入：input()
-函数原型：`input(prompt)`
-1. **返回值**：永远是 **字符串 (str)** 类型。
-2. **转换**：如果需要数字，必须手动转换。
-
-```python
-# 错误写法
-# age = input("年龄: ")
-# print(age + 1)  # 报错！字符串不能和数字相加
-
-# 正确写法
-age = int(input("年龄: "))
-print(age + 1)
-```
-
-### 任务
-输入两个整数，输出它们的乘积。
-"""
-)
-Quiz.objects.create(
-    lesson=l1_4,
-    question="执行代码 `print(1, 2, 3, sep='-')` 的输出结果是？",
-    option_a="1 2 3",
-    option_b="1-2-3",
-    option_c="1,2,3",
-    option_d="123",
-    correct_answer="B",
-    explanation="sep 参数指定了多个打印对象之间的分隔符，这里是短横线 '-'。"
-)
-Quiz.objects.create(
-    lesson=l1_4,
-    question="关于 input() 函数，以下说法正确的是？",
-    option_a="它可以直接读取整数类型",
-    option_b="它总是返回字符串类型",
-    option_c="它不能接受提示信息作为参数",
-    option_d="它只能在 Windows 系统下使用",
-    correct_answer="B",
-    explanation="input() 函数读取用户输入的内容，并始终将其作为字符串返回。如果需要数字，必须使用 int() 或 float() 转换。"
-)
-
-# Ch2: 运算符与表达式
-ch1_2, _ = Chapter.objects.get_or_create(course=c1, title="第2章：运算符与表达式", defaults={'order': 2})
-l2_1 = Lesson.objects.create(
-    chapter=ch1_2, title="2.1 算术运算符", order=1, lesson_type='text',
-    content="""
-## 算术运算符
-| 符号 | 描述 | 示例 | 结果 | 注意 |
-| :--- | :--- | :--- | :--- | :--- |
-| `+` | 加法 | `3 + 5` | `8` | |
-| `-` | 减法 | `5 - 3` | `2` | |
-| `*` | 乘法 | `3 * 5` | `15` | |
-| `/` | **真除法** | `5 / 2` | `2.5` | 结果总是 float |
-| `//` | **整除** | `5 // 2` | `2` | 向下取整 |
-| `%` | 取模 (余数) | `5 % 2` | `1` | |
-| `**` | 幂运算 | `2 ** 3` | `8` | $2^3$ |
-
-### 重点：整除与取模
-- **整除 `//`**：向下取整（往小了取）。
-  - `5 // 2` -> `2`
-  - `-5 // 2` -> `-3` (注意！C++ 可能是 -2)
-- **取模 `%`**：
-  - `5 % 2` -> `1`
-  - `-5 % 2` -> `1` (Python 中余数的符号与除数一致)
-
-### 复合赋值
-`+=`, `-=`, `*=`, `/=`, `//=`, `%=`
-- `a += 1` 等价于 `a = a + 1`
-- **注意**：Python 没有 `++` 或 `--` 运算符！
-"""
-)
-Quiz.objects.create(
-    lesson=l2_1,
-    question="表达式 `5 // 2` 的结果是？",
-    option_a="2.5",
-    option_b="2",
-    option_c="3",
-    option_d="2.0",
-    correct_answer="B",
-    explanation="// 是整除运算符，向下取整，5 除以 2 等于 2.5，向下取整为 2。"
-)
-Quiz.objects.create(
-    lesson=l2_1,
-    question="表达式 `2 ** 3` 的结果是？",
-    option_a="5",
-    option_b="6",
-    option_c="8",
-    option_d="9",
-    correct_answer="C",
-    explanation="** 是幂运算符，表示 2 的 3 次方，即 2 * 2 * 2 = 8。"
-)
-
-l2_2 = Lesson.objects.create(
-    chapter=ch1_2, title="2.2 比较与逻辑运算符", order=2, lesson_type='code',
-    content="""
-## 比较运算符
-结果为 `True` 或 `False`。
-- `==`, `!=`, `>`, `<`, `>=`, `<=`
-- **链式比较**：Python 支持数学写法！
-  ```python
-  x = 5
-  if 1 < x < 10:  # 等价于 1 < x and x < 10
-      print("在范围内")
-  ```
-
-## 逻辑运算符
-| 符号 | 描述 | C++ 对应 | 特性 |
-| :--- | :--- | :--- | :--- |
-| `and` | 与 | `&&` | 全真才真 |
-| `or` | 或 | `||` | 一真即真 |
-| `not` | 非 | `!` | 真变假，假变真 |
-
-### 短路求值 (Short-circuit)
-- `a and b`：如果 a 为假，直接返回 a，不计算 b。
-- `a or b`：如果 a 为真，直接返回 a，不计算 b。
-
-```python
-# 安全的除法检查
-b = 0
-if b != 0 and (10 / b) > 1:  # 如果 b 是 0，前半部分为假，后半部分不会执行，避免报错
-    print("Result")
-```
-
-### 任务
-判断一个年份是否为闰年：(能被4整除 且 不能被100整除) 或 (能被400整除)。
-"""
-)
-Quiz.objects.create(
-    lesson=l2_2,
-    question="以下哪个表达式的结果为 True？",
-    option_a="True and False",
-    option_b="not True",
-    option_c="False or True",
-    option_d="3 > 5",
-    correct_answer="C",
-    explanation="False or True 的结果是 True，因为 or 运算符只要有一个为真，结果就为真。"
-)
-Quiz.objects.create(
-    lesson=l2_2,
-    question="在 Python 中，逻辑运算符 '与' 是？",
-    option_a="&",
-    option_b="&&",
-    option_c="and",
-    option_d="with",
-    correct_answer="C",
-    explanation="Python 使用单词 'and' 作为逻辑与运算符，而不是符号 &&。"
-)
-
-l2_3 = Lesson.objects.create(
-    chapter=ch1_2, title="2.3 运算符优先级", order=3, lesson_type='text',
-    content="""
-## 运算符优先级 (从高到低)
-了解优先级可以避免逻辑错误。如果不确定，**加括号 ()** 是最好的习惯。
-
-1. `**` (幂运算，最高)
-2. `+`, `-` (正负号)
-3. `*`, `/`, `//`, `%`
-4. `+`, `-` (加减)
-5. `==`, `!=`, `>`, `<`, ... (比较)
-6. `not`
-7. `and`
-8. `or` (最低)
-
-```python
-print(2 + 3 * 4)    # 14 (先乘)
-print((2 + 3) * 4)  # 20 (先加)
-print(not True or True) # True (先 not 得到 False，再 or)
-```
-"""
-)
-Quiz.objects.create(
-    lesson=l2_3,
-    question="表达式 `2 + 3 * 4` 的计算结果是？",
-    option_a="20",
-    option_b="14",
-    option_c="24",
-    option_d="10",
-    correct_answer="B",
-    explanation="乘法优先级高于加法，先算 3*4=12，再算 2+12=14。"
-)
-
-# Ch3: 决策与分支
-ch1_3, _ = Chapter.objects.get_or_create(course=c1, title="第3章：决策与分支", defaults={'order': 3})
-l3_1 = Lesson.objects.create(
-    chapter=ch1_3, title="3.1 分支结构详解", order=1, lesson_type='code',
-    content="""
-## 分支结构
-控制程序根据条件执行不同的代码块。
-
-### 语法结构
-```python
-if 条件1:
-    代码块1
-elif 条件2:
-    代码块2
-else:
-    代码块3
-```
-
-### 关键点
-1. **冒号**：每个条件行末尾必须有 `:`。
-2. **缩进**：代码块必须缩进（推荐 4 空格）。Python 依靠缩进来区分代码块。
-3. **pass 语句**：如果代码块为空（还没想好写什么），必须写 `pass` 占位，否则报错。
-
-```python
-if score > 60:
-    pass  # 待办
-```
-
-### 任务
-编写一个程序，输入一个整数：
-- 如果是正数，输出 "Positive"
-- 如果是负数，输出 "Negative"
-- 如果是零，输出 "Zero"
-"""
-)
-Quiz.objects.create(
-    lesson=l3_1,
-    question="Python 中 if 语句的代码块是如何划分的？",
-    option_a="使用大括号 {}",
-    option_b="使用缩进",
-    option_c="使用 begin 和 end",
-    option_d="使用圆括号 ()",
-    correct_answer="B",
-    explanation="Python 强制使用缩进来表示代码块的层级关系。"
-)
-Quiz.objects.create(
-    lesson=l3_1,
-    question="如果 if 语句后面没有代码需要执行，应该使用什么关键字占位？",
-    option_a="null",
-    option_b="void",
-    option_c="pass",
-    option_d="empty",
-    correct_answer="C",
-    explanation="pass 是 Python 的空语句，用于占位，防止语法错误。"
-)
-
-
-# ==========================================
-# Course 2: GESP 2级 - 逻辑进阶
-# ==========================================
-c2, _ = Course.objects.get_or_create(
-    title="GESP 2级：逻辑进阶",
-    description="循环结构、列表数组与字符串操作。",
-    defaults={'order': 2}
-)
-print(f"创建课程: {c2.title}")
-
-# Ch1: 循环结构
-ch2_1, _ = Chapter.objects.get_or_create(course=c2, title="第1章：循环结构", defaults={'order': 1})
-Lesson.objects.create(
-    chapter=ch2_1, title="1.1 range() 与 For 循环", order=1, lesson_type='text',
-    content="""
-## range() 函数详解
-`range` 生成一个整数序列，左闭右开 `[start, stop)`。
-
-1. `range(stop)`: 从 0 开始，到 stop-1。
-   - `range(5)` -> 0, 1, 2, 3, 4
-2. `range(start, stop)`: 从 start 开始，到 stop-1。
-   - `range(2, 5)` -> 2, 3, 4
-3. `range(start, stop, step)`: 步长为 step。
-   - `range(1, 10, 2)` -> 1, 3, 5, 7, 9
-   - **倒序**：step 为负数。
-   - `range(5, 0, -1)` -> 5, 4, 3, 2, 1
-
-## For 循环
-遍历序列中的每个元素。
-```python
-for i in range(1, 11):
-    print(i, end=" ")
-```
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch2_1, title="1.2 While 循环与死循环", order=2, lesson_type='code',
-    content="""
-## While 循环
-当条件为真时，重复执行。
-
-```python
-n = 1
-while n <= 5:
-    print(n)
-    n += 1  # 别忘了更新条件！
-```
-
-### 死循环 (Infinite Loop)
-如果条件永远为真，循环将无法停止。
-```python
-while True:
-    print("停不下来了！")
-    break  # 除非有 break
-```
-
-### 任务
-使用 while 循环，计算从 1 加到 100 的和。
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch2_1, title="1.3 循环控制 (Break/Continue/Else)", order=3, lesson_type='text',
-    content="""
-## 循环控制语句
-
-### break
-立即**终止**当前循环，跳出循环体。
-```python
-for i in range(10):
-    if i == 5:
-        break  # 到 5 就结束了
-    print(i)
-```
-
-### continue
-**跳过**本次循环的剩余部分，直接进入下一次循环（条件判断）。
-```python
-for i in range(5):
-    if i == 2:
-        continue  # 跳过 2
-    print(i)
-```
-
-### else 子句 (特有)
-当循环**正常结束**（没有被 break 打断）时执行。
-```python
-for i in range(5):
-    if i == 10:
-        break
-else:
-    print("没有找到 10，循环正常结束")
-```
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch2_1, title="1.4 循环嵌套实战", order=4, lesson_type='code',
-    content="""
-## 循环嵌套
-外层循环每执行一次，内层循环就执行一整轮。
-常用于处理二维数组、打印图形等。
-
-### 打印九九乘法表
-```python
-for i in range(1, 10):
-    for j in range(1, i + 1):
-        print(f"{j}*{i}={i*j}", end="\\t")
-    print()  # 换行
-```
-
-### 任务
-打印倒直角三角形：
-*****
-****
-***
-**
-*
-"""
-)
-
-# Ch2: 列表 (List)
-ch2_2, _ = Chapter.objects.get_or_create(course=c2, title="第2章：列表 (List)", defaults={'order': 2})
-Lesson.objects.create(
-    chapter=ch2_2, title="2.1 列表基础与索引", order=1, lesson_type='text',
-    content="""
-## 列表 (List)
-Python 的列表是一个有序、可变、异构（可存不同类型）的序列。
-
-### 创建
-```python
-a = [1, 2, 3]
-b = list(range(5))  # [0, 1, 2, 3, 4]
-```
-
-### 索引 (Indexing)
-- **正向索引**：从 0 开始。
-- **负向索引**：从 -1 开始（表示最后一个）。
-```python
-lst = [10, 20, 30, 40]
-print(lst[0])   # 10
-print(lst[-1])  # 40
-print(lst[-2])  # 30
-```
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch2_2, title="2.2 列表切片 (Slicing)", order=2, lesson_type='text',
-    content="""
-## 列表切片
-一次性获取列表的一部分。
-语法：`list[start:stop:step]`
-- **特性**：切片操作会返回一个新的列表（浅拷贝）。
-
-### 常见用法
-```python
-nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-print(nums[2:5])   # [2, 3, 4] (不含 5)
-print(nums[:3])    # [0, 1, 2] (从头开始)
-print(nums[5:])    # [5, 6, 7, 8, 9] (直到末尾)
-print(nums[::2])   # [0, 2, 4, 6, 8] (每隔一个)
-print(nums[::-1])  # [9, 8, ..., 0] (列表反转)
-```
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch2_2, title="2.3 列表的增删改查", order=3, lesson_type='code',
-    content="""
-## 列表常用方法
-
-### 增加
-- `append(x)`: 末尾追加。
-- `insert(i, x)`: 指定位置插入。
-- `extend(iterable)`: 拼接另一个列表。
-
-### 删除
-- `pop(i)`: 删除并返回索引 i 处的元素（默认最后一个）。
-- `remove(x)`: 删除第一个值为 x 的元素（找不到报错）。
-- `clear()`: 清空列表。
-- `del lst[i]`: 删除指定位置。
-
-### 查找与统计
-- `index(x)`: 查找 x 的索引。
-- `count(x)`: 统计 x 出现的次数。
-- `x in lst`: 判断 x 是否在列表中 (True/False)。
-
-### 排序
-- `sort()`: 原地排序（修改原列表）。
-- `reverse()`: 原地反转。
-
-### 任务
-创建一个列表 `[3, 1, 4, 1, 5, 9]`，删除所有的 `1`，然后降序排列。
-"""
-)
-
-# Ch3: 字符串操作
-ch2_3, _ = Chapter.objects.get_or_create(course=c2, title="第3章：字符串操作", defaults={'order': 3})
-Lesson.objects.create(
-    chapter=ch2_3, title="3.1 字符串与编码", order=1, lesson_type='text',
-    content="""
-## 字符串基础
-字符串是**不可变**序列。支持索引和切片操作。
-
-### ASCII 码 (GESP 考点)
-计算机内部使用数字存储字符。
-- `ord(char)`: 字符 -> ASCII 码。
-- `chr(code)`: ASCII 码 -> 字符。
-
-```python
-print(ord('A'))  # 65
-print(ord('a'))  # 97
-print(chr(66))   # 'B'
-```
-记住：`'a'` 比 `'A'` 大 32。
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch2_3, title="3.2 字符串常用方法", order=2, lesson_type='code',
-    content="""
-## 常用方法
-由于字符串不可变，这些方法都会**返回新字符串**，不会修改原字符串。
-
-### 大小写
-- `upper()`: 全大写。
-- `lower()`: 全小写。
-- `capitalize()`: 首字母大写。
-
-### 查找与替换
-- `find(sub)`: 返回子串第一次出现的索引，找不到返回 -1。
-- `replace(old, new)`: 替换。
-- `count(sub)`: 统计次数。
-
-### 清理与分割
-- `strip()`: 去除首尾空白字符（空格、换行）。
-- `split(sep)`: 按分隔符切割成**列表**。
-- `join(iterable)`: 将列表元素连接成字符串。
-
-```python
-s = "  Python,C++,Java  "
-clean = s.strip()
-langs = clean.split(",")  # ['Python', 'C++', 'Java']
-res = "-".join(langs)     # "Python-C++-Java"
-```
-
-### 任务
-输入一行英文句子，统计其中单词的个数（假设单词间用空格分隔）。
-"""
-)
-
-
-# ==========================================
-# Course 3: GESP 3级 - 算法初探
-# ==========================================
-c3, _ = Course.objects.get_or_create(
-    title="GESP 3级：算法初探",
-    description="函数、元组字典与基础算法。",
-    defaults={'order': 3}
-)
-print(f"创建课程: {c3.title}")
-
-# Ch1: 函数
-ch3_1, _ = Chapter.objects.get_or_create(course=c3, title="第1章：函数", defaults={'order': 1})
-Lesson.objects.create(
-    chapter=ch3_1, title="1.1 函数基础", order=1, lesson_type='text',
-    content="""
-## 函数 (Function)
-函数是组织好的、可重复使用的代码块。
-
-### 定义与调用
-```python
-def say_hello(name):
-    print(f"Hello, {name}!")
-
-say_hello("Alice")
-```
-
-### 返回值
-使用 `return` 语句。如果没有 return，默认返回 `None`。
-可以返回多个值（本质是返回一个元组）。
-```python
-def get_point():
-    return 10, 20
-
-x, y = get_point()  # 解包
-```
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch3_1, title="1.2 参数传递详解", order=2, lesson_type='text',
-    content="""
-## 参数类型
-
-1. **位置参数**：按顺序传。
-2. **关键字参数**：指定参数名，顺序无关。
-   ```python
-   func(a=1, b=2)
-   ```
-3. **默认参数**：定义时给参数默认值。
-   ```python
-   def power(x, n=2):  # n 默认为 2
-       return x ** n
-   ```
-   **警告**：默认参数必须放在非默认参数后面。且默认参数最好指向**不可变对象**（不要用列表做默认参数）。
-
-### 可变参数 (选学)
-- `*args`: 接收任意个位置参数（元组）。
-- `**kwargs`: 接收任意个关键字参数（字典）。
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch3_1, title="1.3 变量作用域 (Scope)", order=3, lesson_type='text',
-    content="""
-## 作用域 (LEGB 规则)
-变量查找顺序：Local(局部) -> Enclosing -> Global(全局) -> Built-in(内置)。
-
-### Global 关键字
-在函数内部修改全局变量。
-```python
-cnt = 0
-def add():
-    global cnt
-    cnt += 1
-```
-
-如果不加 `global`，函数内对 `cnt = 1` 只是创建了一个新的局部变量，不会影响外部。
-"""
-)
-
-# Ch2: 高级数据结构
-ch3_2, _ = Chapter.objects.get_or_create(course=c3, title="第2章：高级数据结构", defaults={'order': 2})
-Lesson.objects.create(
-    chapter=ch3_2, title="2.1 元组 (Tuple)", order=1, lesson_type='text',
-    content="""
-## 元组
-不可变的列表。使用 `()`。
-如果元组只有一个元素，必须加逗号：`(1,)`。
-
-### 打包与解包
-```python
-t = 1, 2, 3  # 打包
-a, b, c = t  # 解包
-```
-
-### 交换变量
-Python 特有的语法糖：
-```python
-a, b = b, a
-```
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch3_2, title="2.2 字典 (Dict)", order=2, lesson_type='code',
-    content="""
-## 字典
-键值对 (Key-Value) 映射。
-- **Key**：必须是**不可变**类型（int, str, tuple）。不能是列表！
-- **Value**：任意类型。
-
-### 增删改查
-```python
-d = {"a": 1, "b": 2}
-val = d.get("a", 0)  # 安全获取，不存在返回 0
-d["c"] = 3           # 新增/修改
-d.pop("a")           # 删除
-```
-
-### 遍历
-```python
-for k in d:          # 遍历键
-for v in d.values(): # 遍历值
-for k, v in d.items(): # 遍历键值对
-```
-
-### 任务
-统计字符串中每个字符出现的次数，存入字典。
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch3_2, title="2.3 集合 (Set)", order=3, lesson_type='text',
-    content="""
-## 集合 (Set)
-无序、不重复的元素集合。使用 `{}`。
-
-### 特性
-1. **自动去重**：`set([1, 2, 2, 3])` -> `{1, 2, 3}`。
-2. **成员检测**：`x in s` 速度极快（哈希查找）。
-
-### 集合运算
-- `&`: 交集
-- `|`: 并集
-- `-`: 差集
-"""
-)
-
-# Ch3: 基础算法
-ch3_3, _ = Chapter.objects.get_or_create(course=c3, title="第3章：基础算法", defaults={'order': 3})
-Lesson.objects.create(
-    chapter=ch3_3, title="3.1 枚举算法", order=1, lesson_type='code',
-    content="""
-## 枚举 (Brute Force)
-暴力穷举所有可能性。
-
-### 经典案例：百钱百鸡
-公鸡 5 文，母鸡 3 文，小鸡 3 只 1 文。用 100 文买 100 只鸡。
-```python
-# x:公鸡, y:母鸡, z:小鸡
-for x in range(21):
-    for y in range(34):
-        z = 100 - x - y
-        if z % 3 == 0 and 5*x + 3*y + z//3 == 100:
-            print(x, y, z)
-```
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch3_3, title="3.2 排序算法", order=2, lesson_type='code',
-    content="""
-## 排序
-Python 内置了强大的排序功能。
-
-### list.sort()
-原地排序。
-```python
-a = [3, 1, 2]
-a.sort(reverse=True)  # 降序
-```
-
-### sorted()
-返回新列表，原列表不变。
-```python
-b = sorted(a)
-```
-
-### 自定义排序 (Key)
-按绝对值排序：
-```python
-a = [-5, 1, -2]
-a.sort(key=abs)  # [1, -2, -5]
-```
-
-### 任务
-有一组学生信息 `[("Alice", 80), ("Bob", 90), ("Charlie", 70)]`，请按成绩从高到低排序。
-"""
-)
-
-
-# ==========================================
-# Course 4: GESP 4级 - 系统构建
-# ==========================================
-c4, _ = Course.objects.get_or_create(
-    title="GESP 4级：系统构建",
-    description="面向对象编程、异常处理与文件操作。",
-    defaults={'order': 4}
-)
-print(f"创建课程: {c4.title}")
-
-# Ch1: 面向对象
-ch4_1, _ = Chapter.objects.get_or_create(course=c4, title="第1章：面向对象 (OOP)", defaults={'order': 1})
-Lesson.objects.create(
-    chapter=ch4_1, title="1.1 类与对象", order=1, lesson_type='text',
-    content="""
-## 类与对象
-Python 一切皆对象。
-
-### 定义
-```python
-class Cat:
-    # 类属性
-    species = "Mammal"
-
-    # 构造函数
-    def __init__(self, name):
-        self.name = name  # 实例属性
-
-    # 方法
-    def meow(self):
-        print(f"{self.name} says Meow!")
-```
-
-### self 是什么？
-`self` 代表**实例本身**。在调用方法时 `c.meow()`，Python 会自动把 `c` 传给 `self`。
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch4_1, title="1.2 继承与多态", order=2, lesson_type='code',
-    content="""
-## 继承
-子类继承父类的属性和方法。
-```python
-class Animal:
-    def speak(self):
-        print("Animal speaks")
-
-class Dog(Animal):
-    def speak(self):  # 重写 (Override)
-        print("Woof!")
-
-d = Dog()
-d.speak()  # Woof!
-```
-
-### super()
-调用父类的方法。
-```python
-class SuperDog(Dog):
-    def speak(self):
-        super().speak()
-        print("And I can fly!")
-```
-"""
-)
-
-# Ch2: 异常处理
-ch4_2, _ = Chapter.objects.get_or_create(course=c4, title="第2章：异常处理", defaults={'order': 2})
-Lesson.objects.create(
-    chapter=ch4_2, title="2.1 异常捕获机制", order=1, lesson_type='code',
-    content="""
-## 完整结构
-```python
-try:
-    # 可能出错的代码
-    f = open("file.txt")
-    val = int(f.read())
-except FileNotFoundError:
-    print("文件没找到")
-except ValueError:
-    print("内容不是数字")
-except Exception as e:
-    print(f"未知错误: {e}")
-else:
-    print("一切正常执行这里")
-finally:
-    f.close()
-    print("无论如何都会执行（用于清理资源）")
-```
-
-### 任务
-编写一个除法计算器，处理除零异常和输入非数字异常。
-"""
-)
-
-# Ch3: 文件操作
-ch4_3, _ = Chapter.objects.get_or_create(course=c4, title="第3章：文件操作", defaults={'order': 3})
-Lesson.objects.create(
-    chapter=ch4_3, title="3.1 文件读写详解", order=1, lesson_type='text',
-    content="""
-## 文件操作
-
-### 打开模式
-- `'r'`: 只读（默认）。文件不存在报错。
-- `'w'`: 写入。文件存在则**清空**，不存在则创建。
-- `'a'`: 追加。
-- `'b'`: 二进制模式（如 `'rb'`, `'wb'`），用于图片、音频。
-
-### with 语句 (上下文管理器)
-自动关闭文件，防止资源泄露。
-```python
-with open("data.txt", "r", encoding="utf-8") as f:
-    lines = f.readlines()  # 读取所有行到列表
-```
-"""
-)
-
-Lesson.objects.create(
-    chapter=ch4_3, title="3.2 CSV 与 JSON", order=2, lesson_type='code',
-    content="""
-## CSV 处理
-```python
-import csv
-with open('scores.csv', 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(['Name', 'Math'])
-    writer.writerow(['Alice', 100])
-```
-
-## JSON 处理 (常用)
-```python
-import json
-data = {"name": "Bob", "age": 15}
-json_str = json.dumps(data)  # 转为字符串
-obj = json.loads(json_str)   # 转回对象
-```
-
-### 任务
-读取一个 CSV 文件，计算某列的平均值。
-"""
-)
-
-print("GESP 1-4 级课程数据填充完成！")
-
-# ==========================================
-# Course 5: Head First Python: 基础入门 (Extended)
-# ==========================================
-c5, created = Course.objects.update_or_create(
-    title="Head First Python: 基础入门",
-    defaults={
-        'description': "基于《Head First Python》经典教材，带你轻松入门 Python 编程。从基础语法到数据结构，再到函数与模块，一步步掌握 Python 核心技能。",
-        'order': 5
-    }
-)
-print(f"更新课程: {c5.title}")
-
-# ==========================================
-# Chapter 1: The Basics
-# ==========================================
-ch1_hf, _ = Chapter.objects.update_or_create(
-    course=c5, 
-    title="第一章：基础知识 - 快速入门", 
-    defaults={'order': 1}
-)
-
-# Lesson 1.1: Mission Briefing
-l1_1_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch1_hf, 
-    title="任务简报：初识 Python", 
-    defaults={
-        'content': """
-## 什么是 Python？
-
-Python 是一种**强大且易于学习**的编程语言。它就像是编程界的“瑞士军刀”，无所不能！
-
-### 为什么选择 Python？
-- **简单易读**：代码像英语一样直观，非常适合初学者。
-- **应用广泛**：从网站开发（YouTube, Instagram）到人工智能（ChatGPT），再到数据分析，Python 无处不在。
-- **社区强大**：拥有庞大的开发者社区，遇到问题很容易找到答案。
-
-### 我们的任务
-在本课程中，你将扮演一名“代码学员”，通过完成一个个任务，掌握 Python 的核心技能，最终获得“Python 大师”勋章！
-    """,
-        'lesson_type': 'text',
-        'order': 1
-    }
-)
-
-# Quiz for 1.1
-Quiz.objects.update_or_create(
-    lesson=l1_1_hf,
-    question="为什么 Python 被称为编程界的“瑞士军刀”？",
-    defaults={
-        'option_a': "因为它很贵",
-        'option_b': "因为它只能用来切水果",
-        'option_c': "因为它功能强大，用途广泛",
-        'option_d': "因为它起源于瑞士",
-        'correct_answer': 'C',
-        'explanation': "Python 应用领域非常广泛，从 Web 开发到 AI，无所不能，就像瑞士军刀一样多功能。"
-    }
-)
-
-# Lesson 1.2: First Script
-l1_2_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch1_hf, 
-    title="你的第一个脚本", 
-    defaults={
-        'content': """
-## Hello, World!
-
-在编程界，有一个悠久的传统：学习任何新语言的第一步，都是让电脑说出 "Hello, World!"。
-
-### 怎么做？
-在 Python 中，我们使用 `print()` 函数来在屏幕上显示内容。
-
-**语法：**
-```python
-print("你要显示的内容")
-```
-
-注意：
-1. `print` 全部小写。
-2. 内容必须放在括号 `()` 里。
-3. 文字内容（字符串）必须用引号 `""` 或 `''` 包裹。
-
-### 试一试
-在下方的代码编辑器中，输入 `print('Hello, Python!')` 并点击运行。
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': "print('Hello, Python!')",
-        'order': 2
-    }
-)
-
-# Quiz for 1.2
-Quiz.objects.update_or_create(
-    lesson=l1_2_hf,
-    question="在 Python 中，用于在屏幕上显示内容的函数是？",
-    defaults={
-        'option_a': "show()",
-        'option_b': "display()",
-        'option_c': "Print()",
-        'option_d': "print()",
-        'correct_answer': 'D',
-        'explanation': "Python 是大小写敏感的，正确的函数名是全小写的 `print()`。"
-    }
-)
-
-# Lesson 1.3: Variables & Assignment
-l1_3_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch1_hf, 
-    title="变量与赋值", 
-    defaults={
-        'content': """
-## 什么是变量？
-
-想象你在搬家，你会把东西放进**盒子**里，并在盒子上写上标签（比如“书”、“衣服”）。
-
-在 Python 中，**变量**就是这样的盒子。
-- **变量名**：就是盒子上的标签。
-- **值**：就是盒子里的东西。
-
-### 创建变量
-在 Python 中，创建变量非常简单，只需要用 `=` 号：
+    chapter=ch1, title="1.2 变量与命名规则", order=2, lesson_type='text',
+    code_challenge_prompt="# 定义一个变量 score，赋值为 100，并打印出来\nscore = 100\nprint(score)",
+    content="""# 1.2 变量与命名规则
+
+## 1. 什么是变量？
+变量就像一个**盒子**，用来装数据。我们可以给这个盒子贴上标签（变量名），通过标签找到里面的数据。
 
 ```python
 score = 100
-player_name = "CodeMaster"
+name = "Alice"
 ```
+- `score` 是变量名。
+- `=` 是**赋值运算符**，意思是把右边的 `100` 放进左边的 `score` 盒子里。
+- `100` 是变量的值。
 
-这里，我们创建了一个叫 `score` 的变量，里面装着数字 `100`；还创建了一个叫 `player_name` 的变量，里面装着文字 `"CodeMaster"`。
+## 2. 变量命名规则（GESP 重点考点）
+给变量起名字必须遵守规则，否则程序会报错。
 
-### 动态类型
-Python 是**动态类型**语言。这意味着你不需要声明变量类型，Python 会自动根据你赋的值来决定类型。
+1.  **组成字符**：只能包含**字母**（a-z, A-Z）、**数字**（0-9）和**下划线**（_）。
+2.  **开头限制**：**不能以数字开头**。
+3.  **关键字**：不能使用 Python 的保留字（如 `if`, `else`, `for`, `print`, `class` 等）。
+4.  **大小写敏感**：`Score` 和 `score` 是两个不同的变量。
+
+## 3. 示例辨析
+| 变量名 | 是否合法 | 原因 |
+| :--- | :--- | :--- |
+| `name` | ✅ | 合法 |
+| `user_1` | ✅ | 合法 |
+| `_score` | ✅ | 合法（下划线开头允许） |
+| `2name` | ❌ | **数字不能开头** |
+| `my-name` | ❌ | **不能包含减号**（只能用下划线） |
+| `if` | ❌ | **关键字**不能用 |
+| `MyName` | ✅ | 合法（但推荐用小写加下划线 `my_name`） |
+
+## 4. 变量的多重赋值
+Python 允许同时给多个变量赋值：
 ```python
-x = 10      # x 是整数
-x = "Hello" # 现在 x 变成了字符串！
+a = b = 10  # a 和 b 都是 10
+x, y = 1, 2 # x 是 1，y 是 2
 ```
-    """,
-        'lesson_type': 'text',
-        'order': 3
-    }
+**交换变量的值**（Python 特有技巧）：
+```python
+a = 1
+b = 2
+a, b = b, a  # 现在 a=2, b=1
+```
+
+## 5. 易错点
+- **混淆 `=` 和 `==`**：
+    - `=` 是赋值（把右边给左边）。
+    - `==` 是判断相等（比较左右两边是否一样）。
+"""
 )
 
-# Quiz for 1.3
-Quiz.objects.update_or_create(
-    lesson=l1_3_hf,
-    question="关于 Python 变量，下列说法正确的是？",
-    defaults={
-        'option_a': "变量名必须以数字开头",
-        'option_b': "创建变量前必须声明其类型（如 int, string）",
-        'option_c': "变量类型是固定的，不能改变",
-        'option_d': "Python 是动态类型语言，变量类型由赋值决定",
-        'correct_answer': 'D',
-        'explanation': "Python 不需要显式声明变量类型，且同一个变量可以被重新赋值为不同类型的数据。"
-    }
+Quiz.objects.create(
+    lesson=l1_2,
+    question="下列哪个变量名是**错误**的？",
+    option_a="student_1",
+    option_b="_age",
+    option_c="3days",
+    option_d="total_score",
+    correct_answer="C",
+    explanation="变量名不能以数字开头，所以 3days 是错误的。"
 )
 
-# Lesson 1.4: Control Flow
-l1_4_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch1_hf, 
-    title="流程控制：做出决定", 
-    defaults={
-        'content': """
-## if, else, elif
+Quiz.objects.create(
+    lesson=l1_2,
+    question="执行 a, b = 10, 20 后，a 的值是多少？",
+    option_a="10",
+    option_b="20",
+    option_c="30",
+    option_d="报错",
+    correct_answer="A",
+    explanation="这是解包赋值，a 对应第一个值 10。"
+)
 
-程序不仅仅是按顺序执行代码，还需要根据情况做出决定。
+# 1.3 基本数据类型
+l1_3 = Lesson.objects.create(
+    chapter=ch1, title="1.3 基本数据类型", order=3, lesson_type='text',
+    code_challenge_prompt="# 将字符串 '123' 转换为整数，加上 10 之后输出\ns = '123'\numn = int(s)\nprint(umn + 10)",
+    content="""# 1.3 基本数据类型
 
-### if 语句
+## 1. 四大基本类型
+Python 中常用的数据类型有四种：
+
+1.  **整数 (int)**：没有小数点的数字。
+    - 例如：`1`, `100`, `-5`, `0`
+2.  **浮点数 (float)**：带小数点的数字。
+    - 例如：`3.14`, `2.0`, `-0.5`
+    - 注意：`2` 是整数，`2.0` 是浮点数。
+3.  **字符串 (str)**：用引号括起来的文本。
+    - 例如：`"Hello"`, `'Python'`, `"123"`
+    - 注意：`"123"` 是字符串，不是数字。
+4.  **布尔值 (bool)**：只有两个值，真或假。
+    - 例如：`True` (真), `False` (假)
+    - 注意：首字母必须**大写**。
+
+## 2. 类型查询与转换
+- **查询类型**：使用 `type()` 函数。
+  ```python
+  print(type(10))    # <class 'int'>
+  print(type(3.14))  # <class 'float'>
+  ```
+- **类型转换**：
+  ```python
+  int("10")    # 字符串转整数 -> 10
+  float("10")  # 整数转浮点 -> 10.0
+  str(123)     # 整数转字符串 -> "123"
+  int(3.9)     # 浮点转整数 -> 3 (直接丢弃小数，不四舍五入！)
+  ```
+
+## 3. 易错点与考点
+- **考点**：`int(3.9)` 的结果是 `3`，而不是 `4`。Python 转换整数时是**向下取整**（截断小数）。
+- **考点**：字符串相加是拼接。
+  ```python
+  print("10" + "20")  # 输出 "1020"
+  print(10 + 20)      # 输出 30
+  ```
+- **易错**：`True` 和 `False` 必须大写，`true` 是错误的。
+"""
+)
+
+Quiz.objects.create(
+    lesson=l1_3,
+    question="执行 int(5.9) 的结果是？",
+    option_a="5",
+    option_b="6",
+    option_c="5.9",
+    option_d="报错",
+    correct_answer="A",
+    explanation="int() 函数将浮点数转换为整数时，会直接去掉小数部分（向下取整）。"
+)
+
+Quiz.objects.create(
+    lesson=l1_3,
+    question="type(3.0) 的结果是？",
+    option_a="int",
+    option_b="float",
+    option_c="str",
+    option_d="bool",
+    correct_answer="B",
+    explanation="带小数点的数字类型是浮点数 (float)。"
+)
+
+# 1.4 输入与输出
+l1_4 = Lesson.objects.create(
+    chapter=ch1, title="1.4 输入与输出", order=4, lesson_type='code',
+    code_challenge_prompt="# 编写一个程序，输入你的名字，然后输出 '你好, 名字'\nname = input()\nprint('你好,', name)",
+    content="""# 1.4 输入与输出
+
+## 1. 输出：print()
+我们已经用过 `print()`，现在来看看它的进阶用法。
+
+- **输出多个内容**：用逗号 `,` 隔开，默认会用空格连接。
+  ```python
+  print("Hello", "World")  # 输出：Hello World
+  ```
+- **指定分隔符 (`sep`)**：
+  ```python
+  print("a", "b", "c", sep="-")  # 输出：a-b-c
+  ```
+- **指定结尾符 (`end`)**：默认 `print` 完会换行，可以修改。
+  ```python
+  print("Hello", end="*")
+  print("World")
+  # 输出：Hello*World (没有换行)
+  ```
+
+## 2. 输入：input()
+程序需要和用户交互，使用 `input()` 获取键盘输入。
+
 ```python
-if score > 90:
-    print("优秀！")
+name = input("请输入你的名字：")
+print("你好", name)
 ```
-注意：Python 使用**缩进**（Indentation）来划分代码块，而不是大括号 `{}`。
 
-### else 语句
+**重要考点**：
+`input()` 函数接收到的内容，**永远是字符串 (str) 类型**！
+如果你输入的是数字，并想用来计算，必须先转换类型。
+
 ```python
+# ❌ 错误做法
+age = input("请输入年龄：")
+print(age + 1)  # 报错！字符串不能和数字相加
+
+# ✅ 正确做法
+age_str = input("请输入年龄：")
+age = int(age_str)  # 转换为整数
+print(age + 1)
+```
+
+或者一步到位：
+```python
+age = int(input("请输入年龄："))
+```
+
+## 3. 格式化输出 (f-string)
+这是最方便的输出方式，在字符串前加 `f`，在大括号 `{}` 里放变量。
+
+```python
+name = "Alice"
+score = 98
+print(f"学生 {name} 的分数是 {score}")
+# 输出：学生 Alice 的分数是 98
+```
+"""
+)
+
+Quiz.objects.create(
+    lesson=l1_4,
+    question="如果用户输入 10，代码 a = input() 执行后，a 的类型是？",
+    option_a="int",
+    option_b="str",
+    option_c="float",
+    option_d="bool",
+    correct_answer="B",
+    explanation="input() 函数永远返回字符串类型，即使输入的是数字。"
+)
+
+Quiz.objects.create(
+    lesson=l1_4,
+    question="print('A', 'B', sep='*') 的输出结果是？",
+    option_a="A B",
+    option_b="AB",
+    option_c="A*B",
+    option_d="A,B",
+    correct_answer="C",
+    explanation="sep 参数指定了分隔符为 *。"
+)
+
+# --- 第2章：运算符与表达式 ---
+ch2, _ = Chapter.objects.get_or_create(course=c1, title="第2章：运算符与表达式", defaults={'order': 2})
+
+# 2.1 算术运算符
+l2_1 = Lesson.objects.create(
+    chapter=ch2, title="2.1 算术运算符", order=1, lesson_type='text',
+    code_challenge_prompt="# 计算 10 除以 3 的商（整数）和余数\na = 10\nb = 3\nprint(f'商: {a // b}, 余数: {a % b}')",
+    content="""# 2.1 算术运算符
+
+## 1. 基本运算符
+Python 的数学运算非常直观：
+- `+` 加
+- `-` 减
+- `*` 乘
+- `/` 除（结果总是浮点数，如 `4/2` 结果是 `2.0`）
+
+## 2. 特殊运算符（GESP 必考）
+这三个运算符是考试的重点：
+
+1.  **整除 (`//`)**：只保留整数部分，向下取整。
+    ```python
+    print(5 // 2)   # 2
+    print(-5 // 2)  # -3 (注意！向下取整，-2.5 变成 -3)
+    ```
+2.  **取模/求余 (`%`)**：计算余数。
+    ```python
+    print(5 % 2)    # 1 (5除以2商2余1)
+    print(10 % 3)   # 1
+    ```
+    *用途：判断奇偶数（`x % 2 == 0` 是偶数），取个位数（`x % 10`）。*
+3.  **幂运算 (`**`)**：计算乘方。
+    ```python
+    print(2 ** 3)   # 2的3次方 = 8
+    print(3 ** 2)   # 9
+    ```
+
+## 3. 复合赋值运算符
+`+=`, `-=`, `*=`, `/=` 等。
+```python
+a = 10
+a += 5  # 等同于 a = a + 5
+print(a) # 15
+```
+
+## 4. 易错点
+- 除法 `/` 永远返回 `float`。
+- 负数整除 `//` 是向小取整（往负无穷方向），不是简单的去掉小数。
+"""
+)
+
+Quiz.objects.create(
+    lesson=l2_1,
+    question="表达式 7 % 3 的结果是？",
+    option_a="2",
+    option_b="1",
+    option_c="2.33",
+    option_d="0",
+    correct_answer="B",
+    explanation="7 除以 3 商 2 余 1。"
+)
+
+Quiz.objects.create(
+    lesson=l2_1,
+    question="表达式 2 ** 3 的结果是？",
+    option_a="6",
+    option_b="5",
+    option_c="8",
+    option_d="9",
+    correct_answer="C",
+    explanation="2 的 3 次方等于 2 * 2 * 2 = 8。"
+)
+
+# 2.2 比较与逻辑运算符
+l2_2 = Lesson.objects.create(
+    chapter=ch2, title="2.2 比较与逻辑运算符", order=2, lesson_type='text',
+    code_challenge_prompt="# 判断一个数是否在 10 到 20 之间（包含 10 和 20）\nnum = 15\nis_between = 10 <= num <= 20\nprint(is_between)",
+    content="""# 2.2 比较与逻辑运算符
+
+## 1. 比较运算符
+比较的结果是布尔值：`True` 或 `False`。
+- `==` 等于（注意是两个等号！）
+- `!=` 不等于
+- `>` 大于
+- `<` 小于
+- `>=` 大于等于
+- `<=` 小于等于
+
+**Python 特性**：支持链式比较。
+```python
+x = 15
+print(10 < x < 20)  # True (等同于 x > 10 and x < 20)
+```
+
+## 2. 逻辑运算符
+用于组合多个条件。
+1.  **and (与)**：两边都为真，结果才为真。（并且）
+    - `True and True` -> `True`
+    - `True and False` -> `False`
+2.  **or (或)**：只要有一边为真，结果就为真。（或者）
+    - `False or True` -> `True`
+    - `False or False` -> `False`
+3.  **not (非)**：取反。
+    - `not True` -> `False`
+
+## 3. 短路运算（难点）
+- `a and b`：如果 `a` 是假，直接返回 `a`，不看 `b`。
+- `a or b`：如果 `a` 是真，直接返回 `a`，不看 `b`。
+
+```python
+print(0 and 100)  # 输出 0 (因为0是假)
+print(1 or 100)   # 输出 1 (因为1是真)
+```
+
+## 4. 闰年判断案例
+判断 `year` 是否为闰年：
+1. 能被 4 整除 但 不能被 100 整除。
+2. 或者 能被 400 整除。
+
+```python
+(year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+```
+"""
+)
+
+Quiz.objects.create(
+    lesson=l2_2,
+    question="not (10 > 5) 的结果是？",
+    option_a="True",
+    option_b="False",
+    option_c="10",
+    option_d="5",
+    correct_answer="B",
+    explanation="10 > 5 是 True，not True 结果是 False。"
+)
+
+Quiz.objects.create(
+    lesson=l2_2,
+    question="True or False 的结果是？",
+    option_a="True",
+    option_b="False",
+    option_c="Error",
+    option_d="None",
+    correct_answer="A",
+    explanation="or 运算符只要有一个为真，结果即为真。"
+)
+
+# 2.3 运算符优先级
+l2_3 = Lesson.objects.create(
+    chapter=ch2, title="2.3 运算符优先级", order=3, lesson_type='text',
+    code_challenge_prompt="# 计算表达式：2 + 3 * 4 > 10\nresult = 2 + 3 * 4 > 10\nprint(result)",
+    content="""# 2.3 运算符优先级
+
+当一个式子里有多种运算时，谁先谁后？
+
+## 1. 优先级排行榜（从高到低）
+1.  `()` **括号**：最牛，想先算谁就括谁。
+2.  `**` **幂运算**：2 ** 3。
+3.  `*`, `/`, `//`, `%` **乘除类**。
+4.  `+`, `-` **加减类**。
+5.  `>`, `<`, `==` **比较类**。
+6.  `not`
+7.  `and`
+8.  `or`
+
+**口诀**：
+**括号最大幂第二，乘除加减再比较，非与或门排最后。**
+
+## 2. 案例分析
+```python
+result = 2 + 3 * 4 > 10 and 5 < 2
+```
+解析步骤：
+1. 先算乘法：`3 * 4 = 12` -> `2 + 12 > 10 and 5 < 2`
+2. 再算加法：`2 + 12 = 14` -> `14 > 10 and 5 < 2`
+3. 再算比较：
+   - `14 > 10` 是 `True`
+   - `5 < 2` 是 `False`
+   - -> `True and False`
+4. 最后算逻辑：`True and False` -> `False`
+
+## 3. 建议
+虽然有优先级规则，但写代码时**建议多用括号**，让代码更易读，也不容易出错。
+例如：`(2 + 3) * 4` 显然比 `2 + 3 * 4` 意图更明确（如果你的本意是先加）。
+"""
+)
+
+Quiz.objects.create(
+    lesson=l2_3,
+    question="2 + 3 * 2 的结果是？",
+    option_a="10",
+    option_b="8",
+    option_c="7",
+    option_d="12",
+    correct_answer="B",
+    explanation="乘法优先级高于加法，先算 3*2=6，再加 2 得 8。"
+)
+
+# --- 第3章：决策与分支 ---
+ch3, _ = Chapter.objects.get_or_create(course=c1, title="第3章：决策与分支", defaults={'order': 3})
+
+# 3.1 if 结构
+l3_1 = Lesson.objects.create(
+    chapter=ch3, title="3.1 分支结构 (if-elif-else)", order=1, lesson_type='code',
+    code_challenge_prompt="# 根据分数 score 打印等级：>=60 及格，<60 不及格\nscore = 55\nif score >= 60:\n    print('及格')\nelse:\n    print('不及格')",
+    content="""# 3.1 分支结构
+
+程序不再是“一条道走到黑”，而是可以根据条件选择不同的路。
+
+## 1. 单分支 (if)
+如果条件成立，就做某事。
+```python
+age = 18
+if age >= 18:
+    print("成年了")  # 注意前面的缩进（4个空格）
+```
+**重点**：`if` 语句后面要有**冒号** `:`，下一行必须**缩进**。
+
+## 2. 双分支 (if-else)
+如果条件成立做 A，否则做 B。
+```python
+score = 59
 if score >= 60:
     print("及格")
 else:
     print("不及格")
 ```
 
-### elif 语句 (else if)
+## 3. 多分支 (if-elif-else)
+有多个条件判断。
 ```python
+score = 85
 if score >= 90:
-    print("A")
+    print("优秀")
 elif score >= 80:
-    print("B")
+    print("良好")
+elif score >= 60:
+    print("及格")
 else:
-    print("C")
+    print("不及格")
 ```
+**注意**：程序会从上往下检查，一旦满足某个条件，执行完对应的代码块后，就会**跳出整个 if 结构**，不会再检查后面的条件。
 
-### 实战挑战
-定义一个变量 `temperature`，如果它大于 30，打印 "热"；否则打印 "舒适"。
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': """temperature = 35
-# 在这里写下你的 if-else 代码
-""",
-        'order': 4
-    }
+## 4. 易错点
+- 忘记冒号 `:`。
+- 缩进不一致（Python 对缩进要求非常严格，通常使用 4 个空格）。
+- `elif` 拼写错误（不是 `elseif`）。
+"""
 )
 
-# Quiz for 1.4
-Quiz.objects.update_or_create(
-    lesson=l1_4_hf,
-    question="Python 使用什么来划分代码块（例如 if 语句的内容）？",
-    defaults={
-        'option_a': "大括号 {}",
-        'option_b': "缩进 (Indentation)",
-        'option_c': "分号 ;",
-        'option_d': "begin 和 end 关键字",
-        'correct_answer': 'B',
-        'explanation': "Python 的一大特色就是使用缩进（通常是4个空格）来表示代码块的层级关系。"
-    }
+Quiz.objects.create(
+    lesson=l3_1,
+    question="在 Python 中，if 语句块的代码必须？",
+    option_a="用大括号包围",
+    option_b="缩进",
+    option_c="写在同一行",
+    option_d="加分号",
+    correct_answer="B",
+    explanation="Python 通过缩进来表示代码块的层级关系。"
 )
 
-# Lesson 1.5: Iteration
-l1_5_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch1_hf, 
-    title="循环迭代", 
-    defaults={
-        'content': """
-## for 循环
+# --- 第4章：循环结构 ---
+ch4, _ = Chapter.objects.get_or_create(course=c1, title="第4章：循环结构", defaults={'order': 4})
 
-当你需要重复做某件事，或者遍历一组数据时，`for` 循环是你的好帮手。
+# 4.1 for 循环
+l4_1 = Lesson.objects.create(
+    chapter=ch4, title="4.1 For 循环与 range", order=1, lesson_type='text',
+    code_challenge_prompt="# 打印 0 到 4\nfor i in range(5):\n    print(i)",
+    content="""# 4.1 For 循环与 range
 
-### 遍历列表
-```python
-fruits = ["apple", "banana", "cherry"]
-for fruit in fruits:
-    print(fruit)
-```
+## 1. 什么是循环？
+当我们需要重复做某件事时，就用循环。比如打印 100 次 "Hello"。
 
-### 使用 range()
-`range()` 函数可以生成一个数字序列。
+## 2. range() 函数
+`range` 是 "范围" 的意思，用来生成一系列数字。
+- `range(n)`: 生成 0 到 n-1。
+    - `range(5)` -> 0, 1, 2, 3, 4 (共5个)
+- `range(start, stop)`: 从 start 开始，到 stop-1 结束（**包头不包尾**）。
+    - `range(1, 5)` -> 1, 2, 3, 4
+- `range(start, stop, step)`: 每次加 step（步长）。
+    - `range(1, 10, 2)` -> 1, 3, 5, 7, 9
+
+## 3. for 循环基本结构
 ```python
 for i in range(5):
     print(i)
-# 输出: 0, 1, 2, 3, 4
+```
+- `i` 是循环变量，每次循环会自动变成 `range` 里的下一个数。
+- 循环体（缩进部分）会被重复执行。
+
+## 4. 累加求和案例
+计算 1 + 2 + ... + 100 的和。
+```python
+total = 0           # 定义一个累加器
+for i in range(1, 101): # 1 到 100
+    total = total + i
+print(total)        # 5050
 ```
 
-### 啤酒之歌 (Beer Song) 挑战
-利用循环，打印出 "99 bottles of beer on the wall..." 的歌词片段。
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': """for i in range(5, 0, -1):
-    print(f"{i} bottles of beer on the wall...")
-print("No more bottles of beer on the wall.")
-""",
-        'order': 5
-    }
+## 5. 易错点
+- `range(5)` 是从 0 开始，到 4 结束，不包含 5。
+- 循环结束后，循环变量 `i` 会保留最后一次的值。
+"""
 )
 
-# Quiz for 1.5
-Quiz.objects.update_or_create(
-    lesson=l1_5_hf,
-    question="执行 for i in range(3): print(i) 会输出什么？",
-    defaults={
-        'option_a': "1, 2, 3",
-        'option_b': "0, 1, 2, 3",
-        'option_c': "0, 1, 2",
-        'option_d': "1, 2",
-        'correct_answer': 'C',
-        'explanation': "range(n) 生成从 0 到 n-1 的序列，所以 range(3) 生成 0, 1, 2。"
-    }
+Quiz.objects.create(
+    lesson=l4_1,
+    question="range(1, 5) 生成的序列是？",
+    option_a="1, 2, 3, 4, 5",
+    option_b="1, 2, 3, 4",
+    option_c="0, 1, 2, 3, 4",
+    option_d="1, 2, 3",
+    correct_answer="B",
+    explanation="range 包含起始值，不包含结束值（包头不包尾）。"
+)
+
+# 4.2 while 循环
+l4_2 = Lesson.objects.create(
+    chapter=ch4, title="4.2 While 循环", order=2, lesson_type='code',
+    code_challenge_prompt="# 使用 while 循环打印 5 到 1\nn = 5\nwhile n > 0:\n    print(n)\n    n -= 1",
+    content="""# 4.2 While 循环
+
+## 1. 什么是 while 循环？
+`for` 循环适合“已知次数”的循环，而 `while` 循环适合“当满足条件时”一直执行，直到条件不满足。
+
+## 2. 基本结构
+```python
+while 条件:
+    代码块
+```
+只要条件为 `True`，代码块就会一直执行。
+
+## 3. 示例：倒计时
+```python
+n = 5
+while n > 0:
+    print(n)
+    n = n - 1  # 重要！必须改变 n 的值，否则会变成死循环
+print("发射！")
+```
+
+## 4. 死循环 (Dead Loop)
+如果条件永远为真，循环永远停不下来，程序就卡死了。
+```python
+# ❌ 危险代码
+while True:
+    print("停不下来了")
+```
+如果不小心写了死循环，按 `Ctrl + C` 强制停止。
+
+## 5. 什么时候用 while？
+- 不知道具体要循环多少次。
+- 比如：一直输入密码，直到输对为止。
+"""
+)
+
+Quiz.objects.create(
+    lesson=l4_2,
+    question="while 循环结束的条件是？",
+    option_a="循环次数达到上限",
+    option_b="条件变为 False",
+    option_c="遇到 print 语句",
+    option_d="条件变为 True",
+    correct_answer="B",
+    explanation="当 while 后面的条件判断为 False 时，循环终止。"
+)
+
+# 4.3 循环控制
+l4_3 = Lesson.objects.create(
+    chapter=ch4, title="4.3 break 与 continue", order=3, lesson_type='text',
+    code_challenge_prompt="# 寻找第一个能被 7 整除的数（大于 100）\nfor i in range(100, 200):\n    if i % 7 == 0:\n        print(f'找到了: {i}')\n        break",
+    content="""# 4.3 循环控制：break 与 continue
+
+有时候我们需要中途控制循环的行为。
+
+## 1. break (中断)
+**立即结束整个循环**，跳出循环体，执行后面的代码。
+
+**案例**：在 1 到 100 中找第一个能被 17 整除的数。
+```python
+for i in range(1, 101):
+    if i % 17 == 0:
+        print(i)
+        break  # 找到了就停止，不用再往后找了
+```
+
+## 2. continue (继续/跳过)
+**跳过本次循环剩余的代码**，直接开始下一次循环。
+
+**案例**：逢 7 过（打印 1-10，遇到 7 跳过）。
+```python
+for i in range(1, 11):
+    if i == 7:
+        continue  # 跳过 7，不执行下面的 print
+    print(i)
+```
+
+## 3. 对比总结
+- `break`：彻底罢工，不干了。
+- `continue`：这一轮先休息，下一轮继续干。
+
+## 4. 循环中的 else (进阶)
+Python 的循环可以带 `else`，当循环**正常结束**（没有被 `break` 打断）时执行。
+```python
+# 判断素数
+n = 13
+for i in range(2, n):
+    if n % i == 0:
+        print("不是素数")
+        break
+else:
+    print("是素数") # 只有循环完整走完没发现因子，才执行这里
+```
+"""
+)
+
+Quiz.objects.create(
+    lesson=l4_3,
+    question="在循环中执行 break 语句会发生什么？",
+    option_a="跳过本次循环",
+    option_b="终止整个循环",
+    option_c="暂停程序",
+    option_d="没有任何反应",
+    correct_answer="B",
+    explanation="break 用于立即终止当前所在的循环结构。"
 )
 
 # ==========================================
-# Chapter 2: List Data
+# Course 2: GESP 2级 - 逻辑进阶
 # ==========================================
-ch2_hf, _ = Chapter.objects.update_or_create(
-    course=c5, 
-    title="第二章：列表数据 - 处理有序数据", 
+print("正在创建 GESP 2级 课程...")
+c2, _ = Course.objects.get_or_create(
+    title="GESP 2级：逻辑进阶",
+    description="深入掌握 Python 数据容器。重点讲解列表（List）的增删改查、字符串操作、多层循环嵌套以及 ASCII 码等进阶概念。对应 GESP 二级考纲。",
     defaults={'order': 2}
 )
 
-# Lesson 2.1: Intro to Lists
-l2_1_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch2_hf, 
-    title="列表初探", 
-    defaults={
-        'content': """
-## 什么是列表 (List)？
+ch2_1, _ = Chapter.objects.get_or_create(course=c2, title="第1章：列表 List", defaults={'order': 1})
 
-列表是 Python 中最常用的数据结构之一，它就像一个**有序的容器**，可以存放任何东西。
+# 1.1 列表基础
+l2_1_1 = Lesson.objects.create(
+    chapter=ch2_1, title="1.1 列表的定义与索引", order=1, lesson_type='text',
+    code_challenge_prompt="# 创建一个包含 'Spring', 'Summer', 'Autumn', 'Winter' 的列表，并打印 Summer\nseasons = ['Spring', 'Summer', 'Autumn', 'Winter']\nprint(seasons[1])",
+    content="""# 1.1 列表的定义与索引
 
-### 创建列表
-使用方括号 `[]` 来创建列表，元素之间用逗号 `,` 分隔。
+## 1. 为什么需要列表？
+如果我们要存储全班 50 个同学的名字，定义 50 个变量（`name1`, `name2`...）太麻烦了。
+列表（List）就像一个**大书包**，可以一次装下很多数据。
 
+## 2. 定义列表
+使用方括号 `[]`，元素之间用逗号 `,` 隔开。
 ```python
+names = ["Alice", "Bob", "Charlie"]
 numbers = [1, 2, 3, 4, 5]
-names = ["Alice", "Bob", "Charlie"]
-mixed = [1, "Alice", True, 3.14] # 列表可以包含不同类型的数据！
+empty_list = []  # 空列表
 ```
 
-### 访问元素
-列表是有序的，你可以通过**索引** (Index) 来访问其中的元素。索引从 `0` 开始。
+## 3. 索引 (Index) - 访问元素
+列表里的每个元素都有一个编号，叫**索引**。
+**重点**：索引从 **0** 开始！
 
 ```python
-names = ["Alice", "Bob", "Charlie"]
-print(names[0]) # 输出: Alice
-print(names[1]) # 输出: Bob
+fruits = ["apple", "banana", "cherry"]
+print(fruits[0])  # apple (第1个)
+print(fruits[1])  # banana (第2个)
 ```
-    """,
-        'lesson_type': 'text',
-        'order': 1
-    }
+
+## 4. 负数索引
+Python 允许倒着数：
+- `-1` 表示最后一个。
+- `-2` 表示倒数第二个。
+
+```python
+print(fruits[-1]) # cherry
+```
+
+## 5. 切片 (Slicing) - 获取一部分
+语法：`列表[start:end]` (包头不包尾)
+```python
+nums = [0, 1, 2, 3, 4, 5]
+print(nums[1:4])  # [1, 2, 3]
+print(nums[:3])   # [0, 1, 2] (从头开始)
+print(nums[3:])   # [3, 4, 5] (直到最后)
+```
+"""
 )
 
-# Quiz for 2.1
-Quiz.objects.update_or_create(
-    lesson=l2_1_hf,
-    question="如果有列表 nums = [10, 20, 30]，那么 nums[1] 的值是？",
-    defaults={
-        'option_a': "10",
-        'option_b': "20",
-        'option_c': "30",
-        'option_d': "报错",
-        'correct_answer': 'B',
-        'explanation': "列表索引从 0 开始，所以 nums[0] 是 10，nums[1] 是 20。"
-    }
+Quiz.objects.create(
+    lesson=l2_1_1,
+    question="a = [10, 20, 30, 40]，a[-1] 的值是？",
+    option_a="10",
+    option_b="40",
+    option_c="30",
+    option_d="报错",
+    correct_answer="B",
+    explanation="负数索引 -1 表示列表的最后一个元素。"
 )
 
-# Lesson 2.2: List Methods
-l2_2_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch2_hf, 
-    title="列表方法", 
-    defaults={
-        'content': """
-## 列表的常用方法
+# 1.2 列表操作
+l2_1_2 = Lesson.objects.create(
+    chapter=ch2_1, title="1.2 列表的增删改查", order=2, lesson_type='code',
+    code_challenge_prompt="# 列表操作挑战\nnums = [1, 2, 3]\nnums.append(4)\nnums[0] = 100\nprint(nums)",
+    content="""# 1.2 列表的增删改查
 
-Python 的列表对象自带了许多强大的方法（函数）。
+列表是**可变**的（Mutable），我们可以随意修改它。
 
-### 1. append() - 追加
-在列表末尾添加一个元素。
+## 1. 增加 (Add)
+- `append(x)`: 在末尾追加一个元素。
+- `insert(index, x)`: 在指定位置插入。
+
 ```python
-cart = ["apple"]
-cart.append("banana")
-# cart 变为 ["apple", "banana"]
+lst = ["a", "b"]
+lst.append("c")      # ["a", "b", "c"]
+lst.insert(0, "start") # ["start", "a", "b", "c"]
 ```
 
-### 2. remove() - 移除
-移除列表中第一个匹配的元素。
+## 2. 删除 (Delete)
+- `pop(index)`: 弹出指定位置的元素（默认最后一个），并**返回**它。
+- `remove(x)`: 删除第一个出现的 `x`（如果不存会报错）。
+- `del lst[index]`: 关键字删除。
+
 ```python
-cart.remove("apple")
-# cart 变为 ["banana"]
+lst = ["a", "b", "c", "b"]
+lst.pop()        # 删除 "b"
+lst.remove("b")  # 删除第一个 "b"
 ```
 
-### 3. pop() - 弹出
-移除并返回指定位置的元素（默认是最后一个）。
+## 3. 修改 (Update)
+直接通过索引赋值。
 ```python
-last_item = cart.pop()
-# last_item 是 "banana", cart 变为空列表 []
+lst = [1, 2, 3]
+lst[0] = 99      # [99, 2, 3]
 ```
 
-### 4. extend() - 扩展
-将另一个列表的所有元素添加到当前列表中。
-```python
-list1 = [1, 2]
-list2 = [3, 4]
-list1.extend(list2)
-# list1 变为 [1, 2, 3, 4]
-```
+## 4. 查询与统计
+- `len(lst)`: 列表长度（元素个数）。
+- `x in lst`: 判断 x 是否在列表中（返回 True/False）。
+- `lst.count(x)`: 统计 x 出现的次数。
+- `lst.index(x)`: 查找 x 第一次出现的位置。
 
-### 5. insert() - 插入
-在指定索引位置插入一个元素。
 ```python
-nums = [1, 3]
-nums.insert(1, 2) # 在索引 1 的位置插入 2
-# nums 变为 [1, 2, 3]
+nums = [1, 2, 3, 1]
+print(len(nums))     # 4
+print(1 in nums)     # True
+print(nums.count(1)) # 2
 ```
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': """my_list = [1, 2, 3]
-# 尝试使用 append, pop, insert 等方法操作这个列表
-print(my_list)
-""",
-        'order': 2
-    }
+"""
 )
 
-# Quiz for 2.2
-Quiz.objects.update_or_create(
-    lesson=l2_2_hf,
-    question="要在列表 list = [1, 2] 的末尾添加元素 3，应该使用哪个方法？",
-    defaults={
-        'option_a': "list.add(3)",
-        'option_b': "list.insert(3)",
-        'option_c': "list.push(3)",
-        'option_d': "list.append(3)",
-        'correct_answer': 'D',
-        'explanation': "Python 列表使用 append() 方法在末尾追加元素。"
-    }
+Quiz.objects.create(
+    lesson=l2_1_2,
+    question="列表 list = [1, 2, 3]，执行 list.append(4) 后，list 是？",
+    option_a="[4, 1, 2, 3]",
+    option_b="[1, 2, 3, 4]",
+    option_c="[1, 2, 3]",
+    option_d="报错",
+    correct_answer="B",
+    explanation="append() 方法会将元素添加到列表的末尾。"
 )
 
-# Lesson 2.3: Challenge: Don't Panic
-l2_3_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch2_hf, 
-    title="实战：Don't Panic", 
-    defaults={
-        'content': """
-## 挑战任务
+ch2_2, _ = Chapter.objects.get_or_create(course=c2, title="第2章：字符串进阶", defaults={'order': 2})
 
-将字符串 "Don't panic!" 转换为 "on tap"。
-你需要使用列表切片和列表方法来完成这个变换。
+# 2.1 字符串操作
+l2_2_1 = Lesson.objects.create(
+    chapter=ch2_2, title="2.1 字符串常用方法", order=1, lesson_type='text',
+    code_challenge_prompt="# 将字符串 ' python ' 去掉首尾空格并转为大写\ns = ' python '\nprint(s.strip().upper())",
+    content="""# 2.1 字符串常用方法
 
-原始代码：
+字符串和列表很像，也有索引和切片，但字符串是**不可变**的（不能直接修改某个字符）。
+
+## 1. 大小写转换
+- `s.upper()`: 全大写
+- `s.lower()`: 全小写
+- `s.capitalize()`: 首字母大写
+
 ```python
-phrase = "Don't panic!"
-plist = list(phrase)
-print(phrase)
-print(plist)
-
-# 在这里写下你的代码，操作 plist
-# 目标：让 plist 最终包含 ['o', 'n', ' ', 't', 'a', 'p']
-
-new_phrase = ''.join(plist)
-print(plist)
-print(new_phrase)
+s = "Hello"
+print(s.upper()) # "HELLO"
 ```
 
-提示：
-1. 你可以使用 `pop()` 移除不需要的字符。
-2. 你可以使用 `remove()` 移除特定字符。
-3. 你可以使用 `extend()` 或 `insert()` 调整顺序。
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': """phrase = "Don't panic!"
-plist = list(phrase)
-print(phrase)
-print(plist)
+## 2. 查找与替换
+- `s.find(sub)`: 查找子串的位置，找不到返回 -1。
+- `s.replace(old, new)`: 替换。
 
-# TODO: 修改 plist，使其变为 ['o', 'n', ' ', 't', 'a', 'p']
-# 提示：观察 "Don't panic!" 和 "on tap" 的字符关系
+```python
+s = "I love Python"
+print(s.replace("Python", "Coding")) # "I love Coding"
+```
 
-new_phrase = ''.join(plist)
-print(plist)
-print(new_phrase)
-""",
-        'order': 3
-    }
+## 3. 分割与合并 (重点)
+- `s.split(sep)`: 把字符串切成列表。
+- `sep.join(list)`: 把列表拼成字符串。
+
+```python
+s = "apple,banana,orange"
+lst = s.split(",")   # ['apple', 'banana', 'orange']
+
+print("-".join(lst)) # "apple-banana-orange"
+```
+
+## 4. 去除空白
+- `s.strip()`: 去除首尾空格（或换行符）。
+
+```python
+s = "  hello  "
+print(s.strip()) # "hello"
+```
+"""
+)
+
+Quiz.objects.create(
+    lesson=l2_2_1,
+    question="'1,2,3'.split(',') 的结果是？",
+    option_a="[1, 2, 3]",
+    option_b="['1', '2', '3']",
+    option_c="'1 2 3'",
+    option_d="['1,2,3']",
+    correct_answer="B",
+    explanation="split 返回一个列表，且元素都是字符串类型。"
+)
+
+# 2.2 ASCII 码
+l2_2_2 = Lesson.objects.create(
+    chapter=ch2_2, title="2.2 字符与编码 (ASCII)", order=2, lesson_type='text',
+    code_challenge_prompt="# 打印字符 'A' 的 ASCII 码\nprint(ord('A'))",
+    content="""# 2.2 字符与编码 (ASCII)
+
+## 1. 计算机只认识数字
+在计算机内部，所有的字符（'a', 'A', '1', '!'）都存储为数字。这个对应的规则就是编码表，最常用的是 ASCII 码。
+
+## 2. 两个重要函数 (GESP 考点)
+- `ord(char)`: 字符 -> 数字 (Ordinal)
+- `chr(number)`: 数字 -> 字符 (Character)
+
+```python
+print(ord('A'))  # 65
+print(ord('a'))  # 97
+print(ord('0'))  # 48
+
+print(chr(66))   # 'B'
+```
+
+## 3. 常见 ASCII 码规律
+- **数字**：'0' (48) ... '9' (57)
+- **大写字母**：'A' (65) ... 'Z' (90)
+- **小写字母**：'a' (97) ... 'z' (122)
+- **大小写转换**：小写比大写大 32。
+  `'a' - 'A' = 32`
+
+## 4. 字符串比较
+字符串比较实际上是比较 ASCII 码的大小。
+```python
+print('a' > 'A') # True (97 > 65)
+print('apple' > 'banana') # False (比较第一个字母 'a' < 'b')
+```
+"""
+)
+
+Quiz.objects.create(
+    lesson=l2_2_2,
+    question="ord('A') 的值是 65，那么 ord('C') 是多少？",
+    option_a="66",
+    option_b="67",
+    option_c="68",
+    option_d="97",
+    correct_answer="B",
+    explanation="ASCII 码是连续的，A=65, B=66, C=67。"
 )
 
 # ==========================================
-# Chapter 3: Structured Data
+# Course 3: GESP 3级 - 函数与模块
 # ==========================================
-ch3_hf, _ = Chapter.objects.update_or_create(
-    course=c5, 
-    title="第三章：结构化数据 - 字典与集合", 
+print("正在创建 GESP 3级 课程...")
+c3, _ = Course.objects.get_or_create(
+    title="GESP 3级：函数与模块",
+    description="掌握结构化编程。学习函数的定义、参数传递（位置/关键字/默认参数）、作用域（局部/全局变量），以及 Python 模块的导入与使用。",
     defaults={'order': 3}
 )
 
-# Lesson 3.1: Dictionary Basics
-l3_1_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch3_hf, 
-    title="字典基础", 
-    defaults={
-        'content': """
-## 什么是字典 (Dictionary)？
+ch3_1, _ = Chapter.objects.get_or_create(course=c3, title="第1章：函数 Functions", defaults={'order': 1})
 
-如果说列表是**有序**的数组，那么字典就是**键值对** (Key-Value Pair) 的集合。它就像一本真正的字典，你通过“单词”（键）来查找“定义”（值）。
+# 1.1 函数基础
+l3_1_1 = Lesson.objects.create(
+    chapter=ch3_1, title="1.1 函数定义与返回值", order=1, lesson_type='text',
+    code_challenge_prompt="# 定义一个函数 add(a, b)，返回两个数的和\ndef add(a, b):\n    return a + b\n\nprint(add(3, 5))",
+    content="""# 1.1 函数定义与返回值
 
-### 创建字典
-使用大括号 `{}` 创建字典，键和值之间用冒号 `:` 分隔。
+## 1. 为什么需要函数？
+避免重复代码，把特定的功能封装起来。就像我们用 `print()` 一样，我们也可以造自己的工具。
 
+## 2. 定义函数
+使用 `def` 关键字。
 ```python
-person = {
-    'name': 'Ford Prefect',
-    'gender': 'Male',
-    'occupation': 'Researcher',
-    'home_planet': 'Betelgeuse Seven'
-}
+def say_hello():
+    print("Hello!")
+
+# 调用函数
+say_hello()
 ```
 
-### 访问值
-使用方括号 `[]` 和键名来访问对应的值。
-
+## 3. 参数 (Parameters)
+函数可以接收数据。
 ```python
-print(person['name']) # 输出: Ford Prefect
+def greet(name):
+    print(f"Hello, {name}")
+
+greet("Alice") # 实参
 ```
 
-### 添加/修改
+## 4. 返回值 (Return)
+函数不仅可以打印，还可以**把结果还给调用者**。这是函数最强大的地方。
 ```python
-person['age'] = 42        # 添加新键值对
-person['name'] = 'Arthur' # 修改已有键的值
+def square(x):
+    return x * x
+
+result = square(5) # result 变成了 25
+print(result + 10) # 35
 ```
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': """student = {'name': 'Alice', 'score': 90}
-# 尝试修改 score，并添加一个新的键 'grade'
-print(student)
-""",
-        'order': 1
-    }
+**注意**：函数执行到 `return` 会立刻结束。如果没写 `return`，默认返回 `None`。
+"""
 )
 
-# Quiz for 3.1
-Quiz.objects.update_or_create(
-    lesson=l3_1_hf,
-    question="创建一个空字典的正确语法是？",
-    defaults={
-        'option_a': "d = []",
-        'option_b': "d = ()",
-        'option_c': "d = {}",
-        'option_d': "d = empty()",
-        'correct_answer': 'C',
-        'explanation': "{} 创建空字典，[] 创建空列表，() 创建空元组。"
-    }
+Quiz.objects.create(
+    lesson=l3_1_1,
+    question="如果不写 return 语句，函数默认返回什么？",
+    option_a="0",
+    option_b="False",
+    option_c="None",
+    option_d="空字符串",
+    correct_answer="C",
+    explanation="Python 函数默认返回 None。"
 )
 
-# Lesson 3.2: Iterating Dictionaries
-l3_2_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch3_hf, 
-    title="迭代字典", 
-    defaults={
-        'content': """
-## 遍历字典
+# 1.2 变量作用域
+l3_1_2 = Lesson.objects.create(
+    chapter=ch3_1, title="1.2 局部变量与全局变量", order=2, lesson_type='text',
+    code_challenge_prompt="# 观察局部变量\nx = 10\ndef change():\n    x = 20\n    print(f'内部: {x}')\nchange()\nprint(f'外部: {x}')",
+    content="""# 1.2 局部变量与全局变量
 
-我们可以使用 `for` 循环来遍历字典。
+## 1. 局部变量 (Local)
+在函数**内部**定义的变量。
+- **作用范围**：只在函数内部有效。
+- 函数运行完，局部变量就会被销毁。
 
-### 1. 遍历键 (Keys)
-默认情况下，遍历字典会得到键。
 ```python
-data = {'a': 1, 'b': 2}
-for key in data:
-    print(key)
-# 输出: a, b (顺序不一定)
+def func():
+    a = 10  # 局部变量
+    print(a)
+
+func()
+# print(a)  # ❌ 报错！外面看不到 a
 ```
 
-### 2. 遍历值 (Values)
+## 2. 全局变量 (Global)
+在函数**外部**定义的变量。
+- **作用范围**：整个程序都可以读取。
+
 ```python
-for value in data.values():
-    print(value)
+x = 100 # 全局变量
+
+def func():
+    print(x) # ✅ 可以读取
+
+func()
 ```
 
-### 3. 遍历键值对 (Items)
-使用 `.items()` 方法同时获取键和值，这是最常用的方式。
+## 3. global 关键字
+如果要在函数内部**修改**全局变量，必须先声明 `global`。
 ```python
-for key, value in data.items():
-    print(f"Key: {key}, Value: {value}")
+score = 0
+
+def add_score():
+    global score  # 声明我要修改外面的 score
+    score += 10
+
+add_score()
+print(score) # 10
 ```
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': """scores = {'Math': 95, 'English': 88, 'History': 92}
-# 使用 for 循环打印每门课的成绩
-""",
-        'order': 2
-    }
+如果不加 `global`，Python 会认为你是在创建一个新的同名局部变量，不会影响外面的。
+"""
 )
 
-# Quiz for 3.2
-Quiz.objects.update_or_create(
-    lesson=l3_2_hf,
-    question="要同时遍历字典的键和值，应该使用哪个方法？",
-    defaults={
-        'option_a': "dict.keys()",
-        'option_b': "dict.values()",
-        'option_c': "dict.items()",
-        'option_d': "dict.all()",
-        'correct_answer': 'C',
-        'explanation': "items() 方法返回键值对的列表，可以在 for 循环中同时解包为 key 和 value。"
-    }
-)
-
-# Lesson 3.3: Sets and Tuples
-l3_3_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch3_hf, 
-    title="集合与元组", 
-    defaults={
-        'content': """
-## 集合 (Set)
-集合是一个**无序**且**不重复**的元素集。它非常适合用来**去重**。
-
-```python
-vowels = {'a', 'e', 'i', 'o', 'u'}
-letters = set('hello world')
-print(letters) 
-# 输出类似: {'d', 'e', 'h', 'l', 'o', 'r', 'w'} (无序，且 'l' 和 'o' 只出现一次)
-```
-
-## 元组 (Tuple)
-元组就像列表，但是它是**不可变** (Immutable) 的。一旦创建，就不能修改（不能添加、删除或更改元素）。使用小括号 `()`。
-
-```python
-coordinates = (10.0, 20.0)
-# coordinates[0] = 15.0  <-- 这会报错！
-```
-元组通常用于存储不应该被改变的数据，比如坐标、配置项等。
-    """,
-        'lesson_type': 'text',
-        'order': 3
-    }
-)
-
-# Quiz for 3.3
-Quiz.objects.update_or_create(
-    lesson=l3_3_hf,
-    question="集合 (Set) 和列表 (List) 的主要区别是什么？",
-    defaults={
-        'option_a': "集合是无序且不重复的，列表是有序且允许重复的",
-        'option_b': "集合是有序的，列表是无序的",
-        'option_c': "集合用 [] 表示，列表用 {} 表示",
-        'option_d': "没有区别",
-        'correct_answer': 'A',
-        'explanation': "集合的核心特性是无序性和唯一性（去重），而列表是有序序列。"
-    }
-)
-
-# Lesson 3.4: Challenge: Vowels Frequency
-l3_4_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch3_hf, 
-    title="实战：元音统计", 
-    defaults={
-        'content': """
-## 挑战任务
-
-编写一个程序，统计一个单词中每个元音字母 ('a', 'e', 'i', 'o', 'u') 出现的次数。
-
-示例输入："hitch-hiker"
-示例输出：
-a was found 0 time(s).
-e was found 1 time(s).
-i was found 2 time(s).
-o was found 0 time(s).
-u was found 0 time(s).
-
-提示：
-1. 创建一个字典来存储计数，初始值都为 0。
-2. 遍历单词中的每个字符。
-3. 检查字符是否是元音。
-4. 如果是，更新字典中的计数。
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': """word = "hitch-hiker"
-vowels = ['a', 'e', 'i', 'o', 'u']
-found = {}
-
-# 初始化字典
-for v in vowels:
-    found[v] = 0
-
-# TODO: 遍历 word，统计元音出现次数
-
-# 打印结果
-for k, v in sorted(found.items()):
-    print(f"{k} was found {v} time(s).")
-""",
-        'order': 4
-    }
+Quiz.objects.create(
+    lesson=l3_1_2,
+    question="如何在函数内部修改全局变量 x？",
+    option_a="直接 x = 10",
+    option_b="global x; x = 10",
+    option_c="extern x; x = 10",
+    option_d="public x; x = 10",
+    correct_answer="B",
+    explanation="使用 global 关键字声明全局变量。"
 )
 
 # ==========================================
-# Chapter 4: Functions & Modules
+# Course 4: GESP 4级 - 数据结构
 # ==========================================
-ch4_hf, _ = Chapter.objects.update_or_create(
-    course=c5, 
-    title="第四章：代码复用 - 函数与模块", 
+print("正在创建 GESP 4级 课程...")
+c4, _ = Course.objects.get_or_create(
+    title="GESP 4级：数据结构",
+    description="学习更复杂的数据结构。重点掌握字典（Dictionary）的键值对操作、集合（Set）的去重特性、元组（Tuple）的不可变性，以及面向对象（Class）的初步概念。",
     defaults={'order': 4}
 )
 
-# Lesson 4.1: Defining Functions
-l4_1_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch4_hf, 
-    title="定义函数", 
-    defaults={
-        'content': """
-## 为什么需要函数？
+ch4_1, _ = Chapter.objects.get_or_create(course=c4, title="第1章：字典与集合", defaults={'order': 1})
 
-当你的代码越来越长，你会发现自己在使用复制粘贴。这通常是一个坏信号。
-函数允许你将一段代码**封装**起来，给它起个名字，然后在需要的地方**重复调用**。
+# 1.1 字典
+l4_1_1 = Lesson.objects.create(
+    chapter=ch4_1, title="1.1 字典 Dictionary", order=1, lesson_type='text',
+    code_challenge_prompt="# 创建字典并访问\nd = {'name': 'Tom', 'age': 18}\nprint(d['name'])",
+    content="""# 1.1 字典 Dictionary
 
-### 定义函数
-使用 `def` 关键字定义函数。
+## 1. 什么是字典？
+列表用数字索引（0, 1, 2...），字典用**键 (Key)** 来索引。
+它像一本真的字典，通过“单词”（键）找到“解释”（值）。
+结构：`{key: value, key: value}`
 
 ```python
-def say_hello():
-    print("Hello, Python!")
+student = {
+    "name": "Alice",
+    "age": 12,
+    "score": 98
+}
 ```
 
-### 调用函数
+## 2. 操作字典
+- **访问**：`d[key]`
+  ```python
+  print(student["name"]) # Alice
+  ```
+- **添加/修改**：`d[key] = new_value`
+  ```python
+  student["age"] = 13    # 修改
+  student["city"] = "Beijing" # 新增
+  ```
+- **删除**：`d.pop(key)`
+  ```python
+  student.pop("score")
+  ```
+
+## 3. 遍历字典
 ```python
-say_hello()
-say_hello()
-say_hello()
-```
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': """def say_hello():
-    print("Hello, Python!")
+# 遍历键
+for k in student.keys():
+    print(k)
 
-# 调用三次这个函数
-""",
-        'order': 1
-    }
+# 遍历值
+for v in student.values():
+    print(v)
+
+# 遍历键值对
+for k, v in student.items():
+    print(k, v)
+```
+
+## 4. 特性
+- 键必须是**不可变**的（通常是字符串或数字，列表不能做键）。
+- 键是唯一的，不能重复。
+"""
 )
 
-# Quiz for 4.1
-Quiz.objects.update_or_create(
-    lesson=l4_1_hf,
-    question="在 Python 中定义函数的关键字是？",
-    defaults={
-        'option_a': "function",
-        'option_b': "func",
-        'option_c': "define",
-        'option_d': "def",
-        'correct_answer': 'D',
-        'explanation': "def 是 define 的缩写，用于定义函数。"
-    }
+Quiz.objects.create(
+    lesson=l4_1_1,
+    question="d = {'a': 1, 'b': 2}，执行 d['c'] = 3 后，d 是？",
+    option_a="{'a': 1, 'b': 2}",
+    option_b="{'a': 1, 'b': 2, 'c': 3}",
+    option_c="报错",
+    option_d="{'c': 3}",
+    correct_answer="B",
+    explanation="给不存在的键赋值会自动添加该键值对。"
 )
 
-# Lesson 4.2: Arguments & Return Values
-l4_2_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch4_hf, 
-    title="参数与返回值", 
-    defaults={
-        'content': """
-## 函数参数 (Arguments)
-函数可以接收数据作为输入，这些数据称为参数。
-
-```python
-def greet(name):
-    print(f"Hello, {name}!")
-
-greet("Alice")
-greet("Bob")
-```
-
-## 返回值 (Return Values)
-函数不仅可以打印东西，还可以**返回**数据给调用者，使用 `return` 关键字。
-
-```python
-def add(a, b):
-    return a + b
-
-result = add(3, 5)
-print(result) # 输出: 8
-```
-一旦执行到 `return`，函数就会立即结束。
-    """,
-        'lesson_type': 'code',
-        'code_challenge_prompt': """def calculate_area(width, height):
-    # TODO: 返回矩形的面积
-    pass
-
-area = calculate_area(5, 10)
-print(f"Area is: {area}")
-""",
-        'order': 2
-    }
+# ==========================================
+# Course 5: Head First Python
+# ==========================================
+print("正在创建 Head First Python 课程...")
+c5, _ = Course.objects.get_or_create(
+    title="Head First Python",
+    description="《Head First Python》经典教材改编。通过生动有趣的项目驱动学习，涵盖列表、模块、文件处理、异常处理等实用技能。",
+    defaults={'order': 5}
 )
 
-# Quiz for 4.2
-Quiz.objects.update_or_create(
-    lesson=l4_2_hf,
-    question="函数中 return 关键字的作用是？",
-    defaults={
-        'option_a': "打印结果到屏幕",
-        'option_b': "结束函数执行并将值返回给调用者",
-        'option_c': "重新开始执行函数",
-        'option_d': "定义函数的参数",
-        'correct_answer': 'B',
-        'explanation': "return 用于从函数中返回一个值，并立即终止函数的执行。"
-    }
+ch5_1, _ = Chapter.objects.get_or_create(course=c5, title="第1章：初识 Python", defaults={'order': 1})
+hf1 = Lesson.objects.create(
+    chapter=ch5_1, title="1.1 Python 的不同之处", order=1, lesson_type='text',
+    code_challenge_prompt="print('Hello Head First Python')",
+    content="""# 1.1 Python 的不同之处
+
+## 1. 为什么叫 Head First？
+Head First 系列图书主张“通过图像、故事和练习”来激活你的大脑，而不是枯燥的列出语法规则。
+
+## 2. 列表 - 你的第一个数据结构
+Python 的列表极其强大，它不只是数组。
+```python
+movies = ["The Holy Grail", "The Life of Brian", "The Meaning of Life"]
+```
+
+## 3. 嵌套列表
+列表里面还可以放列表！
+```python
+list_in_list = ["Item 1", ["Sub Item 1", "Sub Item 2"]]
+print(list_in_list[1][0]) # 输出 "Sub Item 1"
+```
+这种结构可以用来处理复杂的树形数据。
+"""
+)
+Quiz.objects.create(
+    lesson=hf1,
+    question="访问嵌套列表 nums = [1, [2, 3]] 中的 3，应该用？",
+    option_a="nums[1]",
+    option_b="nums[1][1]",
+    option_c="nums[2][2]",
+    option_d="nums[0][1]",
+    correct_answer="B",
+    explanation="先取 nums[1] 得到 [2, 3]，再取 [1] 得到 3。"
 )
 
-# Lesson 4.3: Modules & Imports
-l4_3_hf, _ = Lesson.objects.update_or_create(
-    chapter=ch4_hf, 
-    title="模块与导入", 
-    defaults={
-        'content': """
-## 什么是模块 (Module)？
+ch5_2, _ = Chapter.objects.get_or_create(course=c5, title="第2章：模块与函数", defaults={'order': 2})
+hf2 = Lesson.objects.create(
+    chapter=ch5_2, title="2.1 模块化编程", order=1, lesson_type='text',
+    code_challenge_prompt="import math\nprint(math.sqrt(16))",
+    content="""# 2.1 模块化编程
 
-一个 `.py` 文件就是一个模块。模块可以包含函数、变量和类。
-你可以将代码组织到不同的模块中，然后在其他地方**导入** (import) 使用。
+## 1. 什么是模块？
+当代码越来越多，我们需要把它拆分到不同的文件里。每个 `.py` 文件就是一个模块。
 
-### 导入模块
-假设你有一个 `vsearch.py` 文件，里面定义了 `search4vowels` 函数。
-
-```python
-import vsearch
-
-vsearch.search4vowels("hello")
-```
-
-或者你可以直接导入函数：
-
-```python
-from vsearch import search4vowels
-
-search4vowels("hello")
-```
-
-### 标准库 (Standard Library)
-Python 自带了大量的标准库模块，例如 `random` (随机数), `math` (数学), `datetime` (日期时间) 等。
-
+## 2. 导入模块
+Python 标准库提供了“电池内置”的功能。
 ```python
 import random
-print(random.randint(1, 10))
+print(random.randint(1, 10)) # 生成 1-10 随机数
 ```
-    """,
-        'lesson_type': 'text',
-        'order': 3
-    }
+
+## 3. PyPI (Python Package Index)
+Python 的强大之处在于第三方库。你可以通过 `pip install` 安装成千上万的库。
+"""
+)
+Quiz.objects.create(
+    lesson=hf2,
+    question="使用哪个关键字导入模块？",
+    option_a="include",
+    option_b="using",
+    option_c="import",
+    option_d="require",
+    correct_answer="C",
+    explanation="import 是 Python 的导入关键字。"
 )
 
-# Quiz for 4.3
-Quiz.objects.update_or_create(
-    lesson=l4_3_hf,
-    question="如果想使用 Python 的随机数功能，应该先做什么？",
-    defaults={
-        'option_a': "import math",
-        'option_b': "import random",
-        'option_c': "无需做任何事，直接使用",
-        'option_d': "定义一个 random 函数",
-        'correct_answer': 'B',
-        'explanation': "Python 的随机数功能在标准库模块 random 中，使用前需要先 import random。"
-    }
-)
-
-print("GESP 1-4 级课程 + Head First Python 课程数据全部填充/更新完成！")
+print("所有课程创建完成！")
