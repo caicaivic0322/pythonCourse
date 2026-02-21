@@ -6,30 +6,32 @@ django.setup()
 
 from courses.models import Course, Chapter, Lesson
 
-# 1. Clear existing data to avoid duplicates/conflicts during development
-print("正在清理旧数据...")
-Course.objects.all().delete()
+# 1. Update or Create Course (Chinese) - Safe operation
+print("正在更新课程数据...")
 
 # 2. Create Course (Chinese)
-course, created = Course.objects.get_or_create(
+course, created = Course.objects.update_or_create(
     title="Python 基础：发射台",
-    description="迈向 Python 编程世界的第一步。",
-    defaults={'order': 1}
+    defaults={
+        'description': "迈向 Python 编程世界的第一步。",
+        'order': 1
+    }
 )
-print(f"创建课程: {course.title}")
+print(f"更新课程: {course.title}")
 
 # 3. Chapter 1: Mission Briefing (Chinese)
-ch1, _ = Chapter.objects.get_or_create(
+ch1, _ = Chapter.objects.update_or_create(
     course=course, 
     title="任务简报：初识 Python", 
     defaults={'order': 1}
 )
 
 # Lesson 1.1: What is Python?
-Lesson.objects.create(
+Lesson.objects.update_or_create(
     chapter=ch1, 
     title="什么是 Python？", 
-    content="""
+    defaults={
+        'content': """
 ## 什么是 Python？
 
 Python 是一种**强大且易于学习**的编程语言。它就像是编程界的“瑞士军刀”，无所不能！
@@ -42,15 +44,17 @@ Python 是一种**强大且易于学习**的编程语言。它就像是编程界
 ### 我们的任务
 在本课程中，你将扮演一名“代码学员”，通过完成一个个任务，掌握 Python 的核心技能，最终获得“Python 大师”勋章！
     """,
-    lesson_type='text',
-    order=1
+        'lesson_type': 'text',
+        'order': 1
+    }
 )
 
 # Lesson 1.2: First Script
-Lesson.objects.create(
+Lesson.objects.update_or_create(
     chapter=ch1, 
     title="你的第一个脚本", 
-    content="""
+    defaults={
+        'content': """
 ## Hello, World!
 
 在编程界，有一个悠久的传统：学习任何新语言的第一步，都是让电脑说出 "Hello, World!"。
@@ -71,22 +75,24 @@ print("你要显示的内容")
 ### 试一试
 在下方的代码编辑器中，输入 `print('Hello, Python!')` 并点击运行。
     """,
-    lesson_type='code',
-    order=2
+        'lesson_type': 'code',
+        'order': 2
+    }
 )
 
 # 4. Chapter 2: Variables (Chinese)
-ch2, _ = Chapter.objects.get_or_create(
+ch2, _ = Chapter.objects.update_or_create(
     course=course, 
     title="数据仓库：变量与数据类型", 
     defaults={'order': 2}
 )
 
 # Lesson 2.1: Variables Concept
-Lesson.objects.create(
+Lesson.objects.update_or_create(
     chapter=ch2, 
     title="变量：数据的盒子", 
-    content="""
+    defaults={
+        'content': """
 ## 什么是变量？
 
 想象你在搬家，你会把东西放进**盒子**里，并在盒子上写上标签（比如“书”、“衣服”）。
@@ -111,15 +117,17 @@ player_name = "CodeMaster"
 3. 区分大小写（`Score` 和 `score` 是两个不同的变量）。
 4. 建议使用**下划线命名法**（例如 `my_score`），让名字更易读。
     """,
-    lesson_type='text',
-    order=1
+        'lesson_type': 'text',
+        'order': 1
+    }
 )
 
 # Lesson 2.2: Data Types
-Lesson.objects.create(
+Lesson.objects.update_or_create(
     chapter=ch2, 
     title="数据类型：盒子里装什么？", 
-    content="""
+    defaults={
+        'content': """
 ## 常见的数据类型
 
 Python 中的“盒子”（变量）可以装各种不同类型的东西。每种类型都有它的用途和特性。
@@ -193,15 +201,17 @@ print(type(x))
 ### 动手时刻
 在下一节课中，我们将通过代码来亲自操作这些数据类型！
     """,
-    lesson_type='text',
-    order=2
+        'lesson_type': 'text',
+        'order': 2
+    }
 )
 
 # Lesson 2.3: Variables Practice
-Lesson.objects.create(
+Lesson.objects.update_or_create(
     chapter=ch2, 
     title="实战：定义你的角色", 
-    content="""
+    defaults={
+        'content': """
 ## 任务目标
 
 定义几个变量来描述你的游戏角色。
@@ -212,8 +222,9 @@ Lesson.objects.create(
 3. 创建一个变量 `is_active`，赋值为 `True`（布尔值）。
 4. 最后，使用 `print()` 打印出 `hero_name`。
     """,
-    lesson_type='code',
-    order=3
+        'lesson_type': 'code',
+        'order': 3
+    }
 )
 
 print("中文课程数据填充完成！")
