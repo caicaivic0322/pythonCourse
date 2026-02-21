@@ -40,6 +40,11 @@ class CourseListView(generics.ListAPIView):
                 course_data['is_locked'] = False
                 continue
 
+            # Check if user is approved
+            if not request.user.is_approved:
+                course_data['is_locked'] = True
+                continue
+
             # 1. 第一个课程永远解锁
             if first_course and course_id == first_course.id:
                 course_data['is_locked'] = False
@@ -49,11 +54,6 @@ class CourseListView(generics.ListAPIView):
             # 找到前一个课程对象
             current_course_order = course_data['order']
             
-            # 临时解锁 "Python 实战" 模块 (order=5)
-            if current_course_order == 5:
-                course_data['is_locked'] = False
-                continue
-
             prev_course = Course.objects.filter(order__lt=current_course_order).order_by('-order').first()
             
             if prev_course:
@@ -94,7 +94,12 @@ class CourseDetailView(generics.RetrieveAPIView):
         # Superuser always unlocked
         if request.user.is_superuser:
             previous_completed = True
-
+        
+        # Check if user is approved
+        elif not request.user.is_approved:
+            previous_completed = False
+            is_first_lesson = False # Force lock everything
+        
         for chapter in data['chapters']:
             for lesson in chapter['lessons']:
                 lesson_id = lesson['id']
@@ -103,6 +108,8 @@ class CourseDetailView(generics.RetrieveAPIView):
                 
                 if request.user.is_superuser:
                     lesson['is_locked'] = False
+                elif not request.user.is_approved:
+                    lesson['is_locked'] = True
                 elif is_first_lesson:
                     lesson['is_locked'] = False
                     is_first_lesson = False
@@ -120,6 +127,13 @@ class LessonDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
+        # 1. Check if user is approved
+        if not request.user.is_superuser and not request.user.is_approved:
+            return Response(
+                {"detail": "You must be approved by an administrator to view lesson content."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         data = serializer.data

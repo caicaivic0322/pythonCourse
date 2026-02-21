@@ -1269,11 +1269,11 @@ Quiz.objects.create(
 print("正在创建 GESP 3级 课程...")
 c3, _ = Course.objects.get_or_create(
     title="GESP 3级：函数与模块",
-    description="掌握结构化编程。学习函数的定义、参数传递（位置/关键字/默认参数）、作用域（局部/全局变量），以及 Python 模块的导入与使用。",
+    description="掌握结构化编程。涵盖函数进阶、元组（Tuple）、异常处理（Try-Except）以及模块化编程。",
     defaults={'order': 3}
 )
 
-ch3_1, _ = Chapter.objects.get_or_create(course=c3, title="第1章：函数 Functions", defaults={'order': 1})
+ch3_1, _ = Chapter.objects.get_or_create(course=c3, title="第1章：函数与作用域", defaults={'order': 1})
 
 # 1.1 函数基础
 l3_1_1 = Lesson.objects.create(
@@ -1282,119 +1282,34 @@ l3_1_1 = Lesson.objects.create(
     content="""# 1.1 函数定义与返回值
 
 ## 1. 为什么需要函数？
-避免重复代码，把特定的功能封装起来。就像我们用 `print()` 一样，我们也可以造自己的工具。
+避免重复代码，把特定的功能封装起来。
 
 ## 2. 定义函数
 使用 `def` 关键字。
 ```python
 def say_hello():
     print("Hello!")
-
-# 调用函数
-say_hello()
 ```
 
-## 3. 参数 (Parameters)
-函数可以接收数据。
-```python
-def greet(name):
-    print(f"Hello, {name}")
+## 3. 参数与返回值
+- **参数**：函数接收的输入。
+- **返回值**：函数处理后的输出，使用 `return`。
 
-greet("Alice") # 实参
-```
-
-## 4. 返回值 (Return)
-函数不仅可以打印，还可以**把结果还给调用者**。这是函数最强大的地方。
 ```python
 def square(x):
     return x * x
 
-result = square(5) # result 变成了 25
-print(result + 10) # 35
+result = square(5) # 25
 ```
-**注意**：函数执行到 `return` 会立刻结束。如果没写 `return`，默认返回 `None`。
 """
 )
-
-# 5 MCQs + 2 T/F
-# MCQ 1
-Quiz.objects.create(
-    lesson=l3_1_1,
-    question="如果不写 return 语句，函数默认返回什么？",
-    option_a="0",
-    option_b="False",
-    option_c="None",
-    option_d="空字符串",
-    correct_answer="C",
-    explanation="Python 函数默认返回 None。"
-)
-# MCQ 2
-Quiz.objects.create(
-    lesson=l3_1_1,
-    question="定义函数使用哪个关键字？",
-    option_a="function",
-    option_b="def",
-    option_c="func",
-    option_d="define",
-    correct_answer="B",
-    explanation="Python 使用 def 关键字定义函数。"
-)
-# MCQ 3
-Quiz.objects.create(
-    lesson=l3_1_1,
-    question="def foo(): return 1\nprint(foo()) 输出什么？",
-    option_a="foo",
-    option_b="1",
-    option_c="None",
-    option_d="报错",
-    correct_answer="B",
-    explanation="函数返回 1，print 打印返回值。"
-)
-# MCQ 4
-Quiz.objects.create(
-    lesson=l3_1_1,
-    question="下列关于函数参数说法正确的是？",
-    option_a="函数必须有参数",
-    option_b="函数可以没有参数",
-    option_c="参数必须是整数",
-    option_d="参数数量有限制",
-    correct_answer="B",
-    explanation="函数可以定义为不需要任何参数。"
-)
-# MCQ 5
-Quiz.objects.create(
-    lesson=l3_1_1,
-    question="return 语句的作用是？",
-    option_a="打印结果",
-    option_b="结束函数并返回值",
-    option_c="暂停函数",
-    option_d="定义变量",
-    correct_answer="B",
-    explanation="return 用于结束函数执行并将结果返回给调用者。"
-)
-# T/F 1
-Quiz.objects.create(
-    lesson=l3_1_1,
-    question="判断题：一个函数可以写多个 return 语句。",
-    option_a="正确",
-    option_b="错误",
-    option_c="",
-    option_d="",
-    correct_answer="A",
-    explanation="正确，函数可以有多个 return，但只会执行其中一个。"
-)
-# T/F 2
-Quiz.objects.create(
-    lesson=l3_1_1,
-    question="判断题：函数必须有返回值，否则会报错。",
-    option_a="正确",
-    option_b="错误",
-    option_c="",
-    option_d="",
-    correct_answer="B",
-    explanation="错误，没有 return 的函数也是合法的，默认返回 None。"
-)
-
+Quiz.objects.create(lesson=l3_1_1, question="如果不写 return 语句，函数默认返回什么？", option_a="0", option_b="False", option_c="None", option_d="Error", correct_answer="C", explanation="默认返回 None。")
+Quiz.objects.create(lesson=l3_1_1, question="定义函数使用哪个关键字？", option_a="function", option_b="def", option_c="func", option_d="define", correct_answer="B", explanation="使用 def。")
+Quiz.objects.create(lesson=l3_1_1, question="def foo(): return 1\nprint(foo()) 输出？", option_a="foo", option_b="1", option_c="None", option_d="Error", correct_answer="B", explanation="输出 1。")
+Quiz.objects.create(lesson=l3_1_1, question="函数可以没有参数吗？", option_a="可以", option_b="不可以", option_c="必须有", option_d="看情况", correct_answer="A", explanation="函数参数是可选的。")
+Quiz.objects.create(lesson=l3_1_1, question="return 语句的作用？", option_a="打印", option_b="返回结果并结束函数", option_c="暂停", option_d="无作用", correct_answer="B", explanation="返回结果并结束。")
+Quiz.objects.create(lesson=l3_1_1, question="判断题：一个函数可以有多个 return。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l3_1_1, question="判断题：函数必须有返回值。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，可以是 void 函数。")
 
 # 1.2 变量作用域
 l3_1_2 = Lesson.objects.create(
@@ -1402,136 +1317,113 @@ l3_1_2 = Lesson.objects.create(
     code_challenge_prompt="# 观察局部变量\nx = 10\ndef change():\n    x = 20\n    print(f'内部: {x}')\nchange()\nprint(f'外部: {x}')",
     content="""# 1.2 局部变量与全局变量
 
-## 1. 局部变量 (Local)
-在函数**内部**定义的变量。
-- **作用范围**：只在函数内部有效。
-- 函数运行完，局部变量就会被销毁。
+## 1. 局部变量
+在函数内部定义，只在函数内有效。
 
-```python
-def func():
-    a = 10  # 局部变量
-    print(a)
-
-func()
-# print(a)  # ❌ 报错！外面看不到 a
-```
-
-## 2. 全局变量 (Global)
-在函数**外部**定义的变量。
-- **作用范围**：整个程序都可以读取。
-
-```python
-x = 100 # 全局变量
-
-def func():
-    print(x) # ✅ 可以读取
-
-func()
-```
+## 2. 全局变量
+在函数外部定义，全程序有效。
 
 ## 3. global 关键字
-如果要在函数内部**修改**全局变量，必须先声明 `global`。
+在函数内修改全局变量需要声明。
 ```python
 score = 0
-
-def add_score():
-    global score  # 声明我要修改外面的 score
-    score += 10
-
-add_score()
-print(score) # 10
+def add():
+    global score
+    score += 1
 ```
-如果不加 `global`，Python 会认为你是在创建一个新的同名局部变量，不会影响外面的。
 """
 )
+Quiz.objects.create(lesson=l3_1_2, question="如何修改全局变量？", option_a="直接赋值", option_b="global 声明", option_c="extern", option_d="public", correct_answer="B", explanation="使用 global。")
+Quiz.objects.create(lesson=l3_1_2, question="x=1; def f(): x=2; print(x); f(); print(x)", option_a="2 2", option_b="2 1", option_c="1 1", option_d="1 2", correct_answer="B", explanation="局部变量不影响全局。")
+Quiz.objects.create(lesson=l3_1_2, question="局部变量作用域？", option_a="函数内", option_b="全局", option_c="类内", option_d="文件内", correct_answer="A", explanation="函数内部。")
+Quiz.objects.create(lesson=l3_1_2, question="def f(): y=5; print(y) 外部访问 y？", option_a="5", option_b="None", option_c="报错", option_d="0", correct_answer="C", explanation="报错，NameError。")
+Quiz.objects.create(lesson=l3_1_2, question="global 作用？", option_a="定义局部", option_b="声明全局", option_c="导入", option_d="类", correct_answer="B", explanation="声明全局变量。")
+Quiz.objects.create(lesson=l3_1_2, question="判断题：函数内可直接读取全局变量。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l3_1_2, question="判断题：局部变量可与全局变量同名。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，会发生遮蔽。")
 
-# 5 MCQs + 2 T/F
-# MCQ 1
-Quiz.objects.create(
-    lesson=l3_1_2,
-    question="如何在函数内部修改全局变量 x？",
-    option_a="直接 x = 10",
-    option_b="global x; x = 10",
-    option_c="extern x; x = 10",
-    option_d="public x; x = 10",
-    correct_answer="B",
-    explanation="使用 global 关键字声明全局变量。"
+ch3_2, _ = Chapter.objects.get_or_create(course=c3, title="第2章：元组与异常处理", defaults={'order': 2})
+
+# 2.1 元组 Tuple
+l3_2_1 = Lesson.objects.create(
+    chapter=ch3_2, title="2.1 元组 Tuple", order=1, lesson_type='text',
+    code_challenge_prompt="# 创建一个元组并尝试修改（会报错，请观察）\nt = (1, 2, 3)\nprint(t[0])\n# t[0] = 10",
+    content="""# 2.1 元组 Tuple
+
+## 1. 什么是元组？
+元组就像是**不可变的列表**。一旦创建，就不能修改（不能增加、删除、修改元素）。
+使用小括号 `()` 定义。
+
+```python
+t = (1, 2, 3)
+print(t[0]) # 1
+```
+
+## 2. 为什么用元组？
+- **安全**：数据不会被意外修改。
+- **速度**：比列表稍微快一点。
+- **作为键**：元组可以作为字典的键，列表不行。
+
+## 3. 元组操作
+- 支持索引和切片 `t[1:3]`。
+- 支持 `len()`, `count()`, `index()`。
+- **不支持** `append()`, `remove()`, `t[0]=x`。
+
+## 4. 单元素元组
+注意：`(1)` 是数字 1，`(1,)` 才是元组！
+"""
 )
-# MCQ 2
-Quiz.objects.create(
-    lesson=l3_1_2,
-    question="x = 1\ndef func():\n    x = 2\n    print(x)\nfunc()\nprint(x)\n输出什么？",
-    option_a="2 2",
-    option_b="2 1",
-    option_c="1 1",
-    option_d="1 2",
-    correct_answer="B",
-    explanation="函数内部的 x 是局部变量，不会影响全局 x。函数内打印 2，函数外打印 1。"
+Quiz.objects.create(lesson=l3_2_1, question="t = (1, 2, 3)，t[0] = 10 会发生什么？", option_a="t变成(10,2,3)", option_b="报错", option_c="t不变", option_d="t变成[10,2,3]", correct_answer="B", explanation="元组是不可变的，不能修改。")
+Quiz.objects.create(lesson=l3_2_1, question="如何定义包含一个元素 5 的元组？", option_a="(5)", option_b="(5,)", option_c="[5]", option_d="{5}", correct_answer="B", explanation="必须加逗号，否则被视为数学括号。")
+Quiz.objects.create(lesson=l3_2_1, question="元组支持哪种操作？", option_a="append", option_b="remove", option_c="count", option_d="sort", correct_answer="C", explanation="支持查询类操作如 count。")
+Quiz.objects.create(lesson=l3_2_1, question="t = (1, 2) + (3, 4) 的结果？", option_a="(1, 2, 3, 4)", option_b="(4, 6)", option_c="报错", option_d="((1,2),(3,4))", correct_answer="A", explanation="元组拼接。")
+Quiz.objects.create(lesson=l3_2_1, question="列表和元组的主要区别？", option_a="列表用()", option_b="元组可变", option_c="元组不可变", option_d="列表不能存字符串", correct_answer="C", explanation="元组不可变。")
+Quiz.objects.create(lesson=l3_2_1, question="判断题：元组可以包含列表作为元素。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，如 (1, [2, 3])。")
+Quiz.objects.create(lesson=l3_2_1, question="判断题：空元组是 ()。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+
+# 2.2 异常处理
+l3_2_2 = Lesson.objects.create(
+    chapter=ch3_2, title="2.2 异常处理 try-except", order=2, lesson_type='code',
+    code_challenge_prompt="# 捕获除以零的错误\ntry:\n    print(10 / 0)\nexcept ZeroDivisionError:\n    print('不能除以零')",
+    content="""# 2.2 异常处理 try-except
+
+## 1. 什么是异常？
+程序运行过程中出现的错误，比如除以零、索引越界、文件找不到。如果不处理，程序会崩溃。
+
+## 2. 基本结构
+```python
+try:
+    # 可能出错的代码
+    num = int(input("请输入数字: "))
+    print(10 / num)
+except ValueError:
+    print("输入的不是数字！")
+except ZeroDivisionError:
+    print("不能除以零！")
+except Exception as e:
+    print(f"发生了其他错误: {e}")
+```
+
+## 3. else 和 finally
+- `else`: 没有发生异常时执行。
+- `finally`: 无论是否发生异常，**都会执行**（常用于关闭文件）。
+"""
 )
-# MCQ 3
-Quiz.objects.create(
-    lesson=l3_1_2,
-    question="局部变量的作用域是？",
-    option_a="整个程序",
-    option_b="函数内部",
-    option_c="类内部",
-    option_d="文件内部",
-    correct_answer="B",
-    explanation="局部变量只在定义它的函数内部有效。"
-)
-# MCQ 4
-Quiz.objects.create(
-    lesson=l3_1_2,
-    question="def func():\n    y = 5\nprint(y) 会发生什么？",
-    option_a="输出 5",
-    option_b="输出 None",
-    option_c="报错",
-    option_d="输出 0",
-    correct_answer="C",
-    explanation="y 是局部变量，在函数外部无法访问，会报 NameError。"
-)
-# MCQ 5
-Quiz.objects.create(
-    lesson=l3_1_2,
-    question="关于 global 关键字，说法正确的是？",
-    option_a="用于定义局部变量",
-    option_b="用于在函数内部声明全局变量",
-    option_c="用于导入模块",
-    option_d="用于定义类",
-    correct_answer="B",
-    explanation="global 用于在函数内部指示变量引用的是全局变量。"
-)
-# T/F 1
-Quiz.objects.create(
-    lesson=l3_1_2,
-    question="判断题：在函数内部可以直接读取全局变量的值。",
-    option_a="正确",
-    option_b="错误",
-    option_c="",
-    option_d="",
-    correct_answer="A",
-    explanation="正确，读取全局变量不需要 global 关键字。"
-)
-# T/F 2
-Quiz.objects.create(
-    lesson=l3_1_2,
-    question="判断题：局部变量和全局变量不能重名。",
-    option_a="正确",
-    option_b="错误",
-    option_c="",
-    option_d="",
-    correct_answer="B",
-    explanation="错误，可以重名，此时函数内部会优先使用局部变量（遮蔽）。"
-)
+Quiz.objects.create(lesson=l3_2_2, question="处理异常使用哪个关键字？", option_a="catch", option_b="except", option_c="error", option_d="handle", correct_answer="B", explanation="try-except 结构。")
+Quiz.objects.create(lesson=l3_2_2, question="finally 代码块什么时候执行？", option_a="出错时", option_b="不出错时", option_c="总是执行", option_d="不一定", correct_answer="C", explanation="总是执行。")
+Quiz.objects.create(lesson=l3_2_2, question="捕获所有错误的基类是？", option_a="Error", option_b="Exception", option_c="Base", option_d="Object", correct_answer="B", explanation="Exception。")
+Quiz.objects.create(lesson=l3_2_2, question="int('abc') 会抛出什么异常？", option_a="ValueError", option_b="TypeError", option_c="NameError", option_d="IndexError", correct_answer="A", explanation="值错误。")
+Quiz.objects.create(lesson=l3_2_2, question="try 块中没有错误，会执行哪个块？", option_a="except", option_b="else", option_c="catch", option_d="error", correct_answer="B", explanation="else 块。")
+Quiz.objects.create(lesson=l3_2_2, question="判断题：一个 try 可以对应多个 except。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l3_2_2, question="判断题：except 必须配合 try 使用。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
 
 
 # ==========================================
-# Course 4: GESP 4级 - 数据结构
+# Course 4: GESP 4级 - 数据结构进阶
 # ==========================================
 print("正在创建 GESP 4级 课程...")
 c4, _ = Course.objects.get_or_create(
-    title="GESP 4级：数据结构",
-    description="学习更复杂的数据结构。重点掌握字典（Dictionary）的键值对操作、集合（Set）的去重特性、元组（Tuple）的不可变性，以及面向对象（Class）的初步概念。",
+    title="GESP 4级：数据结构进阶",
+    description="深入学习字典、集合以及面向对象编程（OOP）基础。掌握更复杂的数据组织方式，为算法学习打下基础。",
     defaults={'order': 4}
 )
 
@@ -1544,208 +1436,637 @@ l4_1_1 = Lesson.objects.create(
     content="""# 1.1 字典 Dictionary
 
 ## 1. 什么是字典？
-列表用数字索引（0, 1, 2...），字典用**键 (Key)** 来索引。
-它像一本真的字典，通过“单词”（键）找到“解释”（值）。
-结构：`{key: value, key: value}`
+键值对（Key-Value）的集合。键必须唯一且不可变。
 
 ```python
-student = {
-    "name": "Alice",
-    "age": 12,
-    "score": 98
-}
+d = {"name": "Alice", "age": 12}
 ```
 
-## 2. 操作字典
-- **访问**：`d[key]`
-  ```python
-  print(student["name"]) # Alice
-  ```
-- **添加/修改**：`d[key] = new_value`
-  ```python
-  student["age"] = 13    # 修改
-  student["city"] = "Beijing" # 新增
-  ```
-- **删除**：`d.pop(key)`
-  ```python
-  student.pop("score")
-  ```
+## 2. 常用操作
+- `d[key]`: 获取值。
+- `d[key] = value`: 修改或新增。
+- `del d[key]`: 删除。
+- `d.get(key, default)`: 安全获取。
 
-## 3. 遍历字典
-```python
-# 遍历键
-for k in student.keys():
-    print(k)
-
-# 遍历值
-for v in student.values():
-    print(v)
-
-# 遍历键值对
-for k, v in student.items():
-    print(k, v)
-```
-
-## 4. 特性
-- 键必须是**不可变**的（通常是字符串或数字，列表不能做键）。
-- 键是唯一的，不能重复。
+## 3. 遍历
+- `d.keys()`, `d.values()`, `d.items()`
 """
 )
+Quiz.objects.create(lesson=l4_1_1, question="d = {'a': 1}，d['b'] = 2 后 d 是？", option_a="{'a':1}", option_b="{'a':1, 'b':2}", option_c="报错", option_d="{'b':2}", correct_answer="B", explanation="新增键值对。")
+Quiz.objects.create(lesson=l4_1_1, question="字典的键必须是？", option_a="可变的", option_b="不可变的", option_c="字符串", option_d="整数", correct_answer="B", explanation="不可变类型（Hashable）。")
+Quiz.objects.create(lesson=l4_1_1, question="d.get('x', 0) 如果 x 不存在返回？", option_a="None", option_b="0", option_c="报错", option_d="False", correct_answer="B", explanation="返回默认值 0。")
+Quiz.objects.create(lesson=l4_1_1, question="d.items() 返回什么？", option_a="键列表", option_b="值列表", option_c="键值对元组列表", option_d="字符串", correct_answer="C", explanation="键值对。")
+Quiz.objects.create(lesson=l4_1_1, question="清空字典用什么方法？", option_a="delete()", option_b="clean()", option_c="clear()", option_d="empty()", correct_answer="C", explanation="clear()。")
+Quiz.objects.create(lesson=l4_1_1, question="判断题：字典是有序的（Python 3.7+）。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4_1_1, question="判断题：字典可以有重复的键。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，键唯一。")
 
-# 5 MCQs + 2 T/F
-# MCQ 1
-Quiz.objects.create(
-    lesson=l4_1_1,
-    question="d = {'a': 1, 'b': 2}，执行 d['c'] = 3 后，d 是？",
-    option_a="{'a': 1, 'b': 2}",
-    option_b="{'a': 1, 'b': 2, 'c': 3}",
-    option_c="报错",
-    option_d="{'c': 3}",
-    correct_answer="B",
-    explanation="给不存在的键赋值会自动添加该键值对。"
+# 1.2 集合 Set
+l4_1_2 = Lesson.objects.create(
+    chapter=ch4_1, title="1.2 集合 Set", order=2, lesson_type='code',
+    code_challenge_prompt="# 集合去重\nlst = [1, 2, 2, 3, 3, 3]\ns = set(lst)\nprint(s)",
+    content="""# 1.2 集合 Set
+
+## 1. 什么是集合？
+无序、不重复的元素集合。就像没有值的字典。
+用 `{}` 定义，但空集合必须用 `set()`。
+
+```python
+s = {1, 2, 3}
+```
+
+## 2. 核心特性：去重
+```python
+lst = [1, 2, 2, 3]
+print(list(set(lst))) # [1, 2, 3]
+```
+
+## 3. 集合运算
+- `&` 交集
+- `|` 并集
+- `-` 差集
+"""
 )
-# MCQ 2
-Quiz.objects.create(
-    lesson=l4_1_1,
-    question="d = {'a': 1, 'b': 2}，执行 d['a'] = 10 后，d 是？",
-    option_a="{'a': 1, 'b': 2, 'a': 10}",
-    option_b="{'a': 10, 'b': 2}",
-    option_c="报错",
-    option_d="{'b': 2}",
-    correct_answer="B",
-    explanation="键是唯一的，赋值给已存在的键会更新对应的值。"
+Quiz.objects.create(lesson=l4_1_2, question="创建空集合使用？", option_a="{}", option_b="[]", option_c="set()", option_d="()", correct_answer="C", explanation="{} 是空字典。")
+Quiz.objects.create(lesson=l4_1_2, question="set([1, 2, 2]) 的结果？", option_a="{1, 2, 2}", option_b="{1, 2}", option_c="[1, 2]", option_d="报错", correct_answer="B", explanation="自动去重。")
+Quiz.objects.create(lesson=l4_1_2, question="{1, 2} & {2, 3} 的结果？", option_a="{1, 2, 3}", option_b="{2}", option_c="{1, 3}", option_d="{}", correct_answer="B", explanation="交集。")
+Quiz.objects.create(lesson=l4_1_2, question="集合中的元素必须是？", option_a="可变的", option_b="不可变的", option_c="有序的", option_d="无限制", correct_answer="B", explanation="不可变（Hashable）。")
+Quiz.objects.create(lesson=l4_1_2, question="s.add(1) 的作用？", option_a="添加元素", option_b="删除元素", option_c="排序", option_d="求和", correct_answer="A", explanation="添加。")
+Quiz.objects.create(lesson=l4_1_2, question="判断题：集合是有序的，可以通过索引访问。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，无序。")
+Quiz.objects.create(lesson=l4_1_2, question="判断题：集合不能包含重复元素。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+
+ch4_2, _ = Chapter.objects.get_or_create(course=c4, title="第2章：面向对象编程 OOP", defaults={'order': 2})
+
+# 2.1 类与对象
+l4_2_1 = Lesson.objects.create(
+    chapter=ch4_2, title="2.1 类与对象基础", order=1, lesson_type='text',
+    code_challenge_prompt="# 定义一个 Dog 类，有一个 bark 方法\nclass Dog:\n    def bark(self):\n        print('Wang!')\n\nd = Dog()\nd.bark()",
+    content="""# 2.1 类与对象基础
+
+## 1. 什么是类 (Class)？
+类是创建对象的**蓝图**或**模板**。对象是类的**实例**。
+比如：“狗”是一个类，“你家那只叫旺财的狗”是一个对象。
+
+## 2. 定义类
+```python
+class Dog:
+    def bark(self):
+        print("Wang!")
+```
+
+## 3. 创建对象
+```python
+my_dog = Dog()
+my_dog.bark() # 调用方法
+```
+
+## 4. self 是什么？
+`self` 代表对象自己。在类的方法中，第一个参数必须是 `self`。
+"""
 )
-# MCQ 3
-Quiz.objects.create(
-    lesson=l4_1_1,
-    question="如何安全地获取字典的值，如果键不存在不报错？",
-    option_a="d[key]",
-    option_b="d.get(key)",
-    option_c="d.value(key)",
-    option_d="d.find(key)",
-    correct_answer="B",
-    explanation="get() 方法在键不存在时返回 None，而不会报错。"
+Quiz.objects.create(lesson=l4_2_1, question="定义类使用哪个关键字？", option_a="def", option_b="class", option_c="object", option_d="struct", correct_answer="B", explanation="class。")
+Quiz.objects.create(lesson=l4_2_1, question="类方法中第一个参数通常命名为？", option_a="this", option_b="me", option_c="self", option_d="obj", correct_answer="C", explanation="self。")
+Quiz.objects.create(lesson=l4_2_1, question="根据类创建对象的过程叫？", option_a="初始化", option_b="实例化", option_c="抽象", option_d="继承", correct_answer="B", explanation="实例化。")
+Quiz.objects.create(lesson=l4_2_1, question="Dog() 返回的是？", option_a="一个类", option_b="一个函数", option_c="一个对象", option_d="None", correct_answer="C", explanation="对象（实例）。")
+Quiz.objects.create(lesson=l4_2_1, question="对象调用方法 d.bark() 等价于？", option_a="Dog.bark(d)", option_b="bark(d)", option_c="d.bark", option_d="Dog.bark()", correct_answer="A", explanation="类名.方法名(实例)。")
+Quiz.objects.create(lesson=l4_2_1, question="判断题：一个类可以创建多个不同的对象。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4_2_1, question="判断题：self 关键字是 Python 强制要求的语法，不能改名。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，约定俗成叫 self，改名也可以但强烈不推荐。")
+
+# 2.2 构造函数
+l4_2_2 = Lesson.objects.create(
+    chapter=ch4_2, title="2.2 构造函数 __init__", order=2, lesson_type='code',
+    code_challenge_prompt="# 定义 Student 类，初始化 name 和 age\nclass Student:\n    def __init__(self, name, age):\n        self.name = name\n        self.age = age\n\ns = Student('Tom', 12)\nprint(s.name)",
+    content="""# 2.2 构造函数 __init__
+
+## 1. 初始化对象
+`__init__` 是一个特殊方法，在创建对象时**自动调用**。通常用来初始化属性。
+
+```python
+class Student:
+    def __init__(self, name, age):
+        self.name = name  # 属性
+        self.age = age
+
+s1 = Student("Alice", 12)
+print(s1.name)
+```
+
+## 2. 属性
+`self.name` 是对象的属性，每个对象都有自己独立的一份。
+"""
 )
-# MCQ 4
-Quiz.objects.create(
-    lesson=l4_1_1,
-    question="下列哪个可以作为字典的键？",
-    option_a="[1, 2]",
-    option_b="{'a': 1}",
-    option_c="'name'",
-    option_d="[1]",
-    correct_answer="C",
-    explanation="字典的键必须是不可变类型，字符串是不可变的，列表是可变的。"
-)
-# MCQ 5
-Quiz.objects.create(
-    lesson=l4_1_1,
-    question="d.keys() 返回的是什么？",
-    option_a="所有值",
-    option_b="所有键",
-    option_c="键值对",
-    option_d="字典长度",
-    correct_answer="B",
-    explanation="keys() 返回字典中所有的键。"
-)
-# T/F 1
-Quiz.objects.create(
-    lesson=l4_1_1,
-    question="判断题：字典中的键值对是有序的（Python 3.7+）。",
-    option_a="正确",
-    option_b="错误",
-    option_c="",
-    option_d="",
-    correct_answer="A",
-    explanation="正确，Python 3.7+ 字典保持插入顺序。"
-)
-# T/F 2
-Quiz.objects.create(
-    lesson=l4_1_1,
-    question="判断题：同一个字典中可以有两个相同的键。",
-    option_a="正确",
-    option_b="错误",
-    option_c="",
-    option_d="",
-    correct_answer="B",
-    explanation="错误，字典的键必须唯一。"
-)
+Quiz.objects.create(lesson=l4_2_2, question="构造函数的名字是？", option_a="init", option_b="__init__", option_c="start", option_d="create", correct_answer="B", explanation="__init__。")
+Quiz.objects.create(lesson=l4_2_2, question="__init__ 什么时候被调用？", option_a="类定义时", option_b="创建对象时", option_c="手动调用时", option_d="程序结束时", correct_answer="B", explanation="创建对象时自动调用。")
+Quiz.objects.create(lesson=l4_2_2, question="self.age = age 的作用是？", option_a="定义局部变量", option_b="定义全局变量", option_c="定义对象属性", option_d="无作用", correct_answer="C", explanation="给对象绑定属性。")
+Quiz.objects.create(lesson=l4_2_2, question="s = Student('Tom') 会调用？", option_a="Student.Tom()", option_b="__init__('Tom')", option_c="__init__(s, 'Tom')", option_d="start()", correct_answer="C", explanation="自动传入 self。")
+Quiz.objects.create(lesson=l4_2_2, question="在类外部访问属性使用？", option_a=".", option_b="->", option_c="::", option_d="[]", correct_answer="A", explanation="点号。")
+Quiz.objects.create(lesson=l4_2_2, question="判断题：__init__ 方法必须有返回值。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，不能有返回值（只能返回 None）。")
+Quiz.objects.create(lesson=l4_2_2, question="判断题：不同对象的同名属性互不干扰。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
 
 
 # ==========================================
-# Course 5: Head First Python
+# Course 5: GESP 5级 - 算法基础
 # ==========================================
-print("正在创建 Head First Python 课程...")
+print("正在创建 GESP 5级 课程...")
 c5, _ = Course.objects.get_or_create(
-    title="Head First Python",
-    description="《Head First Python》经典教材改编。通过生动有趣的项目驱动学习，涵盖列表、模块、文件处理、异常处理等实用技能。",
+    title="GESP 5级：算法基础",
+    description="进入算法的世界。学习算法复杂度分析、基础排序算法（冒泡、选择、插入）和查找算法（二分查找），培养计算思维。",
     defaults={'order': 5}
 )
 
-ch5_1, _ = Chapter.objects.get_or_create(course=c5, title="第1章：初识 Python", defaults={'order': 1})
-hf1 = Lesson.objects.create(
-    chapter=ch5_1, title="1.1 Python 的不同之处", order=1, lesson_type='text',
+ch5_1, _ = Chapter.objects.get_or_create(course=c5, title="第1章：算法复杂度", defaults={'order': 1})
+l5_1_1 = Lesson.objects.create(
+    chapter=ch5_1, title="1.1 时间复杂度 Big O", order=1, lesson_type='text',
+    code_challenge_prompt="# 写一个 O(n) 的循环\nn = 10\nfor i in range(n):\n    print(i)",
+    content="""# 1.1 时间复杂度 Big O
+
+## 1. 怎么衡量算法快慢？
+不是看运行了多少秒，而是看**操作次数随数据量 n 的增长趋势**。
+
+## 2. 常见复杂度
+- **O(1)**: 常数级。一次搞定。 `a = lst[0]`
+- **O(n)**: 线性级。循环一遍。 `for i in range(n)`
+- **O(n^2)**: 平方级。双重循环。 `for i... for j...`
+- **O(log n)**: 对数级。二分查找。
+
+## 3. 空间复杂度
+算法运行需要占用的额外内存空间。
+"""
+)
+Quiz.objects.create(lesson=l5_1_1, question="访问列表索引 a[i] 的时间复杂度？", option_a="O(1)", option_b="O(n)", option_c="O(log n)", option_d="O(n^2)", correct_answer="A", explanation="数组索引访问是常数时间。")
+Quiz.objects.create(lesson=l5_1_1, question="单层 for 循环遍历 n 个元素的时间复杂度？", option_a="O(1)", option_b="O(n)", option_c="O(n^2)", option_d="O(log n)", correct_answer="B", explanation="线性时间。")
+Quiz.objects.create(lesson=l5_1_1, question="双层嵌套循环通常是？", option_a="O(n)", option_b="O(n^2)", option_c="O(log n)", option_d="O(1)", correct_answer="B", explanation="平方级。")
+Quiz.objects.create(lesson=l5_1_1, question="二分查找的复杂度？", option_a="O(n)", option_b="O(log n)", option_c="O(1)", option_d="O(n^2)", correct_answer="B", explanation="对数级。")
+Quiz.objects.create(lesson=l5_1_1, question="Big O 表示的是算法的？", option_a="最好情况", option_b="最坏情况", option_c="平均情况", option_d="具体秒数", correct_answer="B", explanation="通常指最坏情况的上界。")
+Quiz.objects.create(lesson=l5_1_1, question="判断题：O(1) 的算法一定比 O(n) 快。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，n 很小时不一定，但在 n 很大时 O(1) 更优。")
+Quiz.objects.create(lesson=l5_1_1, question="判断题：空间复杂度是指代码文件的字节大小。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，是指运行时占用的内存。")
+
+ch5_2, _ = Chapter.objects.get_or_create(course=c5, title="第2章：排序与查找", defaults={'order': 2})
+l5_2_1 = Lesson.objects.create(
+    chapter=ch5_2, title="2.1 冒泡排序 Bubble Sort", order=1, lesson_type='code',
+    code_challenge_prompt="# 实现冒泡排序\narr = [3, 1, 4, 2]\n# 请补全代码",
+    content="""# 2.1 冒泡排序 Bubble Sort
+
+## 1. 原理
+两两比较相邻元素，如果反序就交换。一轮下来，最大的元素会“冒泡”到最后。
+
+## 2. 代码实现
+```python
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+```
+
+## 3. 复杂度
+- 时间：O(n^2)
+- 空间：O(1)
+"""
+)
+Quiz.objects.create(lesson=l5_2_1, question="冒泡排序的时间复杂度？", option_a="O(n)", option_b="O(n^2)", option_c="O(n log n)", option_d="O(1)", correct_answer="B", explanation="双重循环。")
+Quiz.objects.create(lesson=l5_2_1, question="冒泡排序是稳定的吗？", option_a="是", option_b="否", option_c="不确定", option_d="看情况", correct_answer="A", explanation="相等元素不交换，相对位置不变，所以稳定。")
+Quiz.objects.create(lesson=l5_2_1, question="第一轮冒泡后，哪个位置的元素确定了？", option_a="第一个", option_b="最后一个", option_c="中间", option_d="无", correct_answer="B", explanation="最大的元素冒泡到最后。")
+Quiz.objects.create(lesson=l5_2_1, question="最好情况（已经有序）的复杂度？", option_a="O(n)", option_b="O(n^2)", option_c="O(1)", option_d="O(log n)", correct_answer="A", explanation="如果加了优化标志位，可以是 O(n)。")
+Quiz.objects.create(lesson=l5_2_1, question="交换两个变量 a, b 的 Python 写法？", option_a="a, b = b, a", option_b="swap(a, b)", option_c="a = b", option_d="b = a", correct_answer="A", explanation="元组解包。")
+Quiz.objects.create(lesson=l5_2_1, question="判断题：冒泡排序是效率最高的排序算法。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，通常较慢。")
+Quiz.objects.create(lesson=l5_2_1, question="判断题：冒泡排序需要额外的 O(n) 空间。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，原地排序 O(1)。")
+
+l5_2_2 = Lesson.objects.create(
+    chapter=ch5_2, title="2.2 二分查找 Binary Search", order=2, lesson_type='code',
+    code_challenge_prompt="# 在有序数组中查找 5\narr = [1, 3, 5, 7, 9]\n# 请实现二分查找",
+    content="""# 2.2 二分查找 Binary Search
+
+## 1. 原理
+在**有序数组**中，每次取中间元素比较。如果中间值比目标大，则找左半边；否则找右半边。
+
+## 2. 条件
+必须是**有序**的！
+
+## 3. 代码
+```python
+def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
+```
+"""
+)
+Quiz.objects.create(lesson=l5_2_2, question="二分查找的前提条件？", option_a="数组无序", option_b="数组有序", option_c="数组必须全正数", option_d="数组长度为偶数", correct_answer="B", explanation="必须有序。")
+Quiz.objects.create(lesson=l5_2_2, question="二分查找的时间复杂度？", option_a="O(n)", option_b="O(n^2)", option_c="O(log n)", option_d="O(1)", correct_answer="C", explanation="每次减半，对数级。")
+Quiz.objects.create(lesson=l5_2_2, question="在 100 个有序数字中找，最多找几次？", option_a="100", option_b="50", option_c="7", option_d="10", correct_answer="C", explanation="log2(100) 约等于 6.6，向上取整 7。")
+Quiz.objects.create(lesson=l5_2_2, question="mid 的计算公式？", option_a="(left+right)/2", option_b="(left+right)//2", option_c="left+right", option_d="right-left", correct_answer="B", explanation="整除。")
+Quiz.objects.create(lesson=l5_2_2, question="如果 arr[mid] < target，说明？", option_a="在左边", option_b="在右边", option_c="找到了", option_d="不存在", correct_answer="B", explanation="目标比中间大，在右边。")
+Quiz.objects.create(lesson=l5_2_2, question="判断题：二分查找可以用于链表。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，链表不支持随机访问，效率低。")
+Quiz.objects.create(lesson=l5_2_2, question="判断题：线性查找比二分查找慢。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确（在数据量大时）。")
+
+
+# ==========================================
+# Course 6: GESP 6级 - 进阶数据结构与递归
+# ==========================================
+print("正在创建 GESP 6级 课程...")
+c6, _ = Course.objects.get_or_create(
+    title="GESP 6级：进阶数据结构与递归",
+    description="挑战高阶编程概念。深入理解递归思想，掌握栈（Stack）和队列（Queue）的原理与实现，解决复杂逻辑问题。",
+    defaults={'order': 6}
+)
+
+ch6_1, _ = Chapter.objects.get_or_create(course=c6, title="第1章：递归", defaults={'order': 1})
+l6_1_1 = Lesson.objects.create(
+    chapter=ch6_1, title="1.1 递归基础 Recursion", order=1, lesson_type='code',
+    code_challenge_prompt="# 递归计算阶乘 5!\ndef factorial(n):\n    if n == 1: return 1\n    return n * factorial(n-1)\nprint(factorial(5))",
+    content="""# 1.1 递归基础
+
+## 1. 什么是递归？
+函数**自己调用自己**。
+必须有两个部分：
+1.  **基准情况 (Base Case)**：停止递归的条件。
+2.  **递归步骤 (Recursive Step)**：调用自身，向基准靠近。
+
+## 2. 经典案例：阶乘
+n! = n * (n-1)!
+```python
+def fact(n):
+    if n == 1: return 1  # 基准
+    return n * fact(n-1) # 递归
+```
+"""
+)
+Quiz.objects.create(lesson=l6_1_1, question="递归函数必须包含？", option_a="循环", option_b="基准情况", option_c="全局变量", option_d="数组", correct_answer="B", explanation="否则会死循环（栈溢出）。")
+Quiz.objects.create(lesson=l6_1_1, question="如果没有基准情况会怎样？", option_a="正常运行", option_b="返回 0", option_c="栈溢出 (RecursionError)", option_d="死机", correct_answer="C", explanation="无限递归导致栈溢出。")
+Quiz.objects.create(lesson=l6_1_1, question="递归计算 3! 的调用顺序？", option_a="f(3)->f(2)->f(1)", option_b="f(1)->f(2)->f(3)", option_c="f(3)->f(3)", option_d="f(3)->f(1)", correct_answer="A", explanation="层层向下调用。")
+Quiz.objects.create(lesson=l6_1_1, question="斐波那契数列适合用递归吗？", option_a="适合且高效", option_b="适合但低效", option_c="完全不适合", option_d="不能用", correct_answer="B", explanation="简单递归会有大量重复计算。")
+Quiz.objects.create(lesson=l6_1_1, question="Python 默认递归深度限制？", option_a="100", option_b="1000", option_c="无限", option_d="10", correct_answer="B", explanation="通常是 1000。")
+Quiz.objects.create(lesson=l6_1_1, question="判断题：所有递归都可以转化为循环。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确（理论上）。")
+Quiz.objects.create(lesson=l6_1_1, question="判断题：递归通常比循环更节省内存。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，递归需要栈空间。")
+
+ch6_2, _ = Chapter.objects.get_or_create(course=c6, title="第2章：栈与队列", defaults={'order': 2})
+l6_2_1 = Lesson.objects.create(
+    chapter=ch6_2, title="2.1 栈 Stack", order=1, lesson_type='code',
+    code_challenge_prompt="# 用列表模拟栈\nstack = []\nstack.append(1)\nstack.append(2)\nprint(stack.pop())",
+    content="""# 2.1 栈 Stack
+
+## 1. 概念
+**后进先出 (LIFO - Last In First Out)**。
+就像洗盘子，最后放上去的盘子最先被拿走。
+
+## 2. Python 实现
+使用 `list` 即可。
+- 进栈 (Push): `append()`
+- 出栈 (Pop): `pop()`
+
+```python
+stack = []
+stack.append("A")
+stack.append("B")
+print(stack.pop()) # "B"
+```
+"""
+)
+Quiz.objects.create(lesson=l6_2_1, question="栈的特点是？", option_a="先进先出", option_b="后进先出", option_c="随机进出", option_d="先进后出", correct_answer="B", explanation="LIFO。")
+Quiz.objects.create(lesson=l6_2_1, question="进栈操作对应 Python 列表的？", option_a="insert", option_b="push", option_c="append", option_d="add", correct_answer="C", explanation="append。")
+Quiz.objects.create(lesson=l6_2_1, question="出栈操作对应 Python 列表的？", option_a="delete", option_b="remove", option_c="pop", option_d="get", correct_answer="C", explanation="pop。")
+Quiz.objects.create(lesson=l6_2_1, question="Stack: 进 1, 进 2, 出, 进 3, 出。剩下？", option_a="[1]", option_b="[2]", option_c="[3]", option_d="[]", correct_answer="A", explanation="进1,2->[1,2]; 出2->[1]; 进3->[1,3]; 出3->[1]。")
+Quiz.objects.create(lesson=l6_2_1, question="函数调用栈使用的是哪种数据结构？", option_a="队列", option_b="栈", option_c="树", option_d="图", correct_answer="B", explanation="栈。")
+Quiz.objects.create(lesson=l6_2_1, question="判断题：栈可以访问中间的元素。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，只能访问栈顶。")
+Quiz.objects.create(lesson=l6_2_1, question="判断题：栈是线性结构。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+
+l6_2_2 = Lesson.objects.create(
+    chapter=ch6_2, title="2.2 队列 Queue", order=2, lesson_type='code',
+    code_challenge_prompt="# 用 deque 模拟队列\nfrom collections import deque\nq = deque()\nq.append(1)\nq.append(2)\nprint(q.popleft())",
+    content="""# 2.2 队列 Queue
+
+## 1. 概念
+**先进先出 (FIFO - First In First Out)**。
+就像排队买票，先来的先服务。
+
+## 2. Python 实现
+列表的 `pop(0)` 很慢（O(n)），建议用 `collections.deque`。
+
+```python
+from collections import deque
+q = deque()
+q.append("A") # 入队
+q.append("B")
+print(q.popleft()) # "A" - 出队
+```
+"""
+)
+Quiz.objects.create(lesson=l6_2_2, question="队列的特点是？", option_a="先进先出", option_b="后进先出", option_c="随机访问", option_d="无序", correct_answer="A", explanation="FIFO。")
+Quiz.objects.create(lesson=l6_2_2, question="Python 中推荐用什么实现队列？", option_a="list", option_b="dict", option_c="deque", option_d="set", correct_answer="C", explanation="collections.deque。")
+Quiz.objects.create(lesson=l6_2_2, question="deque 出队的方法是？", option_a="pop()", option_b="popleft()", option_c="remove()", option_d="delete()", correct_answer="B", explanation="popleft()。")
+Quiz.objects.create(lesson=l6_2_2, question="Queue: 进 1, 进 2, 出, 进 3, 出。剩下？", option_a="[3]", option_b="[1]", option_c="[2]", option_d="[]", correct_answer="A", explanation="进1,2->[1,2]; 出1->[2]; 进3->[2,3]; 出2->[3]。")
+Quiz.objects.create(lesson=l6_2_2, question="BFS（广度优先搜索）使用什么数据结构？", option_a="栈", option_b="队列", option_c="堆", option_d="树", correct_answer="B", explanation="队列。")
+Quiz.objects.create(lesson=l6_2_2, question="判断题：列表的 pop(0) 操作是 O(1) 的。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，是 O(n)，因为要移动后续元素。")
+Quiz.objects.create(lesson=l6_2_2, question="判断题：队列允许在两端插入和删除。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，那是双端队列（Deque），普通队列只能一端进一端出。")
+
+
+# ==========================================
+# Course 7: Head First Python (Structured)
+# ==========================================
+print("正在创建 Head First Python 课程 (Structured)...")
+c7, _ = Course.objects.get_or_create(
+    title="Head First Python",
+    description="《Head First Python》经典教材改编。通过生动有趣的项目驱动学习，涵盖列表、模块、文件处理、异常处理等实用技能。",
+    defaults={'order': 7}
+)
+
+# Chapter 1: The Basics
+ch7_1, _ = Chapter.objects.get_or_create(course=c7, title="第1章：基础知识 (The Basics)", defaults={'order': 1})
+
+# 1.1 Getting Started
+l7_1_1 = Lesson.objects.create(
+    chapter=ch7_1, title="1.1 快速入门与 IDLE", order=1, lesson_type='text',
     code_challenge_prompt="print('Hello Head First Python')",
-    content="""# 1.1 Python 的不同之处
+    content="""# 1.1 快速入门与 IDLE
 
-## 1. 为什么叫 Head First？
-Head First 系列图书主张“通过图像、故事和练习”来激活你的大脑，而不是枯燥的列出语法规则。
+## 1. 打破传统
+大多数书籍从 "Hello World" 开始，但 Head First 系列不同。我们直接从一个更有趣的例子开始。
 
-## 2. 列表 - 你的第一个数据结构
-Python 的列表极其强大，它不只是数组。
+## 2. IDLE 开发环境
+Python 自带了一个轻量级的 IDE 叫 IDLE。它有两个窗口：
+- **Python Shell**: 用于运行单行代码片段 (REPL)。
+- **Edit Window**: 用于编写完整的程序文件。
+
+## 3. 你的第一个挑战
+在 IDLE 中输入代码并运行。确保你安装了 Python 3。
+"""
+)
+Quiz.objects.create(lesson=l7_1_1, question="IDLE 的 Python Shell 主要用于？", option_a="编写大型项目", option_b="测试代码片段 (REPL)", option_c="浏览网页", option_d="画图", correct_answer="B", explanation="Shell 是 Read-Eval-Print-Loop 环境。")
+Quiz.objects.create(lesson=l7_1_1, question="在 IDLE 中，>>> 提示符表示什么？", option_a="等待输入命令", option_b="程序正在运行", option_c="出现错误", option_d="注释", correct_answer="A", explanation="这是 Shell 等待用户输入的标志。")
+Quiz.objects.create(lesson=l7_1_1, question="Head First 系列提倡的学习方式是？", option_a="死记硬背", option_b="大量阅读文字", option_c="图像化与实践驱动", option_d="只看视频", correct_answer="C", explanation="强调大脑友好的学习方式。")
+Quiz.objects.create(lesson=l7_1_1, question="Python 源代码文件的扩展名通常是？", option_a=".python", option_b=".exe", option_c=".py", option_d=".txt", correct_answer="C", explanation="标准后缀是 .py。")
+Quiz.objects.create(lesson=l7_1_1, question="如果 print('Hello') 漏掉了右括号，Python 会？", option_a="自动补全", option_b="报错 SyntaxError", option_c="忽略错误", option_d="打印 Hello", correct_answer="B", explanation="语法错误会导致程序无法运行。")
+Quiz.objects.create(lesson=l7_1_1, question="判断题：IDLE 是 Python 官方自带的编辑器。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，随 Python 安装包一起提供。")
+Quiz.objects.create(lesson=l7_1_1, question="判断题：print 是 Python 2 和 Python 3 中的关键字，用法完全一样。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，Python 3 中 print 是函数，必须加括号。")
+
+# 1.2 A Meatier Example (odd.py)
+l7_1_2 = Lesson.objects.create(
+    chapter=ch7_1, title="1.2 实战：奇数分钟检测 (odd.py)", order=2, lesson_type='code',
+    code_challenge_prompt="""# 编写一个程序，检测当前分钟数。
+# 如果是奇数，打印 "This minute is a little odd"
+# 如果是偶数，打印 "Not an odd minute"
+from datetime import datetime
+import time
+import random
+
+odds = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 59]
+right_this_minute = datetime.today().minute
+
+if right_this_minute in odds:
+    print("This minute is a little odd")
+else:
+    print("Not an odd minute")
+""",
+    content="""# 1.2 实战：奇数分钟检测
+
+## 1. 任务描述
+我们需要编写一个程序 `odd.py`，它能根据当前时间的分钟数，打印不同的消息。
+
+## 2. 关键模块
+- `datetime`: 获取系统时间。
+- `time`: 控制程序暂停 (`sleep`)。
+- `random`: 生成随机数。
+
+## 3. 代码解析
+```python
+from datetime import datetime
+right_this_minute = datetime.today().minute
+
+if right_this_minute % 2 != 0:
+    print("This minute is a little odd")
+```
+"""
+)
+Quiz.objects.create(lesson=l7_1_2, question="如何获取当前时间的分钟数？", option_a="datetime.minute()", option_b="datetime.today().minute", option_c="time.minute", option_d="clock.minute", correct_answer="B", explanation="使用 datetime.today() 获取当前时间对象。")
+Quiz.objects.create(lesson=l7_1_2, question="time.sleep(5) 的作用是？", option_a="让程序加速运行", option_b="让程序暂停 5 秒", option_c="让程序暂停 5 分钟", option_d="关闭程序", correct_answer="B", explanation="暂停执行指定的秒数。")
+Quiz.objects.create(lesson=l7_1_2, question="random.randint(1, 60) 可能生成的数包括？", option_a="1", option_b="60", option_c="1 和 60 都包括", option_d="都不包括", correct_answer="C", explanation="randint 是闭区间，包含两端的值。")
+Quiz.objects.create(lesson=l7_1_2, question="range(5) 生成的序列是？", option_a="1, 2, 3, 4, 5", option_b="0, 1, 2, 3, 4", option_c="0, 1, 2, 3, 4, 5", option_d="1, 2, 3, 4", correct_answer="B", explanation="从 0 开始，包头不包尾。")
+Quiz.objects.create(lesson=l7_1_2, question="在 if 语句中，判断相等应该使用？", option_a="=", option_b="==", option_c="is", option_d="equals", correct_answer="B", explanation="== 是比较运算符，= 是赋值。")
+Quiz.objects.create(lesson=l7_1_2, question="判断题：datetime 模块需要 pip install 才能使用。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，它是 Python 标准库的一部分。")
+Quiz.objects.create(lesson=l7_1_2, question="判断题：if 语句后面的代码块必须缩进。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，Python 依靠缩进来组织代码块。")
+
+# Chapter 2: List Data
+ch7_2, _ = Chapter.objects.get_or_create(course=c7, title="第2章：列表数据 (List Data)", defaults={'order': 2})
+
+# 2.1 Creating Lists
+l7_2_1 = Lesson.objects.create(
+    chapter=ch7_2, title="2.1 列表初探：电影列表", order=1, lesson_type='code',
+    code_challenge_prompt="""# 创建一个列表 movies，包含以下电影：
+# "The Holy Grail", "The Life of Brian", "The Meaning of Life"
+movies = ["The Holy Grail", "The Life of Brian", "The Meaning of Life"]
+print(movies[1])
+""",
+    content="""# 2.1 列表初探
+
+## 1. 一切皆对象
+在 Python 中，变量不需要声明类型。你可以把任何东西赋值给变量。
+
+## 2. 列表 (List)
+列表是一个有序的、可变的集合。就像一个数组，但更灵活。
+
 ```python
 movies = ["The Holy Grail", "The Life of Brian", "The Meaning of Life"]
 ```
 
-## 3. 嵌套列表
-列表里面还可以放列表！
-```python
-list_in_list = ["Item 1", ["Sub Item 1", "Sub Item 2"]]
-print(list_in_list[1][0]) # 输出 "Sub Item 1"
-```
-这种结构可以用来处理复杂的树形数据。
+## 3. 访问列表
+使用索引（从 0 开始）来访问列表中的元素。
+`movies[1]` 会返回 "The Life of Brian"。
 """
 )
-Quiz.objects.create(
-    lesson=hf1,
-    question="访问嵌套列表 nums = [1, [2, 3]] 中的 3，应该用？",
-    option_a="nums[1]",
-    option_b="nums[1][1]",
-    option_c="nums[2][2]",
-    option_d="nums[0][1]",
-    correct_answer="B",
-    explanation="先取 nums[1] 得到 [2, 3]，再取 [1] 得到 3。"
-)
+Quiz.objects.create(lesson=l7_2_1, question="列表的索引是从几开始的？", option_a="1", option_b="0", option_c="-1", option_d="任意", correct_answer="B", explanation="Python 索引从 0 开始。")
+Quiz.objects.create(lesson=l7_2_1, question="定义一个列表使用什么符号？", option_a="()", option_b="[]", option_c="{}", option_d="<>", correct_answer="B", explanation="方括号 []。")
+Quiz.objects.create(lesson=l7_2_1, question="Python 变量在使用前需要声明类型吗？", option_a="需要", option_b="不需要", option_c="看情况", option_d="只能声明整数", correct_answer="B", explanation="Python 是动态类型语言，不需要声明类型。")
+Quiz.objects.create(lesson=l7_2_1, question="movies = ['A', 'B', 'C']，movies[2] 是？", option_a="A", option_b="B", option_c="C", option_d="报错", correct_answer="C", explanation="索引 2 是第三个元素。")
+Quiz.objects.create(lesson=l7_2_1, question="len(movies) 返回的是？", option_a="列表占用的内存", option_b="列表的元素个数", option_c="列表的最大索引", option_d="列表的名称", correct_answer="B", explanation="len() 返回长度。")
+Quiz.objects.create(lesson=l7_2_1, question="判断题：列表中的元素必须是相同类型的。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，Python 列表可以包含混合类型的数据。")
+Quiz.objects.create(lesson=l7_2_1, question="判断题：列表创建后，其大小不能改变。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，列表是动态的，可以随时增加或删除元素。")
 
-ch5_2, _ = Chapter.objects.get_or_create(course=c5, title="第2章：模块与函数", defaults={'order': 2})
-hf2 = Lesson.objects.create(
-    chapter=ch5_2, title="2.1 模块化编程", order=1, lesson_type='text',
-    code_challenge_prompt="import math\nprint(math.sqrt(16))",
-    content="""# 2.1 模块化编程
+# 2.2 List Methods
+l7_2_2 = Lesson.objects.create(
+    chapter=ch7_2, title="2.2 列表操作：增删改", order=2, lesson_type='code',
+    code_challenge_prompt="""# 1. 创建 movies 列表
+# 2. 使用 append 添加 "Terry Jones"
+# 3. 使用 pop 删除最后一个元素
+movies = ["The Holy Grail", "The Life of Brian"]
+movies.append("Terry Jones")
+print(movies)
+movies.pop()
+print(movies)
+""",
+    content="""# 2.2 列表操作
+
+## 1. 常用方法
+列表自带了很多好用的方法（Method）：
+- `append(x)`: 在末尾添加 x。
+- `pop()`: 删除并返回末尾的元素。
+- `extend(list)`: 将另一个列表拼接到末尾。
+- `remove(x)`: 删除第一个出现的 x。
+- `insert(i, x)`: 在索引 i 处插入 x。
+
+## 2. 混合类型
+Python 的列表可以装任何东西！数字、字符串，甚至是另一个列表。
+"""
+)
+Quiz.objects.create(lesson=l7_2_2, question="pop() 方法默认删除哪个元素？", option_a="第一个", option_b="最后一个", option_c="随机一个", option_d="指定的一个", correct_answer="B", explanation="默认删除末尾元素。")
+Quiz.objects.create(lesson=l7_2_2, question="在列表末尾添加一个元素，使用？", option_a="add", option_b="push", option_c="append", option_d="insert", correct_answer="C", explanation="append 方法。")
+Quiz.objects.create(lesson=l7_2_2, question="remove('A') 的作用是？", option_a="删除索引为 A 的元素", option_b="删除所有值为 A 的元素", option_c="删除第一个值为 A 的元素", option_d="报错", correct_answer="C", explanation="只删除第一个匹配项。")
+Quiz.objects.create(lesson=l7_2_2, question="extend 方法接收的参数通常是？", option_a="一个数字", option_b="一个字符串", option_c="另一个列表", option_d="无参数", correct_answer="C", explanation="用于合并两个列表。")
+Quiz.objects.create(lesson=l7_2_2, question="insert(0, 'Start') 会将元素插入到？", option_a="列表末尾", option_b="列表开头", option_c="列表中间", option_d="替换第一个元素", correct_answer="B", explanation="索引 0 是开头。")
+Quiz.objects.create(lesson=l7_2_2, question="判断题：pop() 方法不仅删除元素，还会返回被删除的元素。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，可以用来获取被弹出的值。")
+Quiz.objects.create(lesson=l7_2_2, question="判断题：remove() 如果找不到元素会静默失败（什么都不做）。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，会抛出 ValueError。")
+
+# 2.3 Nested Lists
+l7_2_3 = Lesson.objects.create(
+    chapter=ch7_2, title="2.3 嵌套列表与循环", order=3, lesson_type='code',
+    code_challenge_prompt="""# 遍历嵌套列表
+movies = ["The Holy Grail", 1975, ["Terry Jones", 91]]
+for item in movies:
+    if isinstance(item, list):
+        for nested_item in item:
+            print(nested_item)
+    else:
+        print(item)
+""",
+    content="""# 2.3 嵌套列表与循环
+
+## 1. 列表里的列表
+列表可以包含其他列表。
+```python
+movies = ["The Holy Grail", 1975, ["Terry Jones", 91]]
+```
+
+## 2. 处理嵌套数据
+当我们遍历列表时，如果遇到子列表，直接 `print` 会打印出整个方括号。
+我们需要判断：**如果**它是一个列表，**那么**深入一层继续处理。
+
+## 3. isinstance()
+`isinstance(item, list)` 用来检查一个变量是否是列表类型。
+"""
+)
+Quiz.objects.create(lesson=l7_2_3, question="isinstance(x, list) 的作用是？", option_a="将 x 转为列表", option_b="判断 x 是否为列表", option_c="创建新列表", option_d="删除列表", correct_answer="B", explanation="类型检查。")
+Quiz.objects.create(lesson=l7_2_3, question="对于嵌套列表 lst = [1, [2, 3]]，lst[1][0] 是？", option_a="1", option_b="2", option_c="3", option_d="[2, 3]", correct_answer="B", explanation="先取第二个元素 [2,3]，再取其第一个元素 2。")
+Quiz.objects.create(lesson=l7_2_3, question="遍历列表通常使用哪种循环？", option_a="for", option_b="while", option_c="do-while", option_d="until", correct_answer="A", explanation="for loop 是遍历集合的首选。")
+Quiz.objects.create(lesson=l7_2_3, question="如果列表层级很深（比如 10 层），手动写 for 循环嵌套会？", option_a="非常高效", option_b="非常痛苦且代码难看", option_c="自动优化", option_d="报错", correct_answer="B", explanation="深层嵌套难以维护，需要递归。")
+Quiz.objects.create(lesson=l7_2_3, question="movies = ['A', ['B', 'C']]，len(movies) 是？", option_a="2", option_b="3", option_c="4", option_d="1", correct_answer="A", explanation="只有两个元素：字符串 'A' 和内部列表 ['B', 'C']。")
+Quiz.objects.create(lesson=l7_2_3, question="判断题：Python 的列表可以嵌套任意层级。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，受限于内存，但逻辑上无限。")
+Quiz.objects.create(lesson=l7_2_3, question="判断题：isinstance(3, list) 返回 True。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，3 是 int，不是 list。")
+
+
+# Chapter 3: Structured Data
+ch7_3, _ = Chapter.objects.get_or_create(course=c7, title="第3章：结构化数据 (Structured Data)", defaults={'order': 3})
+
+# 3.1 Dictionaries
+l7_3_1 = Lesson.objects.create(
+    chapter=ch7_3, title="3.1 字典：更好的数据结构", order=1, lesson_type='code',
+    code_challenge_prompt="""# 创建一个字典表示电影信息
+movie = {
+    "title": "The Holy Grail",
+    "year": 1975,
+    "director": "Terry Jones"
+}
+print(movie["year"])
+""",
+    content="""# 3.1 字典：更好的数据结构
+
+## 1. 列表的问题
+用列表存储数据时，我们必须记住索引的含义（索引 0 是标题？索引 1 是年份？）。这很麻烦。
+
+## 2. 字典 (Dictionary)
+字典允许我们要**名字**（Key）来访问数据，而不是索引。
+```python
+movie = {
+    "title": "The Holy Grail",
+    "year": 1975
+}
+```
+
+## 3. 键值对
+字典由 Key: Value 对组成。Key 必须是唯一的。
+"""
+)
+Quiz.objects.create(lesson=l7_3_1, question="字典使用什么符号定义？", option_a="[]", option_b="()", option_c="{}", option_d="<>", correct_answer="C", explanation="大括号 {}。")
+Quiz.objects.create(lesson=l7_3_1, question="字典中访问数据使用的是？", option_a="索引 (0, 1...)", option_b="键 (Key)", option_c="值 (Value)", option_d="随机访问", correct_answer="B", explanation="通过 Key 查找 Value。")
+Quiz.objects.create(lesson=l7_3_1, question="d = {'name': 'Tom'}，如何获取 'Tom'？", option_a="d[0]", option_b="d.Tom", option_c="d['name']", option_d="d('name')", correct_answer="C", explanation="使用方括号加键名。")
+Quiz.objects.create(lesson=l7_3_1, question="字典的 Key 必须是？", option_a="唯一的", option_b="整数", option_c="字符串", option_d="可变的", correct_answer="A", explanation="键必须唯一且不可变（Hashable）。")
+Quiz.objects.create(lesson=l7_3_1, question="列表和字典的主要区别是？", option_a="列表有序，字典无序（逻辑上）", option_b="列表用 {}，字典用 []", option_c="字典不能存数字", option_d="列表比字典慢", correct_answer="A", explanation="列表是序列，字典是映射。")
+Quiz.objects.create(lesson=l7_3_1, question="判断题：字典中的 Value 可以是列表。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，Value 可以是任何对象。")
+Quiz.objects.create(lesson=l7_3_1, question="判断题：两个不同的 Key 可以对应同一个 Value。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，如 {'a': 1, 'b': 1}。")
+
+# Chapter 4: Code Reuse
+ch7_4, _ = Chapter.objects.get_or_create(course=c7, title="第4章：代码复用 (Code Reuse)", defaults={'order': 4})
+
+# 4.1 Functions
+l7_4_1 = Lesson.objects.create(
+    chapter=ch7_4, title="4.1 函数：print_lol", order=1, lesson_type='code',
+    code_challenge_prompt="""# 定义一个递归函数 print_lol 打印嵌套列表
+def print_lol(the_list):
+    for item in the_list:
+        if isinstance(item, list):
+            print_lol(item)
+        else:
+            print(item)
+
+movies = ["The Holy Grail", 1975, ["Terry Jones", 91]]
+print_lol(movies)
+""",
+    content="""# 4.1 函数：print_lol
+
+## 1. 不要重复代码 (DRY)
+如果你发现自己在复制粘贴代码，你就应该写一个函数。
+
+## 2. 定义函数
+使用 `def` 关键字。
+```python
+def print_lol(the_list):
+    # 代码逻辑
+```
+
+## 3. 递归 (Recursion)
+函数调用自身。这对于处理**任意深度**的嵌套列表非常有用。
+我们在 `print_lol` 中调用 `print_lol` 来处理子列表。
+"""
+)
+Quiz.objects.create(lesson=l7_4_1, question="DRY 原则的意思是？", option_a="Do Repeat Yourself", option_b="Don't Repeat Yourself", option_c="Do Right Yesterday", option_d="Data Ready Yet", correct_answer="B", explanation="不要重复造轮子。")
+Quiz.objects.create(lesson=l7_4_1, question="Python 中定义函数使用哪个关键字？", option_a="function", option_b="def", option_c="func", option_d="define", correct_answer="B", explanation="def 是 define 的缩写。")
+Quiz.objects.create(lesson=l7_4_1, question="递归函数是指？", option_a="调用其他函数的函数", option_b="调用自己的函数", option_c="没有返回值的函数", option_d="无限循环的函数", correct_answer="B", explanation="Self-calling function。")
+Quiz.objects.create(lesson=l7_4_1, question="处理任意层级的嵌套列表，最适合的算法是？", option_a="多层 for 循环", option_b="递归", option_c="随机抽样", option_d="二分查找", correct_answer="B", explanation="递归可以自然适应任意深度。")
+Quiz.objects.create(lesson=l7_4_1, question="函数参数 (Argument) 的作用是？", option_a="定义返回值", option_b="向函数传递数据", option_c="停止函数", option_d="定义函数名", correct_answer="B", explanation="传递输入数据。")
+Quiz.objects.create(lesson=l7_4_1, question="判断题：Python 函数必须有 return 语句。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，没有 return 默认返回 None。")
+Quiz.objects.create(lesson=l7_4_1, question="判断题：缩进在 Python 函数定义中非常重要。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，决定了函数体的范围。")
+
+# 4.2 Modules
+l7_4_2 = Lesson.objects.create(
+    chapter=ch7_4, title="4.2 模块：nester.py", order=2, lesson_type='text',
+    code_challenge_prompt="# 假设我们将 print_lol 保存到了 nester.py\n# import nester\n# nester.print_lol(movies)",
+    content="""# 4.2 模块：nester.py
 
 ## 1. 什么是模块？
-当代码越来越多，我们需要把它拆分到不同的文件里。每个 `.py` 文件就是一个模块。
+模块就是一个包含 Python 代码的文件（.py）。
+通过模块，我们可以在不同的程序之间共享代码。
 
-## 2. 导入模块
-Python 标准库提供了“电池内置”的功能。
-```python
-import random
-print(random.randint(1, 10)) # 生成 1-10 随机数
-```
+## 2. 创建模块
+只需将 `print_lol` 函数保存到一个名为 `nester.py` 的文件中。
 
-## 3. PyPI (Python Package Index)
-Python 的强大之处在于第三方库。你可以通过 `pip install` 安装成千上万的库。
+## 3. 导入模块
+使用 `import nester`。
+调用函数时需要加上命名空间：`nester.print_lol(movies)`。
 """
 )
-Quiz.objects.create(
-    lesson=hf2,
-    question="使用哪个关键字导入模块？",
-    option_a="include",
-    option_b="using",
-    option_c="import",
-    option_d="require",
-    correct_answer="C",
-    explanation="import 是 Python 的导入关键字。"
-)
+Quiz.objects.create(lesson=l7_4_2, question="导入模块的关键字是？", option_a="load", option_b="include", option_c="import", option_d="use", correct_answer="C", explanation="import。")
+Quiz.objects.create(lesson=l7_4_2, question="如果模块名为 my_module，调用其中的 func 函数应该是？", option_a="func()", option_b="my_module.func()", option_c="call func from my_module", option_d="import func", correct_answer="B", explanation="需要使用模块名作为命名空间前缀。")
+Quiz.objects.create(lesson=l7_4_2, question="Python 模块文件的后缀名必须是？", option_a=".txt", option_b=".java", option_c=".py", option_d=".exe", correct_answer="C", explanation="Python 源码文件。")
+Quiz.objects.create(lesson=l7_4_2, question="PyPI 是什么？", option_a="Python 解释器", option_b="Python 包索引 (Package Index)", option_c="Python 编辑器", option_d="Python 教程", correct_answer="B", explanation="第三方库的仓库。")
+Quiz.objects.create(lesson=l7_4_2, question="使用 from module import function 的好处是？", option_a="代码运行更快", option_b="可以直接使用函数名，不用加前缀", option_c="可以导入私有函数", option_d="没有区别", correct_answer="B", explanation="引入当前命名空间。")
+Quiz.objects.create(lesson=l7_4_2, question="判断题：你自己写的 .py 文件也可以作为模块被导入。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，只要在 Python 路径下。")
+Quiz.objects.create(lesson=l7_4_2, question="判断题：一个模块只能包含一个函数。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，可以包含任意数量的函数、类和变量。")
 
 print("所有课程创建完成！")
