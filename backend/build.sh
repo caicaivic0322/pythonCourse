@@ -12,4 +12,4 @@ python manage.py collectstatic --no-input
 python manage.py migrate
 
 # Seed/Update course data (Safe operation)
-python seed_courses_zh.py
+python seed_gesp_courses.py
