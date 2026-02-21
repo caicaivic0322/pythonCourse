@@ -28,6 +28,18 @@ class CourseListView(generics.ListAPIView):
         for course_data in response.data:
             course_id = course_data['id']
             
+            # 添加 is_completed 状态
+            current_progress = progress_map.get(course_id)
+            if current_progress and current_progress.is_completed:
+                course_data['is_completed'] = True
+            else:
+                course_data['is_completed'] = False
+
+            # Superuser always unlocked
+            if request.user.is_superuser:
+                course_data['is_locked'] = False
+                continue
+
             # 1. 第一个课程永远解锁
             if first_course and course_id == first_course.id:
                 course_data['is_locked'] = False
@@ -79,13 +91,19 @@ class CourseDetailView(generics.RetrieveAPIView):
         is_first_lesson = True
         previous_completed = True # 第一个 Lesson 默认解锁（因为只要能进这个页面，说明课程已解锁）
 
+        # Superuser always unlocked
+        if request.user.is_superuser:
+            previous_completed = True
+
         for chapter in data['chapters']:
             for lesson in chapter['lessons']:
                 lesson_id = lesson['id']
                 is_completed = progress_map.get(lesson_id, False)
                 lesson['is_completed'] = is_completed
                 
-                if is_first_lesson:
+                if request.user.is_superuser:
+                    lesson['is_locked'] = False
+                elif is_first_lesson:
                     lesson['is_locked'] = False
                     is_first_lesson = False
                 else:
