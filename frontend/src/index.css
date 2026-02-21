@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-primary: #3b82f6;
+  --color-secondary: #10b981;
+  --color-accent: #f59e0b;
+  --color-dark: #1e293b;
+  --color-light: #f8fafc;
+  
+  --font-display: 'Fredoka', 'sans-serif';
+}
+
