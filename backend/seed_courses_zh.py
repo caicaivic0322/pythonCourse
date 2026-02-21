@@ -4,7 +4,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from courses.models import Course, Chapter, Lesson
+from courses.models import Course, Chapter, Lesson, Quiz
 
 # 1. Update or Create Course (Chinese) - Safe operation
 print("正在清理旧数据...")
@@ -33,7 +33,7 @@ ch1, _ = Chapter.objects.update_or_create(
 )
 
 # Lesson 1.1: Mission Briefing
-Lesson.objects.update_or_create(
+l1_1, _ = Lesson.objects.update_or_create(
     chapter=ch1, 
     title="任务简报：初识 Python", 
     defaults={
@@ -55,8 +55,22 @@ Python 是一种**强大且易于学习**的编程语言。它就像是编程界
     }
 )
 
+# Quiz for 1.1
+Quiz.objects.update_or_create(
+    lesson=l1_1,
+    question="为什么 Python 被称为编程界的“瑞士军刀”？",
+    defaults={
+        'option_a': "因为它很贵",
+        'option_b': "因为它只能用来切水果",
+        'option_c': "因为它功能强大，用途广泛",
+        'option_d': "因为它起源于瑞士",
+        'correct_answer': 'C',
+        'explanation': "Python 应用领域非常广泛，从 Web 开发到 AI，无所不能，就像瑞士军刀一样多功能。"
+    }
+)
+
 # Lesson 1.2: First Script
-Lesson.objects.update_or_create(
+l1_2, _ = Lesson.objects.update_or_create(
     chapter=ch1, 
     title="你的第一个脚本", 
     defaults={
@@ -87,8 +101,22 @@ print("你要显示的内容")
     }
 )
 
+# Quiz for 1.2
+Quiz.objects.update_or_create(
+    lesson=l1_2,
+    question="在 Python 中，用于在屏幕上显示内容的函数是？",
+    defaults={
+        'option_a': "show()",
+        'option_b': "display()",
+        'option_c': "Print()",
+        'option_d': "print()",
+        'correct_answer': 'D',
+        'explanation': "Python 是大小写敏感的，正确的函数名是全小写的 `print()`。"
+    }
+)
+
 # Lesson 1.3: Variables & Assignment
-Lesson.objects.update_or_create(
+l1_3, _ = Lesson.objects.update_or_create(
     chapter=ch1, 
     title="变量与赋值", 
     defaults={
@@ -123,8 +151,22 @@ x = "Hello" # 现在 x 变成了字符串！
     }
 )
 
+# Quiz for 1.3
+Quiz.objects.update_or_create(
+    lesson=l1_3,
+    question="关于 Python 变量，下列说法正确的是？",
+    defaults={
+        'option_a': "变量名必须以数字开头",
+        'option_b': "创建变量前必须声明其类型（如 int, string）",
+        'option_c': "变量类型是固定的，不能改变",
+        'option_d': "Python 是动态类型语言，变量类型由赋值决定",
+        'correct_answer': 'D',
+        'explanation': "Python 不需要显式声明变量类型，且同一个变量可以被重新赋值为不同类型的数据。"
+    }
+)
+
 # Lesson 1.4: Control Flow
-Lesson.objects.update_or_create(
+l1_4, _ = Lesson.objects.update_or_create(
     chapter=ch1, 
     title="流程控制：做出决定", 
     defaults={
@@ -169,8 +211,22 @@ else:
     }
 )
 
+# Quiz for 1.4
+Quiz.objects.update_or_create(
+    lesson=l1_4,
+    question="Python 使用什么来划分代码块（例如 if 语句的内容）？",
+    defaults={
+        'option_a': "大括号 {}",
+        'option_b': "缩进 (Indentation)",
+        'option_c': "分号 ;",
+        'option_d': "begin 和 end 关键字",
+        'correct_answer': 'B',
+        'explanation': "Python 的一大特色就是使用缩进（通常是4个空格）来表示代码块的层级关系。"
+    }
+)
+
 # Lesson 1.5: Iteration
-Lesson.objects.update_or_create(
+l1_5, _ = Lesson.objects.update_or_create(
     chapter=ch1, 
     title="循环迭代", 
     defaults={
@@ -206,6 +262,20 @@ print("No more bottles of beer on the wall.")
     }
 )
 
+# Quiz for 1.5
+Quiz.objects.update_or_create(
+    lesson=l1_5,
+    question="执行 for i in range(3): print(i) 会输出什么？",
+    defaults={
+        'option_a': "1, 2, 3",
+        'option_b': "0, 1, 2, 3",
+        'option_c': "0, 1, 2",
+        'option_d': "1, 2",
+        'correct_answer': 'C',
+        'explanation': "range(n) 生成从 0 到 n-1 的序列，所以 range(3) 生成 0, 1, 2。"
+    }
+)
+
 # ==========================================
 # Chapter 2: List Data
 # ==========================================
@@ -216,7 +286,7 @@ ch2, _ = Chapter.objects.update_or_create(
 )
 
 # Lesson 2.1: Intro to Lists
-Lesson.objects.update_or_create(
+l2_1, _ = Lesson.objects.update_or_create(
     chapter=ch2, 
     title="列表初探", 
     defaults={
@@ -248,8 +318,22 @@ print(names[1]) # 输出: Bob
     }
 )
 
+# Quiz for 2.1
+Quiz.objects.update_or_create(
+    lesson=l2_1,
+    question="如果有列表 nums = [10, 20, 30]，那么 nums[1] 的值是？",
+    defaults={
+        'option_a': "10",
+        'option_b': "20",
+        'option_c': "30",
+        'option_d': "报错",
+        'correct_answer': 'B',
+        'explanation': "列表索引从 0 开始，所以 nums[0] 是 10，nums[1] 是 20。"
+    }
+)
+
 # Lesson 2.2: List Methods
-Lesson.objects.update_or_create(
+l2_2, _ = Lesson.objects.update_or_create(
     chapter=ch2, 
     title="列表方法", 
     defaults={
@@ -306,8 +390,22 @@ print(my_list)
     }
 )
 
+# Quiz for 2.2
+Quiz.objects.update_or_create(
+    lesson=l2_2,
+    question="要在列表 list = [1, 2] 的末尾添加元素 3，应该使用哪个方法？",
+    defaults={
+        'option_a': "list.add(3)",
+        'option_b': "list.insert(3)",
+        'option_c': "list.push(3)",
+        'option_d': "list.append(3)",
+        'correct_answer': 'D',
+        'explanation': "Python 列表使用 append() 方法在末尾追加元素。"
+    }
+)
+
 # Lesson 2.3: Challenge: Don't Panic
-Lesson.objects.update_or_create(
+l2_3, _ = Lesson.objects.update_or_create(
     chapter=ch2, 
     title="实战：Don't Panic", 
     defaults={
@@ -364,7 +462,7 @@ ch3, _ = Chapter.objects.update_or_create(
 )
 
 # Lesson 3.1: Dictionary Basics
-Lesson.objects.update_or_create(
+l3_1, _ = Lesson.objects.update_or_create(
     chapter=ch3, 
     title="字典基础", 
     defaults={
@@ -407,8 +505,22 @@ print(student)
     }
 )
 
+# Quiz for 3.1
+Quiz.objects.update_or_create(
+    lesson=l3_1,
+    question="创建一个空字典的正确语法是？",
+    defaults={
+        'option_a': "d = []",
+        'option_b': "d = ()",
+        'option_c': "d = {}",
+        'option_d': "d = empty()",
+        'correct_answer': 'C',
+        'explanation': "{} 创建空字典，[] 创建空列表，() 创建空元组。"
+    }
+)
+
 # Lesson 3.2: Iterating Dictionaries
-Lesson.objects.update_or_create(
+l3_2, _ = Lesson.objects.update_or_create(
     chapter=ch3, 
     title="迭代字典", 
     defaults={
@@ -447,8 +559,22 @@ for key, value in data.items():
     }
 )
 
+# Quiz for 3.2
+Quiz.objects.update_or_create(
+    lesson=l3_2,
+    question="要同时遍历字典的键和值，应该使用哪个方法？",
+    defaults={
+        'option_a': "dict.keys()",
+        'option_b': "dict.values()",
+        'option_c': "dict.items()",
+        'option_d': "dict.all()",
+        'correct_answer': 'C',
+        'explanation': "items() 方法返回键值对的列表，可以在 for 循环中同时解包为 key 和 value。"
+    }
+)
+
 # Lesson 3.3: Sets and Tuples
-Lesson.objects.update_or_create(
+l3_3, _ = Lesson.objects.update_or_create(
     chapter=ch3, 
     title="集合与元组", 
     defaults={
@@ -477,8 +603,22 @@ coordinates = (10.0, 20.0)
     }
 )
 
+# Quiz for 3.3
+Quiz.objects.update_or_create(
+    lesson=l3_3,
+    question="集合 (Set) 和列表 (List) 的主要区别是什么？",
+    defaults={
+        'option_a': "集合是无序且不重复的，列表是有序且允许重复的",
+        'option_b': "集合是有序的，列表是无序的",
+        'option_c': "集合用 [] 表示，列表用 {} 表示",
+        'option_d': "没有区别",
+        'correct_answer': 'A',
+        'explanation': "集合的核心特性是无序性和唯一性（去重），而列表是有序序列。"
+    }
+)
+
 # Lesson 3.4: Challenge: Vowels Frequency
-Lesson.objects.update_or_create(
+l3_4, _ = Lesson.objects.update_or_create(
     chapter=ch3, 
     title="实战：元音统计", 
     defaults={
@@ -530,7 +670,7 @@ ch4, _ = Chapter.objects.update_or_create(
 )
 
 # Lesson 4.1: Defining Functions
-Lesson.objects.update_or_create(
+l4_1, _ = Lesson.objects.update_or_create(
     chapter=ch4, 
     title="定义函数", 
     defaults={
@@ -565,8 +705,22 @@ say_hello()
     }
 )
 
+# Quiz for 4.1
+Quiz.objects.update_or_create(
+    lesson=l4_1,
+    question="在 Python 中定义函数的关键字是？",
+    defaults={
+        'option_a': "function",
+        'option_b': "func",
+        'option_c': "define",
+        'option_d': "def",
+        'correct_answer': 'D',
+        'explanation': "def 是 define 的缩写，用于定义函数。"
+    }
+)
+
 # Lesson 4.2: Arguments & Return Values
-Lesson.objects.update_or_create(
+l4_2, _ = Lesson.objects.update_or_create(
     chapter=ch4, 
     title="参数与返回值", 
     defaults={
@@ -606,8 +760,22 @@ print(f"Area is: {area}")
     }
 )
 
+# Quiz for 4.2
+Quiz.objects.update_or_create(
+    lesson=l4_2,
+    question="函数中 return 关键字的作用是？",
+    defaults={
+        'option_a': "打印结果到屏幕",
+        'option_b': "结束函数执行并将值返回给调用者",
+        'option_c': "重新开始执行函数",
+        'option_d': "定义函数的参数",
+        'correct_answer': 'B',
+        'explanation': "return 用于从函数中返回一个值，并立即终止函数的执行。"
+    }
+)
+
 # Lesson 4.3: Modules & Imports
-Lesson.objects.update_or_create(
+l4_3, _ = Lesson.objects.update_or_create(
     chapter=ch4, 
     title="模块与导入", 
     defaults={
@@ -644,6 +812,20 @@ print(random.randint(1, 10))
     """,
         'lesson_type': 'text',
         'order': 3
+    }
+)
+
+# Quiz for 4.3
+Quiz.objects.update_or_create(
+    lesson=l4_3,
+    question="如果想使用 Python 的随机数功能，应该先做什么？",
+    defaults={
+        'option_a': "import math",
+        'option_b': "import random",
+        'option_c': "无需做任何事，直接使用",
+        'option_d': "定义一个 random 函数",
+        'correct_answer': 'B',
+        'explanation': "Python 的随机数功能在标准库模块 random 中，使用前需要先 import random。"
     }
 )
 
