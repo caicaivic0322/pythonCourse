@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
@@ -65,7 +65,7 @@ const Register = () => {
           </button>
         </form>
         <p className="text-center text-slate-500 mt-6 text-sm">
-          已经是学员了? <a href="/login" className="text-blue-400 hover:text-blue-300 font-bold">在此登录</a>
+          已经是学员了? <Link to="/login" className="text-blue-400 hover:text-blue-300 font-bold">在此登录</Link>
         </p>
       </div>
     </div>
