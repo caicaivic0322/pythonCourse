@@ -1,9 +1,9 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 import api from '../api/axios';
 
 const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('token');
         }
       } else {
-        setLoading(false); // Make sure loading is set to false if no token
+        setLoading(false);
       }
       setLoading(false);
     };
@@ -36,7 +36,6 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, email, password) => {
     await api.post('users/register/', { username, email, password });
-    // Auto login after register
     return login(username, password);
   };
 
@@ -50,6 +49,12 @@ export const AuthProvider = ({ children }) => {
       {!loading && children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}

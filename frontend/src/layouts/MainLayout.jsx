@@ -1,11 +1,14 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, Trophy, User, LogOut } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Home, BookOpen, Award, User, LogOut, Sun, Moon } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import styles from './MainLayout.module.css';
 
 const MainLayout = () => {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const isActive = (path) => location.pathname === path;
@@ -16,86 +19,100 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-800 border-r border-slate-700 hidden md:flex flex-col">
-        <div className="p-6 border-b border-slate-700">
-          <h1 className="text-2xl font-bold font-display text-blue-400 flex items-center gap-2">
-            <span className="text-3xl">🐍</span> PyMaster
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">Level 1 Pythonista</p>
+    <div className={styles.container}>
+      <aside className={styles.sidebar}>
+        <div className={styles.logoSection}>
+          <div className={styles.logo}>
+            <div className={styles.logoIcon}>🐍</div>
+            <div>
+              <div className={styles.logoText}>PyMaster</div>
+              <div className={styles.logoSubtitle}>Python 学习平台</div>
+            </div>
+          </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className={styles.nav}>
           <Link 
             to="/" 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive('/') ? 'bg-blue-600/20 text-blue-400' : 'hover:bg-slate-700 text-slate-400'}`}
+            className={`${styles.navLink} ${isActive('/') ? styles.navLinkActive : ''}`}
           >
-            <Home size={20} />
-            <span className="font-medium">任务中心</span>
+            <Home className={styles.navIcon} />
+            <span>首页</span>
           </Link>
           
           <Link 
             to="/courses" 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive('/courses') ? 'bg-blue-600/20 text-blue-400' : 'hover:bg-slate-700 text-slate-400'}`}
+            className={`${styles.navLink} ${isActive('/courses') ? styles.navLinkActive : ''}`}
           >
-            <BookOpen size={20} />
-            <span className="font-medium">训练模块</span>
+            <BookOpen className={styles.navIcon} />
+            <span>课程中心</span>
           </Link>
 
           <Link 
             to="/achievements" 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive('/achievements') ? 'bg-blue-600/20 text-blue-400' : 'hover:bg-slate-700 text-slate-400'}`}
+            className={`${styles.navLink} ${isActive('/achievements') ? styles.navLinkActive : ''}`}
           >
-            <Trophy size={20} />
-            <span className="font-medium">成就勋章</span>
+            <Award className={styles.navIcon} />
+            <span>成就</span>
           </Link>
         </nav>
 
-        <div className="p-4 border-t border-slate-700">
+        <div className={styles.bottomSection}>
           <Link 
             to="/profile"
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive('/profile') ? 'bg-blue-600/20 text-blue-400' : 'hover:bg-slate-700 text-slate-400'}`}
+            className={`${styles.navLink} ${isActive('/profile') ? styles.navLinkActive : ''}`}
           >
-            <User size={20} />
-            <span className="font-medium">个人档案</span>
+            <User className={styles.navIcon} />
+            <span>个人中心</span>
           </Link>
+          
+          <div className={styles.userInfo}>
+            <div className={styles.userAvatar}>
+              {user?.username?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            <span className={styles.userName}>{user?.username || 'User'}</span>
+          </div>
+          
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 cursor-pointer transition-colors"
+            className={styles.logoutBtn}
           >
-            <LogOut size={20} />
-            <span className="font-medium">退出任务</span>
+            <LogOut size={16} />
+            <span>退出登录</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
-        {/* Mobile Header */}
-        <header className="md:hidden bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold font-display text-blue-400">PyMaster</h1>
-          <button className="p-2 text-slate-400">
-            <User size={24} />
-          </button>
+      <main className={styles.mainContent}>
+        <header className={styles.topBar}>
+          <div className={styles.topBarLeft}>
+            <span className={styles.breadcrumb}>
+              PyMaster / <span className={styles.breadcrumbActive}>
+                {location.pathname === '/' ? '首页' : 
+                 location.pathname === '/courses' ? '课程中心' :
+                 location.pathname === '/profile' ? '个人中心' : ''}
+              </span>
+            </span>
+          </div>
+          <div className={styles.topBarRight}>
+            <button 
+              onClick={toggleTheme}
+              className={styles.themeToggle}
+              title={theme === 'light' ? '切换深色模式' : '切换浅色模式'}
+            >
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
+          </div>
         </header>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative">
-           {/* Gamified Background Elements */}
-           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-20">
-              <div className="absolute top-10 left-10 w-64 h-64 bg-blue-600 rounded-full blur-[100px]"></div>
-              <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-600 rounded-full blur-[120px]"></div>
-           </div>
-
-           <div className="relative z-10 max-w-7xl mx-auto">
+        <div className={styles.contentArea}>
+          <div className={styles.contentWrapper}>
             <Outlet />
-           </div>
+          </div>
         </div>
       </main>
     </div>
   );
 };
-
 
 export default MainLayout;

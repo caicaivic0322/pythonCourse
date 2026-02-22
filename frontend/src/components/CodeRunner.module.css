@@ -1,0 +1,157 @@
+.container {
+  background-color: #1e1e2e;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid #313244;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: var(--font-size-sm);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #181825;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid #313244;
+}
+
+.fileName {
+  color: #a6adc8;
+  font-size: var(--font-size-sm);
+}
+
+.runButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background-color: #89b4fa;
+  color: #1e1e2e;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.runButton:hover:not(:disabled) {
+  background-color: #b4befe;
+}
+
+.runButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.editorWrapper {
+  display: flex;
+  height: 320px;
+}
+
+.editorPane {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.editor {
+  width: 100%;
+  height: 100%;
+}
+
+.editor :global(.line-numbers) {
+  padding-right: 12px !important;
+  color: #6c7086 !important;
+}
+
+.editor :global(.active-line-number) {
+  color: #cdd6f4 !important;
+}
+
+.resizer {
+  width: 4px;
+  background-color: #313244;
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast);
+  position: relative;
+}
+
+.resizer:hover,
+.resizer:active {
+  background-color: #89b4fa;
+}
+
+.resizer::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 32px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #45475a 0px,
+    #45475a 2px,
+    transparent 2px,
+    transparent 6px
+  );
+  border-radius: 2px;
+}
+
+.output {
+  background-color: #11111b;
+  color: #a6adc8;
+  padding: var(--spacing-md);
+  overflow: auto;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.outputLabel {
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  color: #6c7086;
+  margin-bottom: var(--spacing-sm);
+  letter-spacing: 0.05em;
+}
+
+.outputPre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.outputSuccess {
+  color: #a6e3a1;
+}
+
+.outputError {
+  color: #f38ba8;
+}
+
+@media (max-width: 640px) {
+  .editorWrapper {
+    flex-direction: column;
+  }
+  
+  .resizer {
+    width: 100%;
+    height: 4px;
+    cursor: row-resize;
+  }
+  
+  .resizer::after {
+    width: 32px;
+    height: 4px;
+    background: repeating-linear-gradient(
+      to right,
+      #45475a 0px,
+      #45475a 2px,
+      transparent 2px,
+      transparent 6px
+    );
+  }
+}

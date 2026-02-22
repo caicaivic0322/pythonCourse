@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Lock, Play } from 'lucide-react';
 import api from '../api/axios';
+import styles from './CourseList.module.css';
 
 const CourseList = () => {
   const [courses, setCourses] = useState([]);
@@ -22,40 +24,68 @@ const CourseList = () => {
     fetchCourses();
   }, []);
 
+  // 检查是否所有课程都被锁定（除了 GESP 1，或者如果未批准则全部锁定）
+  // 实际上后端现在会返回 is_locked=True 给未批准的用户
+  const isAllLocked = courses.length > 0 && courses.every(c => c.is_locked);
+  
   if (loading) {
-    return <div className="text-white">加载训练模块中...</div>;
-  }
-
-  if (courses.length === 0) {
-      return <div className="text-white text-center py-12">暂无课程数据，请联系管理员。</div>;
+    return <div className={styles.loading}>加载中...</div>;
   }
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold font-display text-white">训练模块</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courses.map((course) => (
-          <div key={course.id} className={`bg-slate-800 rounded-xl border border-slate-700 p-6 transition-all ${course.is_locked ? 'opacity-60 cursor-not-allowed' : 'hover:border-blue-500/50 hover:-translate-y-1 cursor-pointer'}`}>
-            <div className="h-40 bg-slate-700 rounded-lg mb-4 flex items-center justify-center text-4xl relative">
-              {course.is_locked && (
-                  <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center rounded-lg">
-                      <Lock size={48} className="text-slate-400" />
-                  </div>
-              )}
+    <div className={styles.container}>
+      {isAllLocked && (
+        <div className={styles.approvalWarning}>
+          ⚠️ 您的账号正在等待管理员审核，暂时无法查看课程内容。
+        </div>
+      )}
+
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>课程中心</h1>
+          <p className={styles.subtitle}>选择一门课程开始学习</p>
+        </div>
+      </div>
+
+      <div className={styles.grid}>
+        {courses.map((course, index) => (
+          <motion.div
+            key={course.id}
+            className={`${styles.card} ${course.is_locked ? styles.locked : ''}`}
+            onClick={() => !course.is_locked && navigate(`/courses/${course.id}`)}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <div className={styles.image}>
               🐍
+              {course.is_locked && (
+                <div className={styles.lockOverlay}>
+                  <div className={styles.lockIcon}>
+                    <Lock size={24} />
+                  </div>
+                </div>
+              )}
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">{course.title}</h3>
-            <p className="text-slate-400 text-sm mb-4 line-clamp-2">{course.description}</p>
-            <button 
-              onClick={() => !course.is_locked && navigate(`/courses/${course.id}`)}
-              disabled={course.is_locked}
-              className={`w-full font-bold py-2 rounded-lg transition-colors ${course.is_locked ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-700 hover:bg-blue-600 text-white'}`}
-            >
-              {course.is_locked ? '未解锁' : '开始任务'}
-            </button>
-          </div>
+            <div className={styles.content}>
+              <h3 className={styles.cardTitle}>{course.title}</h3>
+              <p className={styles.cardDesc}>{course.description}</p>
+              <div className={styles.cardFooter}>
+                <span className={styles.lessonCount}>
+                  {course.is_locked ? '未解锁' : '开始学习'}
+                </span>
+                <span className={`${styles.startBtn} ${course.is_locked ? styles.startBtnDisabled : ''}`}>
+                  {course.is_locked ? <Lock size={14} /> : <Play size={14} />}
+                </span>
+              </div>
+            </div>
+          </motion.div>
         ))}
       </div>
+
+      {courses.length === 0 && (
+        <div className={styles.empty}>暂无课程</div>
+      )}
     </div>
   );
 };

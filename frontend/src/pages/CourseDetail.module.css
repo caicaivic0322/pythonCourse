@@ -1,0 +1,224 @@
+.container {
+  color: var(--color-text-primary);
+  max-width: 56rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+}
+
+.headerInfo h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.headerInfo p {
+  color: var(--color-text-secondary);
+}
+
+.xpBadge {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-xl);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.xpLabel {
+  font-size: var(--font-size-sm);
+  color: #92400e;
+  display: block;
+  margin-bottom: var(--spacing-xs);
+}
+
+.xpValue {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: #b45309;
+}
+
+.chapterList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.chapterEmpty {
+  color: var(--color-text-secondary);
+}
+
+.chapterCard {
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.chapterHeader {
+  background-color: var(--color-bg-tertiary);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chapterTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.chapterBadge {
+  font-size: var(--font-size-xs);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-weight: 500;
+}
+
+.chapterContent {
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.lessonEmpty {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-md);
+}
+
+.lessonItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-bg-secondary);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.lessonItem:hover:not(.locked) {
+  background-color: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+.lessonItem.locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.lessonLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.lessonIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.lessonIconCompleted {
+  background-color: #dcfce7;
+  color: var(--color-success);
+}
+
+.lessonIconLocked {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+.lessonIconCode {
+  background-color: #f5f3ff;
+  color: var(--color-accent);
+}
+
+.lessonIconDefault {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.lessonInfo h3 {
+  font-weight: 500;
+  font-size: var(--font-size-base);
+}
+
+.lessonItem.locked .lessonTitle {
+  color: var(--color-text-tertiary);
+}
+
+.lessonItem:not(.locked) .lessonTitle {
+  color: var(--color-text-primary);
+}
+
+.lessonItem:hover .lessonTitle {
+  color: var(--color-primary);
+}
+
+.lessonMeta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: 2px;
+}
+
+.lessonCompleted {
+  color: var(--color-success);
+  font-weight: 500;
+}
+
+.lessonAction {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.lessonItem:hover:not(.locked) .lessonAction {
+  color: var(--color-primary);
+  transform: translateX(4px);
+}
+
+.practiceSection {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-border);
+}
+
+.practiceTitle {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  font-family: var(--font-display);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.loading, .notFound {
+  color: var(--color-text-secondary);
+  padding: var(--spacing-2xl);
+  text-align: center;
+}
