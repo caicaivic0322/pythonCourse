@@ -179,7 +179,7 @@ class MarkLessonCompleteView(APIView):
                         correct_count += 1
                 
                 score = int((correct_count / total_quizzes) * 100)
-                if score < 50:
+                if score < 60:
                     passed = False
             else:
                 score = 100 # 没有测验，默认满分
@@ -240,5 +240,5 @@ class MarkLessonCompleteView(APIView):
                 'status': 'failed', 
                 'passed': False, 
                 'score': score,
-                'message': f'得分 {score}% 低于 50%，请重试！'
+                'message': f'得分 {score}% 低于 60%，请重试！'
             })
