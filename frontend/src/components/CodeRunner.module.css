@@ -1,53 +1,53 @@
 .container {
-  background-color: #1e1e2e;
-  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid #313244;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: var(--font-size-sm);
+  border-radius: 1.4rem;
+  border: 1px solid rgba(121, 148, 191, 0.22);
+  background: #0b1220;
+  box-shadow: 0 24px 60px rgba(8, 17, 30, 0.24);
+  font-family: var(--font-mono);
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #181825;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-bottom: 1px solid #313244;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(121, 148, 191, 0.16);
+  background: linear-gradient(180deg, rgba(14, 25, 43, 0.98), rgba(11, 18, 32, 0.98));
 }
 
 .fileName {
-  color: #a6adc8;
+  color: #9fb6d9;
   font-size: var(--font-size-sm);
 }
 
 .runButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  background-color: #89b4fa;
-  color: #1e1e2e;
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-  border: none;
-  cursor: pointer;
+  gap: 0.45rem;
+  min-height: 40px;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #60a5fa 0%, #22d3ee 100%);
+  color: #07111f;
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: 700;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .runButton:hover:not(:disabled) {
-  background-color: #b4befe;
+  transform: translateY(-1px);
 }
 
 .runButton:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 .editorWrapper {
   display: flex;
-  height: 320px;
+  height: 380px;
 }
 
 .editorPane {
@@ -55,103 +55,78 @@
   overflow: hidden;
 }
 
-.editor {
-  width: 100%;
-  height: 100%;
-}
-
-.editor :global(.line-numbers) {
-  padding-right: 12px !important;
-  color: #6c7086 !important;
-}
-
-.editor :global(.active-line-number) {
-  color: #cdd6f4 !important;
-}
-
 .resizer {
-  width: 4px;
-  background-color: #313244;
-  cursor: col-resize;
+  width: 6px;
   flex-shrink: 0;
-  transition: background-color var(--transition-fast);
+  cursor: col-resize;
+  background: rgba(121, 148, 191, 0.14);
   position: relative;
 }
 
-.resizer:hover,
-.resizer:active {
-  background-color: #89b4fa;
-}
-
 .resizer::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 4px;
-  height: 32px;
+  height: 42px;
+  border-radius: 999px;
   background: repeating-linear-gradient(
     to bottom,
-    #45475a 0px,
-    #45475a 2px,
-    transparent 2px,
-    transparent 6px
+    rgba(159, 182, 217, 0.55) 0 2px,
+    transparent 2px 6px
   );
-  border-radius: 2px;
 }
 
 .output {
-  background-color: #11111b;
-  color: #a6adc8;
-  padding: var(--spacing-md);
+  height: 100%;
+  padding: 1rem;
+  background: linear-gradient(180deg, #09111e 0%, #060c16 100%);
+  color: #c8d6eb;
   overflow: auto;
-  font-size: var(--font-size-sm);
-  line-height: 1.6;
 }
 
 .outputLabel {
-  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  color: #7f95b5;
   font-size: var(--font-size-xs);
-  color: #6c7086;
-  margin-bottom: var(--spacing-sm);
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .outputPre {
+  margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  margin: 0;
+  line-height: 1.7;
 }
 
-.outputSuccess {
-  color: #a6e3a1;
-}
-
-.outputError {
-  color: #f38ba8;
-}
-
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .editorWrapper {
     flex-direction: column;
+    height: auto;
   }
-  
+
+  .editorPane {
+    width: 100% !important;
+    min-height: 260px;
+  }
+
   .resizer {
     width: 100%;
-    height: 4px;
+    height: 6px;
     cursor: row-resize;
   }
-  
+
   .resizer::after {
-    width: 32px;
+    width: 42px;
     height: 4px;
     background: repeating-linear-gradient(
       to right,
-      #45475a 0px,
-      #45475a 2px,
-      transparent 2px,
-      transparent 6px
+      rgba(159, 182, 217, 0.55) 0 2px,
+      transparent 2px 6px
     );
   }
 }

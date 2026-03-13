@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Code, Trophy, Clock, BookOpen, ArrowRight } from 'lucide-react';
+import { ArrowRight, BookOpen, Clock3, Code2, Trophy } from 'lucide-react';
 import api from '../api/axios';
 import styles from './HomePage.module.css';
+
+const statItems = [
+  { key: 'xp', label: '经验值', icon: Code2, suffix: '' },
+  { key: 'badges', label: '获得勋章', icon: Trophy, suffix: '' },
+  { key: 'courses_learned', label: '参与课程', icon: BookOpen, suffix: '' },
+  { key: 'study_hours', label: '学习时长', icon: Clock3, suffix: 'h' },
+];
 
 const HomePage = () => {
   const [currentCourse, setCurrentCourse] = useState(null);
@@ -14,191 +20,167 @@ const HomePage = () => {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        // Fetch stats
         const statsRes = await api.get('users/stats/');
         setStats(statsRes.data);
 
         const response = await api.get('courses/');
         const courses = response.data;
-        
-        // 优先找到第一个【已解锁】且【未完成】的课程
-        let activeCourse = courses.find(c => !c.is_locked && !c.is_completed);
-        
-        // 如果都完成了（或者没有符合条件的），就显示最后一个已解锁的课程（即当前进度最远的）
+
+        let activeCourse = courses.find((course) => !course.is_locked && !course.is_completed);
+
         if (!activeCourse) {
-            activeCourse = [...courses].reverse().find(c => !c.is_locked) || courses[0];
+          activeCourse = [...courses].reverse().find((course) => !course.is_locked) || courses[0];
         }
-        
+
         if (activeCourse) {
-            const detailRes = await api.get(`courses/${activeCourse.id}/`);
-            const courseDetail = detailRes.data;
-            setCurrentCourse(courseDetail);
-            
-            let foundLesson = null;
-            let totalLessons = 0;
-            let completedLessons = 0;
+          const detailRes = await api.get(`courses/${activeCourse.id}/`);
+          const courseDetail = detailRes.data;
+          setCurrentCourse(courseDetail);
 
-            if (courseDetail.chapters) {
-                for (const chapter of courseDetail.chapters) {
-                    if (chapter.lessons) {
-                        for (const lesson of chapter.lessons) {
-                            totalLessons++;
-                            if (lesson.is_completed) {
-                                completedLessons++;
-                            } else if (!foundLesson && !lesson.is_locked) {
-                                foundLesson = lesson;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            setCurrentLesson(foundLesson);
-            courseDetail.progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+          let foundLesson = null;
+          let totalLessons = 0;
+          let completedLessons = 0;
+
+          courseDetail.chapters?.forEach((chapter) => {
+            chapter.lessons?.forEach((lesson) => {
+              totalLessons += 1;
+              if (lesson.is_completed) {
+                completedLessons += 1;
+              } else if (!foundLesson && !lesson.is_locked) {
+                foundLesson = lesson;
+              }
+            });
+          });
+
+          setCurrentLesson(foundLesson);
+          courseDetail.progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
         }
-
       } catch (error) {
-        console.error("Failed to fetch progress:", error);
+        console.error('Failed to fetch progress:', error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchProgress();
   }, []);
 
   if (loading) {
-    return (
-      <div className={styles.loading}>
-        <div className={styles.spinner}></div>
-      </div>
-    );
+    return <div className="loading-panel">正在整理你的学习面板...</div>;
   }
 
   return (
-    <div className={styles.container}>
-      <motion.div 
-        className={styles.welcome}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h1 className={styles.welcomeTitle}>欢迎回来！👋</h1>
-        <p className={styles.welcomeSubtitle}>继续你的 Python 学习之旅</p>
-      </motion.div>
-
-      <div className={styles.statsGrid}>
-        <motion.div 
-          className={styles.statCard}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <div className={`${styles.statIcon} ${styles.statIconBlue}`}>
-            <Code size={24} />
+    <div className="page-shell">
+      <section className={`page-hero ${styles.hero}`}>
+        <div className={styles.heroContent}>
+          <span className="eyebrow">Today Focus</span>
+          <h1 className="hero-title">学习总览</h1>
+          <p className="hero-subtitle">
+            这里是你的总览工作台。查看成长数据、快速继续当前课程，并把学习和练习安排在同一个清晰的界面里。
+          </p>
+          <div className={styles.heroActions}>
+            <Link to={currentLesson ? `/lessons/${currentLesson.id}` : '/courses'} className="primary-button">
+              {currentLesson ? '继续当前课程' : '浏览课程'}
+              <ArrowRight size={18} />
+            </Link>
+            <Link to="/courses" className="secondary-button">查看学习路径</Link>
           </div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.xp}</div>
-            <div className={styles.statLabel}>经验值</div>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          className={styles.statCard}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <div className={`${styles.statIcon} ${styles.statIconGreen}`}>
-            <Trophy size={24} />
-          </div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.badges}</div>
-            <div className={styles.statLabel}>获得勋章</div>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          className={styles.statCard}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <div className={`${styles.statIcon} ${styles.statIconPurple}`}>
-            <BookOpen size={24} />
-          </div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.courses_learned}</div>
-            <div className={styles.statLabel}>学习课程</div>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          className={styles.statCard}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <div className={`${styles.statIcon} ${styles.statIconOrange}`}>
-            <Clock size={24} />
-          </div>
-          <div className={styles.statInfo}>
-            <div className={styles.statValue}>{stats.study_hours}h</div>
-            <div className={styles.statLabel}>学习时长</div>
-          </div>
-        </motion.div>
-      </div>
-
-      <motion.section 
-        className={styles.section}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-      >
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>继续学习</h2>
-          <Link to="/courses" className={styles.sectionLink}>
-            查看全部 <ArrowRight size={14} />
-          </Link>
         </div>
 
-        {currentCourse ? (
-          <Link 
-            to={currentLesson ? `/lessons/${currentLesson.id}` : `/courses/${currentCourse.id}`} 
-            className={styles.currentCourse}
-          >
-            <div className={styles.courseImage}>
-              🐍
-            </div>
-            <div className={styles.courseContent}>
-              <div className={styles.courseMeta}>
-                <span className={styles.courseBadge}>进行中</span>
-                <span className={styles.courseChapter}>第 {currentCourse.order} 章</span>
+        <div className={styles.heroAside}>
+          <div className={styles.heroStatLabel}>本周学习状态</div>
+          <div className={styles.heroStatValue}>{stats.study_hours}h</div>
+          <p className={styles.heroStatText}>累计学习时长配合经验值和课程进度，帮助你持续追踪节奏。</p>
+        </div>
+      </section>
+
+      <section className={styles.statsGrid}>
+        {statItems.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <div
+              key={item.key}
+              className={`${styles.statCard} surface-card`}
+              style={{ animationDelay: `${0.08 * index}s` }}
+            >
+              <div className={styles.statIcon}>
+                <Icon size={20} />
               </div>
-              <h3 className={styles.courseTitle}>
-                {currentLesson ? currentLesson.title : currentCourse.title}
-              </h3>
-              <p className={styles.courseDesc}>{currentCourse.description}</p>
-              <div className={styles.courseProgress}>
-                <div className={styles.progressBar}>
-                  <div 
-                    className={styles.progressFill} 
-                    style={{ width: `${currentCourse.progress}%` }}
-                  ></div>
+              <div>
+                <div className="metric-value">
+                  {stats[item.key]}
+                  {item.suffix}
                 </div>
-                <span className={styles.progressText}>{currentCourse.progress}%</span>
+                <div className={styles.statLabel}>{item.label}</div>
               </div>
             </div>
-          </Link>
-        ) : (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>📚</div>
-            <p className={styles.emptyText}>暂无进行中的课程</p>
-            <Link to="/courses" className={styles.emptyLink}>
-              浏览课程 <ArrowRight size={16} />
+          );
+        })}
+      </section>
+
+      <section className={styles.learningGrid}>
+        <div className={`${styles.mainPanel} surface-card`}>
+          <div className={styles.panelHeader}>
+            <div>
+              <h2 className="section-title">继续学习</h2>
+              <p className="section-subtitle">系统已为你定位到最适合继续推进的课程节点。</p>
+            </div>
+            <Link to="/courses" className={styles.inlineLink}>
+              全部课程
+              <ArrowRight size={16} />
             </Link>
           </div>
-        )}
-      </motion.section>
+
+          {currentCourse ? (
+            <Link
+              to={currentLesson ? `/lessons/${currentLesson.id}` : `/courses/${currentCourse.id}`}
+              className={styles.coursePanel}
+            >
+              <div className={styles.courseVisual}>
+                <span className={styles.courseVisualBadge}>进行中</span>
+                <strong>Chapter {currentCourse.order}</strong>
+                <span>Python Path</span>
+              </div>
+
+              <div className={styles.courseBody}>
+                <div className={styles.courseMeta}>
+                  <span className="chip">课程进度 {currentCourse.progress}%</span>
+                  {currentLesson && <span className="chip">下一节 {currentLesson.title}</span>}
+                </div>
+                <h3>{currentLesson ? currentLesson.title : currentCourse.title}</h3>
+                <p>{currentCourse.description}</p>
+                <div className={styles.progressRow}>
+                  <div className={styles.progressTrack}>
+                    <div className={styles.progressFill} style={{ width: `${currentCourse.progress}%` }} />
+                  </div>
+                  <span>{currentCourse.progress}%</span>
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div className="empty-panel">当前还没有可继续的课程，去课程中心看看吧。</div>
+          )}
+        </div>
+
+        <aside className={`${styles.sidePanel} surface-card`}>
+          <h2 className="section-title">学习建议</h2>
+          <p className="section-subtitle">保持轻量但连续的节奏，比单次高强度更容易形成稳定习惯。</p>
+          <div className={styles.tipList}>
+            <div className={styles.tipItem}>
+              <span className={styles.tipIndex}>01</span>
+              <p>先完成当前未锁定课程，再进入自由练习区复现关键代码。</p>
+            </div>
+            <div className={styles.tipItem}>
+              <span className={styles.tipIndex}>02</span>
+              <p>把测验当作复盘工具，优先关注错题解释，而不是只追求一次通过。</p>
+            </div>
+            <div className={styles.tipItem}>
+              <span className={styles.tipIndex}>03</span>
+              <p>学习时间不必很长，但建议固定时段，形成可重复的输入节奏。</p>
+            </div>
+          </div>
+        </aside>
+      </section>
     </div>
   );
 };
