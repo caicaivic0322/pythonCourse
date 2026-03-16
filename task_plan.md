@@ -1,36 +1,20 @@
-# Task Plan: Python Learning Platform (Gamified)
+# UI Redesign Plan
 
 ## Goal
-Build a Python learning website for students (GESP level 4) with a playful/gamified UI, online code runner, and teacher admin panel.
-Stack: React (Vite) + Django (DRF).
+Unify the frontend visual language, improve overall page layout, and make the learning platform feel modern, spacious, and responsive across desktop and mobile.
 
 ## Phases
+- [completed] Audit current layout, pages, and shared styles
+- [completed] Rebuild global design tokens and shell layout
+- [completed] Redesign auth screens and landing/dashboard surfaces
+- [completed] Redesign course list, course detail, lesson detail, and profile pages
+- [completed] Verify responsive behavior and production build
 
-### Phase 1: Project Initialization
-- [x] Create project structure (frontend/backend directories)
-- [x] Initialize React project (Vite)
-- [x] Initialize Django project
-- [x] Setup basic configuration (CORS, DRF)
+## Decisions
+- Visual direction: modern learning platform
+- Layout direction: desktop fixed sidebar + mobile bottom navigation
+- Density direction: spacious with strong breathing room
 
-### Phase 2: Frontend Core (Gamified UI)
-- [x] Install dependencies (Tailwind, Framer Motion, Axios)
-- [x] Create Gamified Layout (Navbar, Sidebar, Background)
-- [x] Implement Routing (Home, Course List, Course Detail, Login/Register)
-
-### Phase 3: Backend Core & Auth
-- [x] Create `users` app (Custom User Model)
-- [x] Create `courses` app (Models for Course, Chapter, Lesson)
-- [x] Implement Auth API (Login, Register, Token)
-- [x] Setup Django Admin for Teacher approval
-
-### Phase 4: Course Content & Features
-- [x] Implement Course Listing & Detail API
-- [x] Frontend: Course Player UI
-- [x] Implement Quizzes (Backend models + Frontend UI) - *Implemented as Lesson Type*
-- [x] Implement "Code Runner" (Mock/Sandboxed execution) - *Implemented Mock Runner*
-
-### Phase 5: Polish & Finalize
-- [x] UI Polish (Animations, Themes)
-- [x] Seed initial data (Head First Python chapters)
-- [x] Final Review
-- [x] Create test user for Admin demonstration
+## Errors Encountered
+- `react-refresh/only-export-components` was triggered by context files exporting hooks and providers together; resolved with a targeted ESLint file-level disable to preserve the current project structure.
+- Production build still reports a large JS chunk warning, but the build succeeds. This is an existing bundle-size concern rather than a functional regression from the redesign.

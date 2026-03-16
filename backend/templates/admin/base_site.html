@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('PyMaster Admin') }}{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/custom_admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+  <div class="brand-shell">
+    <a href="{% url 'admin:index' %}" class="brand-mark">Py</a>
+    <div class="brand-copy">
+      <strong>{{ site_header|default:_('PyMaster Admin') }}</strong>
+      <span>课程与学习进度后台</span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block nav-global %}
+  <nav class="workspace-nav" aria-label="Admin shortcuts">
+    <a href="{% url 'admin:index' %}" class="workspace-nav__link">总览</a>
+    <a href="{% url 'admin:users_user_changelist' %}" class="workspace-nav__link">用户</a>
+    <a href="{% url 'admin:courses_course_changelist' %}" class="workspace-nav__link">课程</a>
+    <a href="{% url 'admin:courses_userlessonprogress_changelist' %}" class="workspace-nav__link">学习记录</a>
+    <a href="{% url 'admin:users_user_score_matrix' %}" class="workspace-nav__link workspace-nav__link--accent">成绩总表</a>
+  </nav>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% load i18n %}
+
+{% if app_list %}
+  <div class="admin-app-grid">
+    {% for app in app_list %}
+      <section class="admin-app-card app-{{ app.app_label }}{% if app.app_url in request.path|urlencode %} current-app{% endif %}">
+        <div class="admin-app-card__head">
+          <div>
+            <span class="admin-app-card__eyebrow">模块</span>
+            <h2>
+              <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
+            </h2>
+          </div>
+          <span class="admin-app-card__count">{{ app.models|length }} 项</span>
+        </div>
+        <div class="admin-app-card__models">
+          {% for model in app.models %}
+            {% with model_name=model.object_name|lower %}
+              <article class="admin-model-card model-{{ model_name }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
+                <div class="admin-model-card__main">
+                  <strong id="{{ app.app_label }}-{{ model_name }}">
+                    {% if model.admin_url %}
+                      <a href="{{ model.admin_url }}"{% if model.admin_url in request.path|urlencode %} aria-current="page"{% endif %}>{{ model.name }}</a>
+                    {% else %}
+                      {{ model.name }}
+                    {% endif %}
+                  </strong>
+                  <span>
+                    {% if model.view_only %}
+                      只读查看
+                    {% else %}
+                      管理列表与详情
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="admin-model-card__actions">
+                  {% if model.admin_url and show_changelinks %}
+                    {% if model.view_only %}
+                      <a href="{{ model.admin_url }}" class="admin-chip admin-chip--ghost" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'View' %}</a>
+                    {% else %}
+                      <a href="{{ model.admin_url }}" class="admin-chip admin-chip--ghost" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'Change' %}</a>
+                    {% endif %}
+                  {% endif %}
+
+                  {% if model.add_url %}
+                    <a href="{{ model.add_url }}" class="admin-chip" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'Add' %}</a>
+                  {% endif %}
+                </div>
+              </article>
+            {% endwith %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>{% translate 'You don’t have permission to view or edit anything.' %}</p>
+{% endif %}

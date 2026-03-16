@@ -1,31 +1,10 @@
 # Progress Log
 
-## Session Start
-- Initialized planning files.
-- Project directory is empty.
-
-## Phase 1: Init
-- Created React Frontend (Vite).
-- Created Django Backend.
-- Configured CORS and DRF.
-
-## Phase 2: Frontend
-- Implemented Gamified Layout (Dark Theme, Blue/Green Accents).
-- Created Home, CourseList, Login, Register pages.
-
-## Phase 3: Backend
-- Created `users` app with `User` model (xp, level, is_approved).
-- Created `courses` app with `Course`, `Chapter`, `Lesson`.
-- Configured Django Admin for teacher management.
-- Implemented Auth Endpoints (Register, Login).
-
-## Phase 4: Integration
-- Connected Frontend to Backend via Axios.
-- Implemented Auth Context for global state.
-- Seeded database with "Python Basics" course.
-- Implemented `CodeRunner` component (Simulated).
-
-## Completion
-- Project is ready for local testing.
-- Admin user: `admin` / `password123`.
-- Test student created: `student_demo` / `password123` (pending approval).
+## 2026-03-13
+- Audited project structure and identified all main user-facing pages.
+- Confirmed redesign direction with user: modern course platform, desktop sidebar + mobile bottom nav, spacious layout.
+- Identified first implementation batch: global tokens, shell layout, auth surfaces, then content pages.
+- Rebuilt the frontend design system with new tokens, global surfaces, typography, and responsive page primitives.
+- Reworked the application shell to use a modern desktop sidebar, sticky top area, and mobile bottom navigation.
+- Redesigned login, register, home, course list, course detail, lesson detail, profile, and code runner surfaces to match the new layout language.
+- Verified `npm run lint` and `npm run build`; both pass. Build still emits a chunk-size warning for the main bundle.

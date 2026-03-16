@@ -1,0 +1,61 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">首页</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:users_user_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; 成绩总表
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <section class="admin-card admin-score-summary">
+    <div class="admin-score-summary__head">
+      <div>
+        <span class="admin-eyebrow">Score Matrix</span>
+        <h1>{{ title }}</h1>
+        <p>{{ subtitle }}</p>
+      </div>
+      <div class="admin-score-badges">
+        <div class="admin-score-badge"><span>学生数</span>{{ students|length }}</div>
+        <div class="admin-score-badge"><span>达标小节</span>{{ eligible_lessons|length }}</div>
+        <div class="admin-score-badge"><span>参与门槛</span>75%</div>
+      </div>
+    </div>
+  </section>
+
+  {% if not eligible_lessons %}
+    <div class="module" style="padding: 20px 24px;">暂无满足参与度条件的小节。</div>
+  {% else %}
+    <section class="admin-matrix-shell">
+      <div class="score-matrix-wrap">
+        <table class="score-matrix">
+          <thead>
+            <tr>
+              <th>学生</th>
+              {% for lesson in eligible_lessons %}
+                <th>
+                  {{ lesson.title }}
+                  <span class="lesson-meta">{{ lesson.chapter.title }}</span>
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in matrix_rows %}
+              <tr>
+                <td>{{ row.student.username }}</td>
+                {% for score in row.scores %}
+                  <td><span class="{{ score.css_class }}">{{ score.value }}</span></td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}
