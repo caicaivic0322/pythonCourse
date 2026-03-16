@@ -11,6 +11,10 @@ python manage.py migrate
 echo "Seeding data..."
 python seed_gesp_courses.py
 
+# Create superuser
+echo "Creating superuser..."
+python create_superuser.py
+
 # Start server
 echo "Starting server..."
 exec "$@"
