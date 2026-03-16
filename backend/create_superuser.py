@@ -7,9 +7,9 @@ django.setup()
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
-username = 'admin'
-password = 'password123'
-email = 'admin@example.com'
+username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'password123')
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@example.com')
 
 try:
     if User.objects.filter(username=username).exists():

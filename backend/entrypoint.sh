@@ -11,9 +11,10 @@ python manage.py migrate
 echo "Seeding data..."
 python seed_gesp_courses.py
 
-# Create superuser
-echo "Creating superuser..."
-python create_superuser.py
+if [ "${AUTO_CREATE_SUPERUSER:-true}" = "true" ]; then
+  echo "Creating superuser..."
+  python create_superuser.py
+fi
 
 # Start server
 echo "Starting server..."

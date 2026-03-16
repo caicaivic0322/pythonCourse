@@ -8,6 +8,7 @@ __pycache__/
 venv/
 .venv_local/
 .env
+deploy/tencentcloud/.env.prod
 
 # Django
 *.sqlite3

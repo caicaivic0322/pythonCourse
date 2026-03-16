@@ -18,17 +18,26 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _as_bool(value, default=False):
+    if value is None:
+        return default
+    return str(value).strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _as_list(value, default=''):
+    raw = value if value is not None else default
+    return [item.strip() for item in str(raw).split(',') if item.strip()]
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-q#ew*j0l)_33cff2$#uzj-%s##k*h=5e2a41nvxh4u2i2y@*s)')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# 如果在 Render 等环境中（设置了 RENDER 环境变量），则关闭 DEBUG
-DEBUG = 'RENDER' not in os.environ
+DEBUG = _as_bool(os.environ.get('DEBUG'), default=False)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = _as_list(os.environ.get('ALLOWED_HOSTS'), default='localhost,127.0.0.1')
 
 
 # Application definition
@@ -62,29 +71,23 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = True # For development only
-# 生产环境建议设置为具体的域名，例如：
-# if not DEBUG:
-#    CORS_ALLOWED_ORIGINS = [
-#        "https://your-frontend.vercel.app",
-#    ]
+CORS_ALLOW_ALL_ORIGINS = _as_bool(os.environ.get('CORS_ALLOW_ALL_ORIGINS'), default=False)
+CORS_ALLOWED_ORIGINS = _as_list(os.environ.get('CORS_ALLOWED_ORIGINS'))
 
 # DRF Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication',  # Disable session auth for API to avoid CSRF issues
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost",
-    "http://127.0.0.1",
-]
+CSRF_TRUSTED_ORIGINS = _as_list(
+    os.environ.get('CSRF_TRUSTED_ORIGINS'),
+    default='http://localhost,http://127.0.0.1'
+)
 
 ROOT_URLCONF = 'config.urls'
 
