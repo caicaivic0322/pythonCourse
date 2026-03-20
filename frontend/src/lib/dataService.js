@@ -153,3 +153,7 @@ export async function submitExamAttempt() {
 export function getStoredUser() {
   return normalizeUser(readSession()?.user);
 }
+
+export function hasStoredToken() {
+  return Boolean(localStorage.getItem('token'));
+}

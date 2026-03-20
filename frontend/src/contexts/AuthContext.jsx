@@ -1,47 +1,50 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext, useEffect } from 'react';
-import api from '../api/axios';
+import {
+  getCurrentUserData,
+  getStoredUser,
+  hasStoredToken,
+  loginWithUsernameOrEmail,
+  registerUser,
+  signOut,
+} from '../lib/dataService';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const initialUser = getStoredUser();
+  const [user, setUser] = useState(initialUser);
+  const [loading, setLoading] = useState(hasStoredToken() && !initialUser);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const response = await api.get('users/me/');
-          setUser(response.data);
-        } catch (error) {
-          console.error("Auth check failed:", error);
-          localStorage.removeItem('token');
-        }
-      } else {
-        setLoading(false);
-      }
+    if (!hasStoredToken()) {
+      return;
+    }
+
+    const initAuth = async () => {
+      const currentUser = await getCurrentUserData();
+      setUser(currentUser);
       setLoading(false);
     };
-    checkAuth();
+    initAuth();
   }, []);
 
-  const login = async (username, password) => {
-    const response = await api.post('users/login/', { username, password });
-    const { token, ...userData } = response.data;
-    localStorage.setItem('token', token);
-    setUser(userData);
-    return userData;
+  const login = async (identifier, password) => {
+    await loginWithUsernameOrEmail(identifier, password);
+    const currentUser = await getCurrentUserData();
+    setUser(currentUser);
+    return currentUser;
   };
 
   const register = async (username, email, password) => {
-    await api.post('users/register/', { username, email, password });
-    return login(username, password);
+    await registerUser(username, email, password);
+    const currentUser = await getCurrentUserData();
+    setUser(currentUser);
+    return currentUser;
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    await signOut();
     setUser(null);
   };
 

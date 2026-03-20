@@ -13,25 +13,13 @@ body {
   font-family: var(--font-body);
   color: var(--color-text-primary);
   background:
-    radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.09), transparent 22%),
-    radial-gradient(circle at 82% 10%, rgba(96, 165, 250, 0.08), transparent 18%),
+    radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.08), transparent 20%),
+    radial-gradient(circle at 82% 10%, rgba(96, 165, 250, 0.06), transparent 16%),
     linear-gradient(180deg, var(--color-bg-canvas) 0%, var(--color-bg-canvas-strong) 100%);
   min-height: 100vh;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-  background-size: 72px 72px;
-  opacity: 0.18;
-  pointer-events: none;
-  z-index: -1;
 }
 
 #root {
