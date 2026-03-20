@@ -30,17 +30,15 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (identifier, password) => {
-    await loginWithUsernameOrEmail(identifier, password);
-    const currentUser = await getCurrentUserData();
-    setUser(currentUser);
-    return currentUser;
+    const session = await loginWithUsernameOrEmail(identifier, password);
+    setUser(session.user);
+    return session.user;
   };
 
   const register = async (username, email, password) => {
-    await registerUser(username, email, password);
-    const currentUser = await getCurrentUserData();
-    setUser(currentUser);
-    return currentUser;
+    const session = await registerUser(username, email, password);
+    setUser(session.user);
+    return session.user;
   };
 
   const logout = async () => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { startTransition, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Clock3, Code2, Trophy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,17 +18,26 @@ const HomePage = () => {
   const [currentLesson, setCurrentLesson] = useState(null);
   const [stats, setStats] = useState({ xp: 0, badges: 0, courses_learned: 0, study_hours: 0 });
   const [loading, setLoading] = useState(true);
+  const [coursePanelLoading, setCoursePanelLoading] = useState(true);
 
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        if (!user?.id) return;
+        if (!user?.id) {
+          setLoading(false);
+          setCoursePanelLoading(false);
+          return;
+        }
+
         const [statsRes, courses] = await Promise.all([
           getUserStats(user.id),
           getCourses(user.id),
         ]);
 
-        setStats(statsRes);
+        startTransition(() => {
+          setStats(statsRes);
+          setLoading(false);
+        });
 
         let activeCourse = courses.find((course) => !course.is_locked && !course.is_completed);
 
@@ -36,32 +45,39 @@ const HomePage = () => {
           activeCourse = [...courses].reverse().find((course) => !course.is_locked) || courses[0];
         }
 
-        if (activeCourse) {
-          const courseDetail = await getCourseDetail(user.id, activeCourse.id);
+        if (!activeCourse) {
+          setCoursePanelLoading(false);
+          return;
+        }
 
-          let foundLesson = null;
-          let totalLessons = 0;
-          let completedLessons = 0;
+        const courseDetail = await getCourseDetail(user.id, activeCourse.id);
 
-          courseDetail.chapters?.forEach((chapter) => {
-            chapter.lessons?.forEach((lesson) => {
-              totalLessons += 1;
-              if (lesson.is_completed) {
-                completedLessons += 1;
-              } else if (!foundLesson && !lesson.is_locked) {
-                foundLesson = lesson;
-              }
-            });
+        let foundLesson = null;
+        let totalLessons = 0;
+        let completedLessons = 0;
+
+        courseDetail.chapters?.forEach((chapter) => {
+          chapter.lessons?.forEach((lesson) => {
+            totalLessons += 1;
+            if (lesson.is_completed) {
+              completedLessons += 1;
+            } else if (!foundLesson && !lesson.is_locked) {
+              foundLesson = lesson;
+            }
           });
+        });
 
+        startTransition(() => {
           setCurrentLesson(foundLesson);
           setCurrentCourse({
             ...courseDetail,
             progress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
           });
-        }
+          setCoursePanelLoading(false);
+        });
       } catch (error) {
         console.error('Failed to fetch progress:', error);
+        setCoursePanelLoading(false);
       } finally {
         setLoading(false);
       }
@@ -136,7 +152,18 @@ const HomePage = () => {
             </Link>
           </div>
 
-          {currentCourse ? (
+          {coursePanelLoading ? (
+            <div className={styles.coursePanelSkeleton}>
+              <div className={styles.courseVisualSkeleton} />
+              <div className={styles.courseBodySkeleton}>
+                <div className={styles.skeletonLineShort} />
+                <div className={styles.skeletonLineTitle} />
+                <div className={styles.skeletonLine} />
+                <div className={styles.skeletonLine} />
+                <div className={styles.skeletonProgress} />
+              </div>
+            </div>
+          ) : currentCourse ? (
             <Link
               to={currentLesson ? `/lessons/${currentLesson.id}` : `/courses/${currentCourse.id}`}
               className={styles.coursePanel}
