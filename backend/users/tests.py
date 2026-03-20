@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework.test import APIClient
 
 from courses.models import Chapter, Course, Lesson, UserCourseProgress, UserLessonProgress
 
@@ -143,3 +144,28 @@ class AdminUserProgressTests(TestCase):
         self.assertContains(response, 'student_four')
         self.assertContains(response, 'matrix-score score-top', count=9, html=False)
         self.assertContains(response, 'matrix-score score-bottom', count=2, html=False)
+
+
+class CustomAuthTokenTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='student_login',
+            email='student_login@example.com',
+            password='studentpass123',
+            is_approved=True,
+        )
+
+    def test_login_accepts_email_address(self):
+        response = self.client.post(
+            '/api/users/login/',
+            {
+                'username': 'student_login@example.com',
+                'password': 'studentpass123',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('token', response.data)
+        self.assertEqual(response.data['username'], 'student_login')

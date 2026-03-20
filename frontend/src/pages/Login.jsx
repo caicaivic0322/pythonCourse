@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import styles from './Login.module.css';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,11 +17,11 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      await login(username, password);
+      await login(identifier, password);
       navigate('/');
     } catch (err) {
       console.error('Login error:', err);
-      setError('用户名或密码错误');
+      setError(err.message || '用户名或密码错误');
     } finally {
       setLoading(false);
     }
@@ -70,14 +70,14 @@ const Login = () => {
 
           <form className={styles.form} onSubmit={handleSubmit}>
             <div className={styles.field}>
-              <label htmlFor="username" className={styles.label}>用户名</label>
+              <label htmlFor="username" className={styles.label}>用户名或邮箱</label>
               <input
                 id="username"
                 type="text"
                 className={styles.input}
-                placeholder="例如 py_learner"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="例如 py_learner 或 name@example.com"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
               />
             </div>

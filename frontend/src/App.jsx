@@ -9,6 +9,8 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const CourseList = lazy(() => import('./pages/CourseList'));
 const CourseDetail = lazy(() => import('./pages/CourseDetail'));
 const LessonDetail = lazy(() => import('./pages/LessonDetail'));
+const ExamList = lazy(() => import('./pages/ExamList'));
+const ExamDetail = lazy(() => import('./pages/ExamDetail'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Profile = lazy(() => import('./pages/Profile'));
@@ -25,6 +27,8 @@ function App() {
                 <Route path="courses" element={<CourseList />} />
                 <Route path="courses/:id" element={<CourseDetail />} />
                 <Route path="lessons/:id" element={<LessonDetail />} />
+                <Route path="exams" element={<ExamList />} />
+                <Route path="exams/:id" element={<ExamDetail />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
               <Route path="/login" element={<Login />} />

@@ -46,8 +46,8 @@ const MainLayout = () => {
     subtitle: '继续你的 Python 学习旅程。',
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 

@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from django.contrib.auth import get_user_model
-from django.db.models import Sum, Count
 from .serializers import UserSerializer, RegisterSerializer
 from courses.models import UserLessonProgress, UserCourseProgress
 
@@ -16,7 +15,15 @@ class RegisterView(generics.CreateAPIView):
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data,
+        auth_data = request.data.copy()
+        identifier = auth_data.get('username', '')
+
+        if identifier and '@' in identifier:
+            matched_user = User.objects.filter(email__iexact=identifier).first()
+            if matched_user:
+                auth_data['username'] = matched_user.username
+
+        serializer = self.serializer_class(data=auth_data,
                                            context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
@@ -25,7 +32,6 @@ class CustomAuthToken(ObtainAuthToken):
             'token': token.key,
             'user_id': user.pk,
             'username': user.username,
-            # 'is_approved': user.is_approved
         })
 
 class UserDetailView(generics.RetrieveAPIView):

@@ -22,7 +22,7 @@ const Register = () => {
       navigate('/');
     } catch (err) {
       console.error('Register error:', err);
-      setError('注册失败，请稍后重试');
+      setError(err.message || '注册失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,7 @@ const Register = () => {
         <div className={styles.heroCopy}>
           <span className="eyebrow">Get Started</span>
           <h1>创建一个轻量、清爽、专注学习进度的 Python 账号。</h1>
-          <p>注册后即可进入课程中心，按章节解锁内容、积累经验值，并在练习区即时运行代码。</p>
+          <p>注册后会先创建学习账号，管理员审核通过后即可进入完整课程内容，按章节解锁内容并积累经验值。</p>
         </div>
 
         <div className={styles.featureList}>
@@ -62,7 +62,7 @@ const Register = () => {
           <div className={styles.formHeader}>
             <span className="eyebrow">New Account</span>
             <h2>创建账号</h2>
-            <p>只需几步，开始你的 Python 学习路线。</p>
+            <p>只需几步创建账号，提交后会自动登录，并等待管理员审核开通课程权限。</p>
           </div>
 
           {error && <div className={styles.error}>{error}</div>}
