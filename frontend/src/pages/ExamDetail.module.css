@@ -1,0 +1,66 @@
+.hero {
+  display: grid;
+  gap: 10px;
+}
+
+.backButton {
+  width: fit-content;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.questionList {
+  display: grid;
+  gap: 14px;
+}
+
+.questionCard {
+  display: grid;
+  gap: 12px;
+}
+
+.questionCard h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+}
+
+.option {
+  border: 1px solid var(--border-color);
+  background: var(--surface-elevated);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: left;
+  display: flex;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.optionSelected {
+  border-color: var(--accent-primary);
+}
+
+.explainBlock {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+}
+
+.footer {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.result {
+  font-weight: 600;
+}
