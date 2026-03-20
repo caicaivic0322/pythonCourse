@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Clock3, Code2, Trophy } from 'lucide-react';
-import api from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
+import { getCourseDetail, getCourses, getUserStats } from '../lib/dataService';
 import styles from './HomePage.module.css';
 
 const statItems = [
@@ -12,6 +13,7 @@ const statItems = [
 ];
 
 const HomePage = () => {
+  const { user } = useAuth();
   const [currentCourse, setCurrentCourse] = useState(null);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [stats, setStats] = useState({ xp: 0, badges: 0, courses_learned: 0, study_hours: 0 });
@@ -20,11 +22,13 @@ const HomePage = () => {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const statsRes = await api.get('users/stats/');
-        setStats(statsRes.data);
+        if (!user?.id) return;
+        const [statsRes, courses] = await Promise.all([
+          getUserStats(user.id),
+          getCourses(user.id),
+        ]);
 
-        const response = await api.get('courses/');
-        const courses = response.data;
+        setStats(statsRes);
 
         let activeCourse = courses.find((course) => !course.is_locked && !course.is_completed);
 
@@ -33,9 +37,7 @@ const HomePage = () => {
         }
 
         if (activeCourse) {
-          const detailRes = await api.get(`courses/${activeCourse.id}/`);
-          const courseDetail = detailRes.data;
-          setCurrentCourse(courseDetail);
+          const courseDetail = await getCourseDetail(user.id, activeCourse.id);
 
           let foundLesson = null;
           let totalLessons = 0;
@@ -53,7 +55,10 @@ const HomePage = () => {
           });
 
           setCurrentLesson(foundLesson);
-          courseDetail.progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+          setCurrentCourse({
+            ...courseDetail,
+            progress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
+          });
         }
       } catch (error) {
         console.error('Failed to fetch progress:', error);
@@ -63,7 +68,7 @@ const HomePage = () => {
     };
 
     fetchProgress();
-  }, []);
+  }, [user?.id]);
 
   if (loading) {
     return <div className="loading-panel">正在整理你的学习面板...</div>;

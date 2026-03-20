@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react';
 import { Play } from 'lucide-react';
-import Editor from "@monaco-editor/react";
 import styles from './CodeRunner.module.css';
+
+const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 
 const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprint('Hello, World!')" }) => {
   const [code, setCode] = useState(initialCode);
@@ -9,6 +10,7 @@ const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprin
   const [isRunning, setIsRunning] = useState(false);
   const [pyodide, setPyodide] = useState(null);
   const [isPyodideLoading, setIsPyodideLoading] = useState(true);
+  const [isActivated, setIsActivated] = useState(false);
   const [editorWidth, setEditorWidth] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef(null);
@@ -18,9 +20,13 @@ const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprin
   }, [initialCode]);
 
   useEffect(() => {
+    if (!isActivated) return undefined;
+
     let script;
     const initPyodide = async () => {
       try {
+        setIsPyodideLoading(true);
+
         if (!window.loadPyodide) {
             if (window.pyodideLoadingPromise) {
                 await window.pyodideLoadingPromise;
@@ -55,9 +61,8 @@ const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprin
     };
     initPyodide();
 
-    return () => {
-    };
-  }, []);
+    return () => {};
+  }, [isActivated]);
 
   const handleMouseDown = useCallback((e) => {
     e.preventDefault();
@@ -158,6 +163,29 @@ const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprin
   const editorPaneWidth = `${editorWidth}%`;
   const outputPaneWidth = `${100 - editorWidth}%`;
 
+  if (!isActivated) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <span className={styles.fileName}>practice.py</span>
+          <button
+            onClick={() => setIsActivated(true)}
+            className={styles.runButton}
+            type="button"
+          >
+            打开练习区
+          </button>
+        </div>
+        <div className={styles.output}>
+          <div className={styles.outputLabel}>延迟加载</div>
+          <pre className={styles.outputPre}>
+            练习区会在你真正需要时再加载编辑器和 Python 运行环境，这样课程页面会更快打开。
+          </pre>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -173,35 +201,37 @@ const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprin
       </div>
       <div className={styles.editorWrapper} ref={containerRef}>
         <div className={styles.editorPane} style={{ width: editorPaneWidth }}>
-            <Editor
-                height="100%"
-                defaultLanguage="python"
-                value={code}
-                onChange={(value) => setCode(value || '')}
-                theme="vs-dark"
-                options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                    lineNumbers: 'on',
-                    glyphMargin: false,
-                    lineDecorationsWidth: 0,
-                    lineNumbersMinChars: 5,
-                    renderLineHighlight: 'none',
-                    overviewRulerBorder: false,
-                    hideCursorInOverviewRuler: true,
-                    padding: { top: 8, bottom: 8 },
-                    readOnly: false,
-                    wordWrap: 'on',
-                    scrollbar: {
-                        vertical: 'auto',
-                        horizontal: 'auto',
-                        verticalScrollbarSize: 10,
-                        horizontalScrollbarSize: 10,
-                    },
-                }}
+          <Suspense fallback={<div className={styles.output}>编辑器加载中...</div>}>
+            <MonacoEditor
+              height="100%"
+              defaultLanguage="python"
+              value={code}
+              onChange={(value) => setCode(value || '')}
+              theme="vs-dark"
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                lineNumbers: 'on',
+                glyphMargin: false,
+                lineDecorationsWidth: 0,
+                lineNumbersMinChars: 5,
+                renderLineHighlight: 'none',
+                overviewRulerBorder: false,
+                hideCursorInOverviewRuler: true,
+                padding: { top: 8, bottom: 8 },
+                readOnly: false,
+                wordWrap: 'on',
+                scrollbar: {
+                  vertical: 'auto',
+                  horizontal: 'auto',
+                  verticalScrollbarSize: 10,
+                  horizontalScrollbarSize: 10,
+                },
+              }}
             />
+          </Suspense>
         </div>
         <div 
           className={styles.resizer}
