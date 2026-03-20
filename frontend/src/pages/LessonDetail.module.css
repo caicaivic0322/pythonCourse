@@ -176,6 +176,7 @@
   border-radius: 1rem;
   border: 1px solid var(--color-border);
   background: var(--color-surface-strong);
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
   gap: 0.8rem;
@@ -226,6 +227,7 @@
 
 .optionText {
   flex: 1;
+  color: var(--color-text-primary);
 }
 
 .answerBadge {

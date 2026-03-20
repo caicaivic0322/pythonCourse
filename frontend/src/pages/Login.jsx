@@ -40,7 +40,7 @@ const Login = () => {
 
         <div className={styles.heroCopy}>
           <span className="eyebrow">Python Learning</span>
-          <h1>把课程、练习和测验收进一个更清晰的学习空间。</h1>
+          <h1>Learn, Practice, Project.</h1>
           <p>
             登录后直接回到你的学习总览，继续课程、查看成长进度，并在代码练习区马上开始动手。
           </p>
