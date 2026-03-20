@@ -76,6 +76,30 @@
   font-size: var(--font-size-sm);
 }
 
+.statMetricSkeleton,
+.statLabelSkeleton {
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(133, 153, 186, 0.12) 0%,
+    rgba(133, 153, 186, 0.22) 50%,
+    rgba(133, 153, 186, 0.12) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.6s ease infinite;
+}
+
+.statMetricSkeleton {
+  width: 92px;
+  height: 38px;
+}
+
+.statLabelSkeleton {
+  width: 72px;
+  height: 12px;
+  margin-top: 0.45rem;
+}
+
 .learningGrid {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.78fr);

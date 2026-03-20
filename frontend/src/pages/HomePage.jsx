@@ -17,14 +17,14 @@ const HomePage = () => {
   const [currentCourse, setCurrentCourse] = useState(null);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [stats, setStats] = useState({ xp: 0, badges: 0, courses_learned: 0, study_hours: 0 });
-  const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [coursePanelLoading, setCoursePanelLoading] = useState(true);
 
   useEffect(() => {
     const fetchProgress = async () => {
       try {
         if (!user?.id) {
-          setLoading(false);
+          setStatsLoading(false);
           setCoursePanelLoading(false);
           return;
         }
@@ -36,7 +36,7 @@ const HomePage = () => {
 
         startTransition(() => {
           setStats(statsRes);
-          setLoading(false);
+          setStatsLoading(false);
         });
 
         let activeCourse = courses.find((course) => !course.is_locked && !course.is_completed);
@@ -77,18 +77,15 @@ const HomePage = () => {
         });
       } catch (error) {
         console.error('Failed to fetch progress:', error);
+        setStatsLoading(false);
         setCoursePanelLoading(false);
       } finally {
-        setLoading(false);
+        setStatsLoading(false);
       }
     };
 
     fetchProgress();
   }, [user?.id]);
-
-  if (loading) {
-    return <div className="loading-panel">正在整理你的学习面板...</div>;
-  }
 
   return (
     <div className="page-shell">
@@ -128,11 +125,20 @@ const HomePage = () => {
                 <Icon size={20} />
               </div>
               <div>
-                <div className="metric-value">
-                  {stats[item.key]}
-                  {item.suffix}
-                </div>
-                <div className={styles.statLabel}>{item.label}</div>
+                {statsLoading ? (
+                  <>
+                    <div className={styles.statMetricSkeleton} />
+                    <div className={styles.statLabelSkeleton} />
+                  </>
+                ) : (
+                  <>
+                    <div className="metric-value">
+                      {stats[item.key]}
+                      {item.suffix}
+                    </div>
+                    <div className={styles.statLabel}>{item.label}</div>
+                  </>
+                )}
               </div>
             </div>
           );
