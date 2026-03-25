@@ -14,6 +14,7 @@ const statItems = [
 
 const HomePage = () => {
   const { user } = useAuth();
+  const userId = user?.id ?? user?.user_id;
   const [currentCourse, setCurrentCourse] = useState(null);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [stats, setStats] = useState({ xp: 0, badges: 0, courses_learned: 0, study_hours: 0 });
@@ -23,15 +24,15 @@ const HomePage = () => {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        if (!user?.id) {
+        if (!userId) {
           setStatsLoading(false);
           setCoursePanelLoading(false);
           return;
         }
 
         const [statsRes, courses] = await Promise.all([
-          getUserStats(user.id),
-          getCourses(user.id),
+          getUserStats(userId),
+          getCourses(userId),
         ]);
 
         startTransition(() => {
@@ -50,7 +51,7 @@ const HomePage = () => {
           return;
         }
 
-        const courseDetail = await getCourseDetail(user.id, activeCourse.id);
+        const courseDetail = await getCourseDetail(userId, activeCourse.id);
 
         let foundLesson = null;
         let totalLessons = 0;
@@ -85,7 +86,7 @@ const HomePage = () => {
     };
 
     fetchProgress();
-  }, [user?.id]);
+  }, [userId]);
 
   return (
     <div className="page-shell">

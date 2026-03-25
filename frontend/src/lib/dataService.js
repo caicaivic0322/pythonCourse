@@ -20,6 +20,7 @@ function normalizeUser(user) {
   if (!user) return null;
   return {
     ...user,
+    id: user.id || user.user_id,
     user_id: user.user_id || user.id,
   };
 }
