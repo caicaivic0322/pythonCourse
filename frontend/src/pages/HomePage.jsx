@@ -30,15 +30,26 @@ const HomePage = () => {
           return;
         }
 
-        const [statsRes, courses] = await Promise.all([
+        const [statsResult, coursesResult] = await Promise.allSettled([
           getUserStats(userId),
           getCourses(userId),
         ]);
 
-        startTransition(() => {
-          setStats(statsRes);
+        if (statsResult.status === 'fulfilled') {
+          startTransition(() => {
+            setStats(statsResult.value);
+            setStatsLoading(false);
+          });
+        } else {
+          console.error('Failed to fetch stats:', statsResult.reason);
           setStatsLoading(false);
-        });
+        }
+
+        if (coursesResult.status !== 'fulfilled') {
+          throw coursesResult.reason;
+        }
+
+        const courses = coursesResult.value;
 
         let activeCourse = courses.find((course) => !course.is_locked && !course.is_completed);
 

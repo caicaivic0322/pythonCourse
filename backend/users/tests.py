@@ -169,3 +169,68 @@ class CustomAuthTokenTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('token', response.data)
         self.assertEqual(response.data['username'], 'student_login')
+
+
+class UserStatsViewTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='stats_user',
+            email='stats@example.com',
+            password='studentpass123',
+            is_approved=True,
+        )
+        self.course = Course.objects.create(
+            title='Stats Course',
+            description='Course used for stats tests.',
+            order=1,
+        )
+        self.chapter = Chapter.objects.create(
+            course=self.course,
+            title='Stats Chapter',
+            order=1,
+        )
+        self.lesson_one = Lesson.objects.create(
+            chapter=self.chapter,
+            title='Lesson 1',
+            order=1,
+            lesson_type='text',
+            content='content',
+        )
+        self.lesson_two = Lesson.objects.create(
+            chapter=self.chapter,
+            title='Lesson 2',
+            order=2,
+            lesson_type='quiz',
+            content='content',
+        )
+
+        UserLessonProgress.objects.create(
+            user=self.user,
+            lesson=self.lesson_one,
+            is_completed=True,
+            score=100,
+        )
+        UserLessonProgress.objects.create(
+            user=self.user,
+            lesson=self.lesson_two,
+            is_completed=True,
+            score=80,
+        )
+        UserCourseProgress.objects.create(
+            user=self.user,
+            course=self.course,
+            current_lesson=self.lesson_two,
+            is_completed=False,
+        )
+
+        self.client.force_authenticate(user=self.user)
+
+    def test_stats_endpoint_returns_aggregated_learning_metrics(self):
+        response = self.client.get('/api/users/stats/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['xp'], 180)
+        self.assertEqual(response.data['badges'], 0)
+        self.assertEqual(response.data['courses_learned'], 1)
+        self.assertEqual(response.data['study_hours'], 0.7)
