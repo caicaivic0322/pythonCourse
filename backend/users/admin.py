@@ -18,6 +18,9 @@ admin.site.index_title = '后台总览'
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'is_approved', 'level', 'xp', 'progress_snapshot', 'is_staff')
     list_filter = ('is_approved', 'level', 'is_staff')
+    search_fields = ('username', 'email')
+    ordering = ('username',)
+    list_per_page = 25
     readonly_fields = ('progress_snapshot', 'lesson_scores_board')
     fieldsets = UserAdmin.fieldsets + (
         ('Gamification', {'fields': ('is_approved', 'xp', 'level')}),

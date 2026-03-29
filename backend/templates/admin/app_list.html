@@ -1,23 +1,31 @@
 {% load i18n %}
 
 {% if app_list %}
-  <div class="admin-app-grid">
+  <div class="admin-app-list">
     {% for app in app_list %}
-      <section class="admin-app-card app-{{ app.app_label }}{% if app.app_url in request.path|urlencode %} current-app{% endif %}">
-        <div class="admin-app-card__head">
+      <section class="admin-module">
+        <div class="admin-module__header">
           <div>
-            <span class="admin-app-card__eyebrow">模块</span>
             <h2>
               <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
             </h2>
+            <p>管理该模块下的列表、详情与新增入口。</p>
           </div>
-          <span class="admin-app-card__count">{{ app.models|length }} 项</span>
+          <span class="admin-module__count">{{ app.models|length }} 项</span>
         </div>
-        <div class="admin-app-card__models">
+        <table class="admin-module__table">
+          <thead>
+            <tr>
+              <th>模型</th>
+              <th>说明</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
           {% for model in app.models %}
             {% with model_name=model.object_name|lower %}
-              <article class="admin-model-card model-{{ model_name }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
-                <div class="admin-model-card__main">
+              <tr class="model-{{ model_name }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
+                <td>
                   <strong id="{{ app.app_label }}-{{ model_name }}">
                     {% if model.admin_url %}
                       <a href="{{ model.admin_url }}"{% if model.admin_url in request.path|urlencode %} aria-current="page"{% endif %}>{{ model.name }}</a>
@@ -25,31 +33,32 @@
                       {{ model.name }}
                     {% endif %}
                   </strong>
-                  <span>
-                    {% if model.view_only %}
-                      只读查看
-                    {% else %}
-                      管理列表与详情
-                    {% endif %}
-                  </span>
-                </div>
-                <div class="admin-model-card__actions">
+                </td>
+                <td>
+                  {% if model.view_only %}
+                    只读查看
+                  {% else %}
+                    管理列表与详情
+                  {% endif %}
+                </td>
+                <td class="admin-module__actions">
                   {% if model.admin_url and show_changelinks %}
                     {% if model.view_only %}
-                      <a href="{{ model.admin_url }}" class="admin-chip admin-chip--ghost" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'View' %}</a>
+                      <a href="{{ model.admin_url }}" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'View' %}</a>
                     {% else %}
-                      <a href="{{ model.admin_url }}" class="admin-chip admin-chip--ghost" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'Change' %}</a>
+                      <a href="{{ model.admin_url }}" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'Change' %}</a>
                     {% endif %}
                   {% endif %}
 
                   {% if model.add_url %}
-                    <a href="{{ model.add_url }}" class="admin-chip" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'Add' %}</a>
+                    <a href="{{ model.add_url }}" aria-describedby="{{ app.app_label }}-{{ model_name }}">{% translate 'Add' %}</a>
                   {% endif %}
-                </div>
-              </article>
+                </td>
+              </tr>
             {% endwith %}
           {% endfor %}
-        </div>
+          </tbody>
+        </table>
       </section>
     {% endfor %}
   </div>

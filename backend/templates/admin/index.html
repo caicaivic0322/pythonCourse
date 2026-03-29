@@ -1,26 +1,17 @@
 {% extends "admin/index.html" %}
 
 {% block content %}
-  <section class="admin-hero">
-    <div class="admin-hero__content">
-      <span class="admin-eyebrow">管理工作台</span>
+  <section class="admin-overview">
+    <div>
       <h1>后台总览</h1>
-      <p>统一管理用户、课程内容与学习数据，优先把最重要的状态放在同一屏里。</p>
-      <div class="admin-hero__actions">
-        <a href="{% url 'admin:users_user_changelist' %}" class="admin-chip">查看用户</a>
-        <a href="{% url 'admin:courses_course_changelist' %}" class="admin-chip admin-chip--ghost">查看课程</a>
-      </div>
+      <p>使用更接近 Django 默认后台的布局，优先保证查找、筛选、编辑和维护效率。</p>
     </div>
-    <div class="admin-hero__meta">
-      <div class="admin-stat">
-        <span class="admin-stat__label">管理模块</span>
-        <strong>{{ app_list|length }}</strong>
-      </div>
-      <div class="admin-stat">
-        <span class="admin-stat__label">当前入口</span>
-        <strong>Django Admin</strong>
-      </div>
-    </div>
+    <ul class="admin-overview__links">
+      <li><a href="{% url 'admin:users_user_changelist' %}">管理用户</a></li>
+      <li><a href="{% url 'admin:courses_course_changelist' %}">管理课程</a></li>
+      <li><a href="{% url 'admin:courses_userlessonprogress_changelist' %}">查看学习记录</a></li>
+      <li><a href="{% url 'admin:users_user_score_matrix' %}">查看成绩总表</a></li>
+    </ul>
   </section>
   {{ block.super }}
 {% endblock %}

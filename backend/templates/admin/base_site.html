@@ -5,25 +5,23 @@
 
 {% block extrastyle %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'admin/custom_admin.css' %}">
+  <link rel="stylesheet" href="{% static 'pymaster_admin/admin.css' %}">
 {% endblock %}
 
 {% block branding %}
-  <div class="brand-shell">
-    <a href="{% url 'admin:index' %}" class="brand-mark">Py</a>
-    <div class="brand-copy">
-      <strong>{{ site_header|default:_('PyMaster Admin') }}</strong>
-      <span>课程与学习进度后台</span>
-    </div>
+  <div class="admin-branding">
+    <strong><a href="{% url 'admin:index' %}">{{ site_header|default:_('PyMaster Admin') }}</a></strong>
+    <span>内容、用户与学习记录管理</span>
   </div>
 {% endblock %}
 
 {% block nav-global %}
-  <nav class="workspace-nav" aria-label="Admin shortcuts">
-    <a href="{% url 'admin:index' %}" class="workspace-nav__link">总览</a>
-    <a href="{% url 'admin:users_user_changelist' %}" class="workspace-nav__link">用户</a>
-    <a href="{% url 'admin:courses_course_changelist' %}" class="workspace-nav__link">课程</a>
-    <a href="{% url 'admin:courses_userlessonprogress_changelist' %}" class="workspace-nav__link">学习记录</a>
-    <a href="{% url 'admin:users_user_score_matrix' %}" class="workspace-nav__link workspace-nav__link--accent">成绩总表</a>
+  <nav class="admin-shortcuts" aria-label="Admin shortcuts">
+    <a href="{% url 'admin:index' %}">总览</a>
+    <a href="{% url 'admin:users_user_changelist' %}">用户</a>
+    <a href="{% url 'admin:courses_course_changelist' %}">课程</a>
+    <a href="{% url 'admin:courses_lesson_changelist' %}">课时</a>
+    <a href="{% url 'admin:courses_userlessonprogress_changelist' %}">学习记录</a>
+    <a href="{% url 'admin:users_user_score_matrix' %}">成绩总表</a>
   </nav>
 {% endblock %}
