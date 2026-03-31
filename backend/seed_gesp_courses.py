@@ -2778,6 +2778,64 @@ Quiz.objects.create(lesson=l3_1_2, question="在函数内部修改全局列表�
 Quiz.objects.create(lesson=l3_1_2, question="nonlocal 关键字用于？", option_a="全局变量", option_b="嵌套函数中的外层变量", option_c="局部变量", option_d="类变量", correct_answer="B", explanation="用于嵌套作用域。")
 Quiz.objects.create(lesson=l3_1_2, question="Python 查找变量的顺序是？", option_a="LEGB (Local -> Enclosing -> Global -> Built-in)", option_b="LGBE", option_c="Global -> Local", option_d="随机", correct_answer="A", explanation="LEGB 原则。")
 
+# 1.3 参数进阶
+l3_1_3 = create_lesson(
+    chapter=ch3_1, title="1.3 参数传递与函数调用", order=3, lesson_type='code',
+    code_challenge_prompt="# 定义一个 greet 函数，支持默认参数 title='同学'\ndef greet(name, title='同学'):\n    return f'{title}，你好，{name}!'\n\nprint(greet('小明'))\nprint(greet('小红', title='老师'))",
+    content="""# 1.3 参数传递与函数调用
+
+## 1. 位置参数
+函数调用时最常见的是按顺序传参。
+
+```python
+def add(a, b):
+    return a + b
+
+print(add(3, 5))
+```
+
+## 2. 默认参数
+有些参数在大多数时候取同一个值，这时可以设置默认参数。
+
+```python
+def greet(name, title="同学"):
+    return f"{title}，你好，{name}!"
+```
+
+如果调用时不传 `title`，就自动使用默认值。
+
+## 3. 关键字参数
+调用函数时也可以写出“参数名=值”，这样代码更清晰。
+
+```python
+print(greet(name="小明", title="班长"))
+```
+
+## 4. 返回多个结果
+Python 函数可以一次返回多个值，本质上会打包成元组。
+
+```python
+def calc(a, b):
+    return a + b, a - b
+
+x, y = calc(8, 3)
+```
+
+## 5. 使用函数拆解问题
+函数的意义不仅是“能调用”，更重要的是把复杂问题分成多个小步骤，让程序更清晰、便于复用和测试。
+"""
+)
+Quiz.objects.create(lesson=l3_1_3, question="调用 add(3, 5) 时，3 和 5 属于哪类参数传递方式？", option_a="关键字参数", option_b="位置参数", option_c="默认参数", option_d="匿名参数", correct_answer="B", explanation="按顺序传入的参数叫位置参数。")
+Quiz.objects.create(lesson=l3_1_3, question="def greet(name, title='同学') 中 title='同学' 属于？", option_a="局部变量", option_b="返回值", option_c="默认参数", option_d="全局变量", correct_answer="C", explanation="这是默认参数。")
+Quiz.objects.create(lesson=l3_1_3, question="下面哪种调用方式属于关键字参数？", option_a="greet('小明', '老师')", option_b="greet(name='小明')", option_c="greet('小明')", option_d="greet()", correct_answer="B", explanation="写出参数名就是关键字参数。")
+Quiz.objects.create(lesson=l3_1_3, question="函数 return a + b, a - b 返回的本质通常是？", option_a="列表", option_b="字符串", option_c="元组", option_d="字典", correct_answer="C", explanation="多个返回值会打包为元组。")
+Quiz.objects.create(lesson=l3_1_3, question="函数最重要的作用之一是？", option_a="让代码更长", option_b="拆分问题、复用逻辑", option_c="减少缩进", option_d="替代变量", correct_answer="B", explanation="函数可以封装并复用逻辑。")
+Quiz.objects.create(lesson=l3_1_3, question="判断题：默认参数只能放在参数列表最后。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="默认参数后面不能再跟普通位置参数。")
+Quiz.objects.create(lesson=l3_1_3, question="判断题：关键字参数可以提高函数调用时的可读性。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，尤其是参数较多时。")
+Quiz.objects.create(lesson=l3_1_3, question="x, y = calc(8, 3) 这种写法叫？", option_a="异常捕获", option_b="元组解包", option_c="切片", option_d="递归", correct_answer="B", explanation="返回的多个值可以直接解包到多个变量。")
+Quiz.objects.create(lesson=l3_1_3, question="如果函数定义为 f(a, b=1)，调用 f(5) 时 b 的值是？", option_a="0", option_b="1", option_c="5", option_d="报错", correct_answer="B", explanation="未传入时使用默认值 1。")
+Quiz.objects.create(lesson=l3_1_3, question="下列哪项最能体现“函数化思维”？", option_a="所有代码都写在 main 里", option_b="把重复逻辑提取成函数", option_c="少用 return", option_d="避免传参", correct_answer="B", explanation="复用和拆解是函数化思维的核心。")
+
 ch3_2, _ = Chapter.objects.get_or_create(course=c3, title="第2章：元组与异常处理", defaults={'order': 2})
 
 # 2.1 元组 Tuple
@@ -2858,6 +2916,217 @@ Quiz.objects.create(lesson=l3_2_2, question="判断题：except 必须配合 try
 Quiz.objects.create(lesson=l3_2_2, question="raise 关键字的作用是？", option_a="捕获异常", option_b="抛出异常", option_c="忽略异常", option_d="定义异常", correct_answer="B", explanation="手动抛出异常。")
 Quiz.objects.create(lesson=l3_2_2, question="KeyError 通常发生在？", option_a="列表索引越界", option_b="字典键不存在", option_c="除以零", option_d="变量未定义", correct_answer="B", explanation="字典查找不存在的键。")
 Quiz.objects.create(lesson=l3_2_2, question="IndexError 通常发生在？", option_a="访问不存在的列表索引", option_b="字典键错误", option_c="类型错误", option_d="文件错误", correct_answer="A", explanation="列表索引越界。")
+
+ch3_3, _ = Chapter.objects.get_or_create(course=c3, title="第3章：模块与代码组织", defaults={'order': 3})
+
+# 3.1 模块基础
+l3_3_1 = create_lesson(
+    chapter=ch3_3, title="3.1 什么是模块 import", order=1, lesson_type='text',
+    code_challenge_prompt="# 导入 math 模块并计算 16 的平方根\nimport math\nprint(math.sqrt(16))",
+    content="""# 3.1 什么是模块 import
+
+## 1. 模块是什么？
+Python 中，一个 `.py` 文件通常就可以看作一个**模块**。  
+模块里可以放函数、变量、类，用来组织代码。
+
+## 2. 为什么要用模块？
+- 让代码更清晰
+- 方便复用
+- 避免把所有代码都写在一个文件里
+
+## 3. 最基本的导入方式
+```python
+import math
+print(math.sqrt(16))
+```
+
+这里 `math` 是 Python 自带的标准库模块。
+
+## 4. 通过模块名调用函数
+导入模块后，通常要写成：
+
+```python
+模块名.函数名()
+```
+
+例如：
+```python
+math.sqrt(25)
+```
+
+这种写法可以清楚地看出函数来自哪个模块。
+"""
+)
+Quiz.objects.create(lesson=l3_3_1, question="Python 中一个普通的 .py 文件通常可以看作什么？", option_a="变量", option_b="模块", option_c="异常", option_d="元组", correct_answer="B", explanation="一个 .py 文件通常就是一个模块。")
+Quiz.objects.create(lesson=l3_3_1, question="使用 math 模块中的 sqrt 函数，正确写法是？", option_a="sqrt(16)", option_b="math->sqrt(16)", option_c="math.sqrt(16)", option_d="import.sqrt(16)", correct_answer="C", explanation="导入模块后要通过 模块名.函数名 调用。")
+Quiz.objects.create(lesson=l3_3_1, question="模块的主要作用之一是？", option_a="删除变量", option_b="组织和复用代码", option_c="让程序变慢", option_d="替代 if", correct_answer="B", explanation="模块用于组织和复用代码。")
+Quiz.objects.create(lesson=l3_3_1, question="import math 后，想求 9 的平方根应写作？", option_a="sqrt(9)", option_b="math.sqrt(9)", option_c="math(9)", option_d="import.sqrt(9)", correct_answer="B", explanation="函数属于 math 模块。")
+Quiz.objects.create(lesson=l3_3_1, question="判断题：模块中只能写函数，不能写变量。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，模块中也可以定义变量和类。")
+Quiz.objects.create(lesson=l3_3_1, question="判断题：使用模块可以减少代码混乱。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，模块有助于组织代码。")
+Quiz.objects.create(lesson=l3_3_1, question="math 属于哪一类模块？", option_a="第三方模块", option_b="标准库模块", option_c="浏览器模块", option_d="数据库模块", correct_answer="B", explanation="math 是 Python 标准库模块。")
+Quiz.objects.create(lesson=l3_3_1, question="模块导入后加模块名前缀的好处是？", option_a="代码更短", option_b="更清楚函数来源", option_c="速度更快", option_d="一定更省内存", correct_answer="B", explanation="写成 math.sqrt 更清楚函数来自哪里。")
+Quiz.objects.create(lesson=l3_3_1, question="下列哪个关键字用于导入模块？", option_a="include", option_b="require", option_c="import", option_d="using", correct_answer="C", explanation="Python 使用 import 导入模块。")
+Quiz.objects.create(lesson=l3_3_1, question="模块化编程最直接的好处不包括？", option_a="更易维护", option_b="更便于复用", option_c="完全不需要测试", option_d="结构更清晰", correct_answer="C", explanation="模块化不能替代测试。")
+
+# 3.2 from import 与别名
+l3_3_2 = create_lesson(
+    chapter=ch3_3, title="3.2 from...import 与 as 别名", order=2, lesson_type='code',
+    code_challenge_prompt="# 使用 from random import randint 生成 1~6 的随机整数\nfrom random import randint\nprint(randint(1, 6))",
+    content="""# 3.2 from...import 与 as 别名
+
+## 1. 直接导入模块中的内容
+有时我们只想用模块里的某一个函数，可以写成：
+
+```python
+from math import sqrt
+print(sqrt(36))
+```
+
+## 2. 使用别名
+如果模块名太长，或者为了书写方便，可以使用 `as`。
+
+```python
+import random as rnd
+print(rnd.randint(1, 10))
+```
+
+## 3. 两种导入方式对比
+- `import math`：更清楚函数来自哪里
+- `from math import sqrt`：调用更短
+
+## 4. 一个习惯
+初学时更推荐先理解 `import 模块名` 的方式，再学习 `from ... import ...` 和 `as`。
+"""
+)
+Quiz.objects.create(lesson=l3_3_2, question="from math import sqrt 后，调用平方根函数应写作？", option_a="math.sqrt(9)", option_b="sqrt(9)", option_c="import.sqrt(9)", option_d="from.sqrt(9)", correct_answer="B", explanation="直接导入了 sqrt，因此可以直接写 sqrt(9)。")
+Quiz.objects.create(lesson=l3_3_2, question="import random as rnd 中 rnd 是什么？", option_a="函数名", option_b="模块别名", option_c="异常对象", option_d="关键字参数", correct_answer="B", explanation="as 可以给模块起别名。")
+Quiz.objects.create(lesson=l3_3_2, question="哪种写法表示“只导入模块中的一个函数”？", option_a="import math.sqrt", option_b="from math import sqrt", option_c="use math sqrt", option_d="math import sqrt", correct_answer="B", explanation="这是 Python 的标准写法。")
+Quiz.objects.create(lesson=l3_3_2, question="as 关键字的主要用途是？", option_a="定义函数", option_b="设置默认参数", option_c="起别名", option_d="捕获异常", correct_answer="C", explanation="as 用于为模块或导入内容指定别名。")
+Quiz.objects.create(lesson=l3_3_2, question="下列哪种导入方式更能清楚看出函数来源？", option_a="from math import sqrt", option_b="import math", option_c="都一样", option_d="都不行", correct_answer="B", explanation="写成 math.sqrt 更清楚来源。")
+Quiz.objects.create(lesson=l3_3_2, question="判断题：from module import * 一般不推荐初学阶段大量使用。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="容易造成命名混乱。")
+Quiz.objects.create(lesson=l3_3_2, question="判断题：import random as rnd 后，原来的模块功能依旧可以通过 rnd 使用。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="别名只是换了一个名字。")
+Quiz.objects.create(lesson=l3_3_2, question="from random import randint 后，还必须写 random.randint(1, 6) 吗？", option_a="必须", option_b="不需要", option_c="只能在函数内写", option_d="会报错", correct_answer="B", explanation="已经直接导入了 randint。")
+Quiz.objects.create(lesson=l3_3_2, question="下列哪个更适合表示“骰子随机点数”？", option_a="randint(1, 6)", option_b="sqrt(1, 6)", option_c="input(1, 6)", option_d="len(1, 6)", correct_answer="A", explanation="randint 可以生成指定范围内的随机整数。")
+Quiz.objects.create(lesson=l3_3_2, question="关键字 as 的作用最接近下面哪句话？", option_a="给东西换个更方便的名字", option_b="把字符串变成数字", option_c="定义异常", option_d="创建循环", correct_answer="A", explanation="as 就是给导入对象设置别名。")
+
+# 3.3 自定义模块
+l3_3_3 = create_lesson(
+    chapter=ch3_3, title="3.3 自定义模块与代码拆分", order=3, lesson_type='text',
+    code_challenge_prompt="# 假设 helpers.py 中有 say_hi 函数\n# from helpers import say_hi\n# say_hi('Tom')\nprint('思考：为什么要把函数拆到 helpers.py 里？')",
+    content="""# 3.3 自定义模块与代码拆分
+
+## 1. 你自己写的 .py 文件也可以是模块
+例如你写了一个 `helpers.py`：
+
+```python
+def say_hi(name):
+    return f"你好，{name}"
+```
+
+然后在另一个文件中使用它：
+
+```python
+from helpers import say_hi
+print(say_hi("Tom"))
+```
+
+## 2. 为什么要拆分文件？
+- 主程序更简洁
+- 常用函数可以复用
+- 多个同学合作时更容易分工
+
+## 3. 一个常见思路
+- `main.py`：主程序入口
+- `helpers.py`：辅助函数
+- `utils.py`：工具函数
+
+这就是最基础的代码组织方式。
+
+## 4. 模块化思维
+当程序越来越大时，把不同职责的代码放到不同模块中，是非常重要的编程习惯。
+"""
+)
+Quiz.objects.create(lesson=l3_3_3, question="自己写的 helpers.py 能不能作为模块导入？", option_a="能", option_b="不能", option_c="只有系统模块才行", option_d="必须联网才行", correct_answer="A", explanation="自己的 .py 文件也可以作为模块。")
+Quiz.objects.create(lesson=l3_3_3, question="把常用函数放入 helpers.py 的主要好处是？", option_a="让代码更乱", option_b="便于复用和组织", option_c="自动加速程序", option_d="避免写函数", correct_answer="B", explanation="模块化的核心就是复用和清晰。")
+Quiz.objects.create(lesson=l3_3_3, question="主程序入口通常更适合放在哪个文件？", option_a="main.py", option_b="random.py", option_c="except.py", option_d="tuple.py", correct_answer="A", explanation="main.py 常作为主程序入口。")
+Quiz.objects.create(lesson=l3_3_3, question="from helpers import say_hi 说明要导入什么？", option_a="helpers 模块里的 say_hi", option_b="所有模块", option_c="异常处理", option_d="一个列表", correct_answer="A", explanation="导入的是 helpers 模块中的 say_hi 函数。")
+Quiz.objects.create(lesson=l3_3_3, question="模块化编程更适合哪种场景？", option_a="代码越来越多时", option_b="只有一行代码时", option_c="不用函数时", option_d="只写输入输出时", correct_answer="A", explanation="程序变大后更需要模块化组织。")
+Quiz.objects.create(lesson=l3_3_3, question="判断题：把所有代码永远写在一个文件里通常更利于维护。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，代码多时拆分模块更容易维护。")
+Quiz.objects.create(lesson=l3_3_3, question="判断题：一个模块中可以包含多个函数。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，一个模块可以包含多个函数和变量。")
+Quiz.objects.create(lesson=l3_3_3, question="helpers.py 最适合放什么内容？", option_a="辅助函数", option_b="浏览器设置", option_c="硬件驱动", option_d="数据库本体", correct_answer="A", explanation="名称就说明它适合放辅助函数。")
+Quiz.objects.create(lesson=l3_3_3, question="模块拆分最能帮助哪一项？", option_a="代码分工与复用", option_b="减少所有缩进", option_c="自动修复 bug", option_d="取消参数", correct_answer="A", explanation="代码组织和复用是核心价值。")
+Quiz.objects.create(lesson=l3_3_3, question="主程序调用模块函数，常见目的不包括？", option_a="复用逻辑", option_b="简化主程序", option_c="让所有文件都一样大", option_d="方便维护", correct_answer="C", explanation="模块化不是为了文件大小平均。")
+
+# 3.4 综合实战
+l3_3_4 = create_lesson(
+    chapter=ch3_3, title="3.4 综合实战：制作成绩工具箱", order=4, lesson_type='code',
+    code_challenge_prompt="""# 现在把“成绩统计”想象成来自 score_tools 模块
+# 请定义下面两个函数：
+# 1. avg(scores) 计算平均分
+# 2. is_pass(score) 判断是否及格（>=60）
+# 然后在主程序中调用它们
+
+scores = [76, 88, 92, 61]
+
+def avg(scores):
+    pass
+
+def is_pass(score):
+    pass
+
+print(avg(scores))
+print(is_pass(scores[0]))
+""",
+    content="""# 3.4 综合实战：制作成绩工具箱
+
+这一节把前面学过的内容串起来：
+- 函数
+- 返回值
+- 模块化思维
+
+## 1. 问题背景
+如果我们经常要处理学生成绩，就可以把“求平均分”“判断是否及格”这些功能做成一个小工具箱。
+
+## 2. 第一步：先写函数
+```python
+def avg(scores):
+    return sum(scores) / len(scores)
+
+def is_pass(score):
+    return score >= 60
+```
+
+## 3. 第二步：主程序调用
+```python
+scores = [76, 88, 92, 61]
+print(avg(scores))
+print(is_pass(scores[0]))
+```
+
+## 4. 第三步：如果项目变大
+就可以把这些函数放进 `score_tools.py`，主程序中再导入使用。
+
+```python
+from score_tools import avg, is_pass
+```
+
+## 5. 这节课的重点
+真正的“函数与模块”不是分开记忆知识点，而是学会：
+- 先封装函数
+- 再组织到模块
+- 最后在主程序里复用
+"""
+)
+Quiz.objects.create(lesson=l3_3_4, question="把成绩计算函数放入 score_tools.py，最主要体现了什么思想？", option_a="递归", option_b="模块化", option_c="切片", option_d="排序", correct_answer="B", explanation="把功能拆到独立文件中是模块化思想。")
+Quiz.objects.create(lesson=l3_3_4, question="avg(scores) 最可能返回什么？", option_a="一个平均分", option_b="一个文件", option_c="一个异常", option_d="一个模块名", correct_answer="A", explanation="avg 用于计算平均分。")
+Quiz.objects.create(lesson=l3_3_4, question="is_pass(score) 最可能返回哪种值？", option_a="列表", option_b="布尔值", option_c="字典", option_d="元组", correct_answer="B", explanation="判断及格通常返回 True 或 False。")
+Quiz.objects.create(lesson=l3_3_4, question="from score_tools import avg 表示？", option_a="导入模块中的 avg 函数", option_b="创建模块", option_c="删除模块", option_d="定义异常", correct_answer="A", explanation="这是从模块中导入函数。")
+Quiz.objects.create(lesson=l3_3_4, question="综合实战里，主程序最主要负责什么？", option_a="重复写同样逻辑", option_b="调用已经封装好的函数", option_c="替代模块文件", option_d="删除返回值", correct_answer="B", explanation="主程序应以调用为主。")
+Quiz.objects.create(lesson=l3_3_4, question="判断题：如果功能会重复使用，就值得写成函数。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，函数最适合封装重复逻辑。")
+Quiz.objects.create(lesson=l3_3_4, question="判断题：模块化后，主程序通常会更短、更清晰。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，模块化可以让主程序更聚焦。")
+Quiz.objects.create(lesson=l3_3_4, question="如果函数已经写好，再放到单独文件里，本质上是在做什么？", option_a="调试", option_b="代码组织", option_c="异常捕获", option_d="循环优化", correct_answer="B", explanation="这是代码组织与模块化。")
+Quiz.objects.create(lesson=l3_3_4, question="下列哪项更像“工具箱函数”？", option_a="avg(scores)", option_b="while True", option_c="import", option_d="except", correct_answer="A", explanation="avg 是可复用的功能函数。")
+Quiz.objects.create(lesson=l3_3_4, question="“先写函数，再拆成模块”最符合哪种学习路径？", option_a="从复用到组织", option_b="从异常到继承", option_c="从集合到排序", option_d="从元组到递归", correct_answer="A", explanation="这是函数与模块最自然的学习顺序。")
 
 
 # ==========================================
