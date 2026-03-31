@@ -49,6 +49,7 @@
 .contentCard,
 .practiceCard,
 .quizCard,
+.inlineNavCard,
 .navCard {
   padding: 1.35rem;
 }
@@ -266,6 +267,18 @@
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   font-weight: 700;
+}
+
+.inlineNavCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.inlineNavHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .navActions {

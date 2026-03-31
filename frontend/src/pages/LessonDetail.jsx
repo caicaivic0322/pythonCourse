@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../api/axios';
 import CodeRunner from '../components/CodeRunner';
 import { ArrowLeft, CheckCircle, PlayCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useAuth } from '../contexts/AuthContext';
+import { getLessonDetail, submitLessonQuiz } from '../lib/dataService';
 import styles from './LessonDetail.module.css';
 
 const LessonDetail = () => {
+  const { user } = useAuth();
   const { id } = useParams();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,12 +22,13 @@ const LessonDetail = () => {
     const fetchLesson = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`courses/lessons/${id}/`);
-        setLesson(response.data);
-        if (response.data.user_progress?.is_completed) {
+        if (!user?.id) return;
+        const response = await getLessonDetail(user.id, id);
+        setLesson(response);
+        if (response.user_progress?.is_completed) {
           setQuizResult({
             passed: true,
-            score: response.data.user_progress.score,
+            score: response.user_progress.score,
             message: '您已完成本节课。',
           });
         }
@@ -39,7 +42,7 @@ const LessonDetail = () => {
     fetchLesson();
     setQuizAnswers({});
     setQuizResult(null);
-  }, [id]);
+  }, [id, user?.id]);
 
   const handleQuizSubmit = async () => {
     if (!lesson?.quizzes) return;
@@ -51,10 +54,8 @@ const LessonDetail = () => {
 
     setSubmitting(true);
     try {
-      const response = await api.post(`courses/lessons/${id}/complete/`, {
-        quiz_answers: quizAnswers,
-      });
-      setQuizResult(response.data);
+      const response = await submitLessonQuiz(user.id, id, quizAnswers);
+      setQuizResult(response);
     } catch (error) {
       console.error('Failed to submit quiz:', error);
       alert('提交失败，请重试。');
@@ -100,6 +101,35 @@ const LessonDetail = () => {
 
   if (loading) return <div className="loading-panel">课时内容加载中...</div>;
   if (!lesson) return <div className="empty-panel">未找到该课时。</div>;
+
+  const hasQuiz = Boolean(lesson.quizzes && lesson.quizzes.length > 0);
+  const canGoNext = !hasQuiz || Boolean(quizResult);
+  const renderNavigationActions = () => (
+    <div className={styles.navActions}>
+      <button
+        type="button"
+        onClick={() => lesson.prev_lesson_id && navigate(`/lessons/${lesson.prev_lesson_id}`)}
+        disabled={!lesson.prev_lesson_id}
+        className="secondary-button"
+      >
+        上一节
+      </button>
+
+      <button
+        type="button"
+        onClick={handleNextLesson}
+        disabled={!canGoNext}
+        className="primary-button"
+      >
+        {lesson.next_lesson_id ? '下一节' : '完成本章'}
+        <CheckCircle size={18} />
+      </button>
+
+      {!canGoNext && (
+        <div className={styles.lockHint}>请先提交测验，再进入下一节。</div>
+      )}
+    </div>
+  );
 
   return (
     <div className="page-shell">
@@ -247,31 +277,21 @@ const LessonDetail = () => {
               </div>
             </section>
           )}
+
+          <section className={`${styles.inlineNavCard} surface-card`}>
+            <div className={styles.inlineNavHeader}>
+              <h2 className="section-title">章节切换</h2>
+              <p className="section-subtitle">答题完成后可直接在这里切换上一节或下一节。</p>
+            </div>
+            {renderNavigationActions()}
+          </section>
         </div>
 
         <aside className={styles.sideColumn}>
           <div className={`${styles.navCard} surface-card`}>
             <h2 className="section-title">学习导航</h2>
-            <p className="section-subtitle">完成当前课时后即可进入下一节，必要时也可以回退复习。</p>
-            <div className={styles.navActions}>
-              <button
-                type="button"
-                onClick={() => lesson.prev_lesson_id && navigate(`/lessons/${lesson.prev_lesson_id}`)}
-                disabled={!lesson.prev_lesson_id}
-                className="secondary-button"
-              >
-                上一节
-              </button>
-
-              {(!lesson.quizzes || lesson.quizzes.length === 0 || quizResult?.passed) ? (
-                <button type="button" onClick={handleNextLesson} className="primary-button">
-                  {lesson.next_lesson_id ? '下一节' : '完成本章'}
-                  <CheckCircle size={18} />
-                </button>
-              ) : (
-                <div className={styles.lockHint}>请先通过测验，再进入下一节。</div>
-              )}
-            </div>
+            <p className="section-subtitle">可随时回到上一节；测验提交后可直接进入下一节。</p>
+            {renderNavigationActions()}
           </div>
         </aside>
       </section>
