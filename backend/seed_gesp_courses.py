@@ -1741,7 +1741,7 @@ Quiz.objects.create(
 print("正在创建 GESP 2级 课程...")
 c2, _ = Course.objects.get_or_create(
     title="GESP 2级：逻辑进阶",
-    description="深入掌握 Python 数据容器。重点讲解列表（List）的增删改查、字符串操作、多层循环嵌套以及 ASCII 码等进阶概念。对应 GESP 二级考纲。",
+    description="深入掌握 Python 数据容器。重点讲解列表（List）、字符串（String）、元组（Tuple）、字典（Dictionary）、集合（Set）以及常见容器选型思路，对应 GESP 二级考纲。",
     defaults={'order': 2}
 )
 
@@ -2382,6 +2382,316 @@ Quiz.objects.create(
     correct_answer="B",
     explanation="错误，ASCII 只有 128 个字符，不包含汉字（汉字在 Unicode 中）。"
 )
+
+ch2_3, _ = Chapter.objects.get_or_create(course=c2, title="第3章：常见数据结构", defaults={'order': 3})
+
+l2_3_1 = create_lesson(
+    chapter=ch2_3, title="3.1 元组 Tuple：不能随意修改的序列", order=1, lesson_type='text',
+    code_challenge_prompt="# 创建一个元组 point，保存平面坐标 (3, 5)\npoint = (3, 5)\nprint(point[0], point[1])",
+    content="""# 3.1 元组 Tuple：不能随意修改的序列
+
+## 1. 什么是元组？
+元组（Tuple）和列表很像，都是**有序序列**，也都支持索引、切片、遍历。
+最大的区别是：**元组创建后不能修改**，所以它适合存放“固定不变”的数据。
+
+```python
+point = (3, 5)
+rgb = (255, 128, 0)
+```
+
+## 2. 为什么需要元组？
+- 表示不会变化的数据，例如：坐标、年月日、颜色值。
+- 防止程序中被误改。
+- 在函数返回多个结果时非常常见。
+
+## 3. 元组的基本操作
+```python
+point = (3, 5, 8)
+print(point[0])   # 3
+print(point[-1])  # 8
+print(point[1:])  # (5, 8)
+```
+
+## 4. 单元素元组
+只有一个元素时，后面要加逗号：
+
+```python
+a = (5,)      # 这是元组
+b = (5)       # 这只是数字 5
+```
+
+## 5. 元组和列表的对比
+- 列表：可变，适合频繁增删改
+- 元组：不可变，适合固定数据
+
+## 6. 易错点
+```python
+t = (1, 2, 3)
+# t[0] = 9   # 会报错，元组不能修改
+```
+
+学会判断“数据是否需要变化”，是选择列表还是元组的关键。
+"""
+)
+
+Quiz.objects.create(lesson=l2_3_1, question="元组和列表最大的区别是什么？", option_a="元组更长", option_b="元组不能修改", option_c="列表不能遍历", option_d="列表不能切片", correct_answer="B", explanation="元组是不可变序列，列表是可变序列。")
+Quiz.objects.create(lesson=l2_3_1, question="下列哪个是单元素元组？", option_a="(5)", option_b="[5]", option_c="(5,)", option_d="{5}", correct_answer="C", explanation="单元素元组必须写成 (5,)。")
+Quiz.objects.create(lesson=l2_3_1, question="t = (10, 20, 30)，t[-1] 的值是？", option_a="10", option_b="20", option_c="30", option_d="报错", correct_answer="C", explanation="负索引 -1 表示最后一个元素。")
+Quiz.objects.create(lesson=l2_3_1, question="元组最适合保存哪类数据？", option_a="每天会变化的购物车", option_b="需要不断插入的数据", option_c="固定不变的坐标信息", option_d="临时空列表", correct_answer="C", explanation="坐标等固定信息适合用元组保存。")
+Quiz.objects.create(lesson=l2_3_1, question="判断题：元组支持索引访问。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，元组和列表一样支持索引。")
+Quiz.objects.create(lesson=l2_3_1, question="判断题：元组中的元素一旦创建，通常不能直接修改。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这正是元组的核心特点。")
+
+l2_3_2 = create_lesson(
+    chapter=ch2_3, title="3.2 字典 Dictionary：用名字找数据", order=2, lesson_type='code',
+    code_challenge_prompt="# 创建一个字典 student，包含 name、age、score 三个键\nstudent = {\n    'name': 'Tom',\n    'age': 12,\n    'score': 95,\n}\nprint(student['name'])",
+    content="""# 3.2 字典 Dictionary：用名字找数据
+
+## 1. 为什么列表不够方便？
+如果我们用列表保存学生信息：
+
+```python
+student = ["Tom", 12, 95]
+```
+
+过一会儿就可能忘记：
+- 索引 0 是名字？
+- 索引 1 是年龄？
+- 索引 2 是成绩？
+
+这时更适合使用**字典**。
+
+## 2. 字典的结构
+字典由很多组 **键: 值** 组成。
+
+```python
+student = {
+    "name": "Tom",
+    "age": 12,
+    "score": 95
+}
+```
+
+## 3. 访问与修改
+```python
+print(student["name"])   # Tom
+student["score"] = 98
+student["city"] = "深圳"
+```
+
+## 4. 常用方法
+- `dict.keys()`：查看所有键
+- `dict.values()`：查看所有值
+- `dict.items()`：同时查看键和值
+- `"name" in student`：判断键是否存在
+
+## 5. 字典适合什么场景？
+- 学生信息
+- 商品信息
+- 配置参数
+- 联系人电话簿
+
+## 6. 一个重要提醒
+字典里的键通常应该是**唯一**的，重复键会覆盖旧值。
+"""
+)
+
+Quiz.objects.create(lesson=l2_3_2, question="字典中用于查找数据的是？", option_a="索引位置", option_b="键（Key）", option_c="长度", option_d="切片", correct_answer="B", explanation="字典通过键来查找对应的值。")
+Quiz.objects.create(lesson=l2_3_2, question="student = {'name': 'Amy', 'age': 11}，student['age'] 的值是？", option_a="Amy", option_b="11", option_c="'age'", option_d="报错", correct_answer="B", explanation="键 'age' 对应的值是 11。")
+Quiz.objects.create(lesson=l2_3_2, question="向字典中新增键值对，下面哪种写法正确？", option_a="d.add('x', 1)", option_b="d['x'] = 1", option_c="d.append('x', 1)", option_d="d.insert('x', 1)", correct_answer="B", explanation="直接通过 d['x'] = 1 即可新增或修改。")
+Quiz.objects.create(lesson=l2_3_2, question="遍历字典的键和值最常用的方法是？", option_a="keys()", option_b="values()", option_c="items()", option_d="pairs()", correct_answer="C", explanation="items() 会返回键值对。")
+Quiz.objects.create(lesson=l2_3_2, question="判断题：字典中的键可以重复而不会有影响。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，重复键会覆盖原来的值。")
+Quiz.objects.create(lesson=l2_3_2, question="判断题：'name' in student 可以判断键是否存在。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，in 可以判断键是否在字典中。")
+
+l2_3_3 = create_lesson(
+    chapter=ch2_3, title="3.3 集合 Set：自动去重的容器", order=3, lesson_type='code',
+    code_challenge_prompt="# 使用集合对下面列表去重\nnums = [1, 2, 2, 3, 3, 3, 4]\nunique_nums = set(nums)\nprint(unique_nums)",
+    content="""# 3.3 集合 Set：自动去重的容器
+
+## 1. 什么是集合？
+集合（Set）是一个**无序**、**元素不重复**的容器。
+
+```python
+nums = {1, 2, 3}
+letters = set("banana")
+print(letters)
+```
+
+输出中不会有重复元素。
+
+## 2. 集合最常见的用途
+- **去重**
+- **快速判断元素是否存在**
+- 进行交集、并集、差集等集合运算
+
+## 3. 去重示例
+```python
+nums = [1, 2, 2, 3, 3, 4]
+unique_nums = set(nums)
+print(unique_nums)
+```
+
+## 4. 常用操作
+```python
+a = {1, 2, 3}
+b = {3, 4, 5}
+
+print(a | b)  # 并集 {1, 2, 3, 4, 5}
+print(a & b)  # 交集 {3}
+print(a - b)  # 差集 {1, 2}
+```
+
+## 5. 注意事项
+- 集合没有固定顺序，所以不能像列表那样用索引访问。
+- 集合中的元素必须是可哈希的，初学阶段可以简单理解为：通常放数字、字符串、元组，不放列表。
+"""
+)
+
+Quiz.objects.create(lesson=l2_3_3, question="集合最明显的特点是？", option_a="元素可重复", option_b="元素自动排序", option_c="元素不重复", option_d="只能保存数字", correct_answer="C", explanation="集合中的重复元素会被自动去掉。")
+Quiz.objects.create(lesson=l2_3_3, question="set('banana') 中字母 'a' 最多会出现几次？", option_a="0 次", option_b="1 次", option_c="2 次", option_d="3 次", correct_answer="B", explanation="集合会自动去重，所以 'a' 只保留一次。")
+Quiz.objects.create(lesson=l2_3_3, question="下列哪个运算表示交集？", option_a="|", option_b="&", option_c="-", option_d="*", correct_answer="B", explanation="& 表示两个集合共同拥有的元素。")
+Quiz.objects.create(lesson=l2_3_3, question="为什么集合不适合按下标取值？", option_a="因为集合太大", option_b="因为集合只能存字符串", option_c="因为集合无序", option_d="因为集合必须先排序", correct_answer="C", explanation="集合无序，因此没有稳定的索引位置。")
+Quiz.objects.create(lesson=l2_3_3, question="判断题：集合很适合做列表去重。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，set(list_data) 是常见去重方式。")
+Quiz.objects.create(lesson=l2_3_3, question="判断题：集合可以直接使用 s[0] 访问第一个元素。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，集合没有索引。")
+
+l2_3_4 = create_lesson(
+    chapter=ch2_3, title="3.4 列表、元组、字典、集合怎么选？", order=4, lesson_type='code',
+    code_challenge_prompt="# 请为下面 4 种数据选择合适的容器\n# 1. 学生姓名列表\n# 2. 固定坐标 (x, y)\n# 3. 学生信息（姓名、年龄、班级）\n# 4. 去重后的选课名单\nprint('思考：list / tuple / dict / set 分别适合什么场景？')",
+    content="""# 3.4 列表、元组、字典、集合怎么选？
+
+## 1. 四种容器回顾
+- **列表 list**：有序、可修改，适合保存一串需要增删改的数据
+- **元组 tuple**：有序、不可修改，适合固定信息
+- **字典 dict**：键值对，适合“按名字找数据”
+- **集合 set**：无序、不重复，适合去重和判存在
+
+## 2. 典型场景
+### 场景 A：班级成绩单
+如果只想按顺序存一组分数，使用列表。
+
+```python
+scores = [95, 88, 76, 90]
+```
+
+### 场景 B：一个固定坐标
+```python
+point = (120, 45)
+```
+
+### 场景 C：一名学生的完整资料
+```python
+student = {
+    "name": "Lily",
+    "age": 12,
+    "class": "三年级二班"
+}
+```
+
+### 场景 D：报名名单去重
+```python
+signup = ["Tom", "Amy", "Tom", "Lucy"]
+unique_signup = set(signup)
+```
+
+## 3. 选型口诀
+- 要顺序又要修改：**列表**
+- 要顺序但不修改：**元组**
+- 要通过名称查数据：**字典**
+- 要去重或快速查存在：**集合**
+
+真正的编程能力，不只是会写语法，更是知道什么时候该用哪种数据结构。
+"""
+)
+
+Quiz.objects.create(lesson=l2_3_4, question="保存每天可能新增的待办事项，更适合用哪种结构？", option_a="tuple", option_b="list", option_c="set", option_d="dict", correct_answer="B", explanation="待办事项会频繁增加和修改，列表更合适。")
+Quiz.objects.create(lesson=l2_3_4, question="保存固定的平面坐标 (x, y)，更推荐使用？", option_a="list", option_b="tuple", option_c="dict", option_d="set", correct_answer="B", explanation="坐标通常固定不变，用元组更清晰。")
+Quiz.objects.create(lesson=l2_3_4, question="已知学生姓名、年龄、班级，要按字段读取信息，更适合用？", option_a="dict", option_b="set", option_c="tuple", option_d="range", correct_answer="A", explanation="按字段名称读取最适合字典。")
+Quiz.objects.create(lesson=l2_3_4, question="从一堆重复名单中保留唯一值，更适合用？", option_a="list", option_b="tuple", option_c="set", option_d="dict", correct_answer="C", explanation="集合天然去重。")
+Quiz.objects.create(lesson=l2_3_4, question="判断题：如果要根据商品编号快速找到商品信息，字典通常比列表更直观。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，商品编号可以作为字典键。")
+Quiz.objects.create(lesson=l2_3_4, question="判断题：集合中的元素顺序通常是稳定且可依赖的。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，集合是无序容器。")
+
+l2_3_5 = create_lesson(
+    chapter=ch2_3, title="3.5 综合实战：班级选课信息整理", order=5, lesson_type='code',
+    code_challenge_prompt="""# 已知班级选课记录如下：
+# 同一个学生可能出现多次，表示重复提交
+records = [
+    ("Tom", "Python"),
+    ("Amy", "Scratch"),
+    ("Tom", "Python"),
+    ("Lily", "Python"),
+    ("Amy", "C++"),
+]
+
+# 任务：
+# 1. 用集合统计一共有多少位不同的学生
+# 2. 用字典统计每门课程有多少位学生选择
+# 3. 打印 students_count 和 course_counts
+
+students_count = 0
+course_counts = {}
+
+# TODO: 在这里完成代码
+
+print(students_count)
+print(course_counts)
+""",
+    content="""# 3.5 综合实战：班级选课信息整理
+
+这一节把前面学过的 **元组、字典、集合** 放在同一个任务里练习。
+
+## 1. 题目背景
+老师收到了下面这些选课记录：
+
+```python
+records = [
+    ("Tom", "Python"),
+    ("Amy", "Scratch"),
+    ("Tom", "Python"),
+    ("Lily", "Python"),
+    ("Amy", "C++"),
+]
+```
+
+每条记录都可以理解成一个**元组**：
+- 第一个位置：学生姓名
+- 第二个位置：课程名称
+
+## 2. 我们要解决什么问题？
+### 问题 A：一共有多少位不同的学生？
+因为有重复提交，所以要去重。  
+这时最适合用 **集合 set**。
+
+### 问题 B：每门课程有多少位学生选择？
+这时需要“课程名 -> 数量”的对应关系，最适合用 **字典 dict**。
+
+## 3. 解题思路
+```python
+student_names = set()
+course_counts = {}
+
+for name, course in records:
+    student_names.add(name)
+    if course not in course_counts:
+        course_counts[course] = 0
+    course_counts[course] += 1
+```
+
+## 4. 这道题练到了什么？
+- 元组解包：`for name, course in records`
+- 集合去重：`student_names.add(name)`
+- 字典计数：`course_counts[course] += 1`
+
+## 5. 最终目标
+你不只是会用某一种数据结构，而是能根据问题主动选择合适的数据结构。
+"""
+)
+
+Quiz.objects.create(lesson=l2_3_5, question="records 中的每一项 ('Tom', 'Python') 最适合看成什么？", option_a="列表", option_b="元组", option_c="集合", option_d="字典", correct_answer="B", explanation="这类固定位置的数据更适合看成元组。")
+Quiz.objects.create(lesson=l2_3_5, question="想统计有多少位不同的学生，最适合先把姓名放进哪种结构？", option_a="list", option_b="tuple", option_c="set", option_d="str", correct_answer="C", explanation="集合会自动去重，最适合统计不同姓名。")
+Quiz.objects.create(lesson=l2_3_5, question="想保存“课程名 -> 选择人数”的对应关系，应使用哪种结构？", option_a="dict", option_b="set", option_c="tuple", option_d="range", correct_answer="A", explanation="键值对应关系最适合字典。")
+Quiz.objects.create(lesson=l2_3_5, question="for name, course in records 这种写法用到了什么？", option_a="切片", option_b="元组解包", option_c="排序", option_d="递归", correct_answer="B", explanation="每条记录都有两个值，循环时可以直接拆成 name 和 course。")
+Quiz.objects.create(lesson=l2_3_5, question="若 course_counts 中还没有某门课，正确的做法通常是？", option_a="直接删掉", option_b="先设为 0 再加 1", option_c="改成列表", option_d="转换成元组", correct_answer="B", explanation="计数问题通常先初始化为 0，再逐步累加。")
+Quiz.objects.create(lesson=l2_3_5, question="判断题：集合和字典经常一起出现，一个负责去重，一个负责统计。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这是非常常见的基础数据处理模式。")
+Quiz.objects.create(lesson=l2_3_5, question="判断题：如果 Tom 重复提交两次，集合中会保留两个 Tom。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，集合中的重复元素只会保留一个。")
 
 
 # ==========================================
