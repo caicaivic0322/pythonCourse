@@ -18,8 +18,10 @@ class CourseListView(generics.ListAPIView):
         user = request.user
         
         # 获取用户的所有课程进度
-        progresses = UserCourseProgress.objects.filter(user=user)
+        progresses = UserCourseProgress.objects.filter(user=user).select_related('course')
         progress_map = {p.course.id: p for p in progresses}
+        started_orders = sorted({p.course.order for p in progresses})
+        max_completed_order = max((p.course.order for p in progresses if p.is_completed), default=0)
         
         # 默认解锁第一个课程
         first_course = Course.objects.order_by('order').first()
@@ -56,7 +58,14 @@ class CourseListView(generics.ListAPIView):
             
             prev_course = Course.objects.filter(order__lt=current_course_order).order_by('-order').first()
             
-            if prev_course:
+            has_started_current_course = course_id in progress_map
+            has_started_later_course = any(order > current_course_order for order in started_orders)
+
+            if has_started_current_course or has_started_later_course:
+                course_data['is_locked'] = False
+            elif current_course_order <= max_completed_order + 1:
+                course_data['is_locked'] = False
+            elif prev_course:
                 prev_progress = progress_map.get(prev_course.id)
                 # 如果前一个课程有进度且已完成，则当前课程解锁
                 if prev_progress and prev_progress.is_completed:
@@ -81,8 +90,15 @@ class CourseDetailView(generics.RetrieveAPIView):
         user = request.user
 
         # 获取该用户在该课程下的所有 Lesson 进度
-        lesson_progresses = UserLessonProgress.objects.filter(user=user, lesson__chapter__course=instance)
+        lesson_progresses = UserLessonProgress.objects.filter(
+            user=user,
+            lesson__chapter__course=instance
+        ).select_related('lesson', 'lesson__chapter')
         progress_map = {p.lesson.id: p.is_completed for p in lesson_progresses}
+        started_positions = {
+            (p.lesson.chapter.order, p.lesson.order)
+            for p in lesson_progresses
+        }
 
         # 遍历章节和课程，计算解锁状态
         # 逻辑：第一个课程永远解锁。后续课程依赖前一个课程完成。
@@ -105,6 +121,9 @@ class CourseDetailView(generics.RetrieveAPIView):
                 lesson_id = lesson['id']
                 is_completed = progress_map.get(lesson_id, False)
                 lesson['is_completed'] = is_completed
+                lesson_position = (chapter['order'], lesson['order'])
+                has_started_current_lesson = lesson_id in progress_map
+                has_started_later_lesson = any(position > lesson_position for position in started_positions)
                 
                 if request.user.is_superuser:
                     lesson['is_locked'] = False
@@ -113,6 +132,8 @@ class CourseDetailView(generics.RetrieveAPIView):
                 elif is_first_lesson:
                     lesson['is_locked'] = False
                     is_first_lesson = False
+                elif has_started_current_lesson or has_started_later_lesson:
+                    lesson['is_locked'] = False
                 else:
                     lesson['is_locked'] = not previous_completed
                 
