@@ -45,6 +45,36 @@
   cursor: not-allowed;
 }
 
+.helperBar {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid rgba(121, 148, 191, 0.12);
+  background: rgba(9, 17, 30, 0.92);
+}
+
+.helperLabel {
+  color: #7f95b5;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.helperChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(121, 148, 191, 0.2);
+  background: rgba(96, 165, 250, 0.08);
+  color: #bfd4f5;
+  font-size: var(--font-size-xs);
+}
+
 .editorWrapper {
   display: flex;
   height: 380px;

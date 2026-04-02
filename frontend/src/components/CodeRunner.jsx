@@ -3,6 +3,41 @@ import { Play } from 'lucide-react';
 import styles from './CodeRunner.module.css';
 
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
+const AUTOLOAD_PACKAGES = ['numpy', 'pandas', 'matplotlib'];
+const VIRTUAL_FILES = {
+  'notes.txt': '第一行：欢迎来到 PyMaster 文件练习区\n第二行：你可以直接用 open() 读取这个文件\n第三行：也可以继续写入新的内容\n',
+  'study_log.txt': '2026-04-02 完成文件处理课程\n2026-04-02 完成 NumPy 入门练习\n',
+  'scores.csv': 'name,score\nTom,90\nAmy,95\nLily,88\n',
+};
+
+const detectImportedPackages = (sourceCode) => {
+  const packages = new Set();
+  const lines = sourceCode.split('\n');
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+
+    const importMatch = trimmed.match(/^import\s+([a-zA-Z0-9_.,\s]+)/);
+    if (importMatch) {
+      importMatch[1]
+        .split(',')
+        .map((item) => item.trim().split(/\s+as\s+/)[0].split('.')[0])
+        .filter(Boolean)
+        .forEach((pkg) => {
+          if (AUTOLOAD_PACKAGES.includes(pkg)) packages.add(pkg);
+        });
+    }
+
+    const fromMatch = trimmed.match(/^from\s+([a-zA-Z0-9_]+)(?:\.[a-zA-Z0-9_]+)*\s+import\s+/);
+    if (fromMatch) {
+      const pkg = fromMatch[1];
+      if (AUTOLOAD_PACKAGES.includes(pkg)) packages.add(pkg);
+    }
+  });
+
+  return [...packages];
+};
 
 const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprint('Hello, World!')" }) => {
   const [code, setCode] = useState(initialCode);
@@ -110,6 +145,42 @@ const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprin
     return true;
   };
 
+  const ensureVirtualFiles = useCallback(() => {
+    if (!pyodide?.FS) return;
+
+    Object.entries(VIRTUAL_FILES).forEach(([filename, content]) => {
+      pyodide.FS.writeFile(filename, content, { encoding: 'utf8' });
+    });
+  }, [pyodide]);
+
+  const ensurePackagesLoaded = useCallback(async (sourceCode) => {
+    if (!pyodide) return;
+
+    const packages = detectImportedPackages(sourceCode);
+    if (!packages.length) return;
+
+    setOutput(`正在加载依赖: ${packages.join(', ')}...`);
+
+    if (typeof pyodide.loadPackagesFromImports === 'function') {
+      await pyodide.loadPackagesFromImports(sourceCode);
+    }
+
+    if (!window.pyodideLoadedPackages) {
+      window.pyodideLoadedPackages = new Set();
+    }
+
+    const missingPackages = packages.filter((pkg) => !window.pyodideLoadedPackages.has(pkg));
+    if (missingPackages.length) {
+      await pyodide.loadPackage(missingPackages);
+      missingPackages.forEach((pkg) => window.pyodideLoadedPackages.add(pkg));
+    }
+  }, [pyodide]);
+
+  useEffect(() => {
+    if (!pyodide) return;
+    ensureVirtualFiles();
+  }, [pyodide, ensureVirtualFiles]);
+
   const handleRun = async () => {
     if (!pyodide || !code.trim()) return;
     
@@ -122,6 +193,9 @@ const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprin
     setOutput('正在运行...');
     
     try {
+        ensureVirtualFiles();
+        await ensurePackagesLoaded(code);
+
         pyodide.setStdout({
             batched: (msg) => {
                 setOutput(prev => (prev === '正在运行...' ? msg : prev + '\n' + msg));
@@ -152,6 +226,8 @@ const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprin
          const errorMsg = String(error);
          if (errorMsg.includes("EOFError") || errorMsg.includes("I/O error")) {
              setOutput(prev => prev + '\n[提示] 代码执行完成（或需要输入）');
+         } else if (errorMsg.includes('The module') && errorMsg.includes('is included in the Pyodide distribution')) {
+             setOutput(`${errorMsg}\n\n[提示] 当前练习区已支持自动加载常见科学计算库，请刷新页面后重试。`);
          } else {
              setOutput(errorMsg);
          }
@@ -198,6 +274,14 @@ const CodeRunner = ({ initialCode = "# 在这里写下你的 Python 代码\nprin
           <Play size={14} />
           {isPyodideLoading ? '加载环境...' : isRunning ? '运行中...' : '运行代码'}
         </button>
+      </div>
+      <div className={styles.helperBar}>
+        <span className={styles.helperLabel}>预置文件</span>
+        {Object.keys(VIRTUAL_FILES).map((filename) => (
+          <span key={filename} className={styles.helperChip}>
+            {filename}
+          </span>
+        ))}
       </div>
       <div className={styles.editorWrapper} ref={containerRef}>
         <div className={styles.editorPane} style={{ width: editorPaneWidth }}>

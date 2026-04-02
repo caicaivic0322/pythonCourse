@@ -3288,7 +3288,274 @@ Quiz.objects.create(lesson=l4_2_2, question="__str__ 方法的作用是？", opt
 
 
 # ==========================================
-# Course 5: GESP 5级 - 算法基础
+# Course 5: Python 应用进阶 - 数据分析与可视化
+# ==========================================
+print("正在创建 Python 应用进阶 课程...")
+c4a, _ = Course.objects.get_or_create(
+    title="Python 应用进阶：数据分析与可视化",
+    description="在进入算法学习之前，先掌握 NumPy、Pandas 与 Matplotlib 三大常用库，建立数组计算、表格处理和数据可视化的应用能力。",
+    defaults={'order': 5}
+)
+c4a.order = 5
+c4a.save(update_fields=['order'])
+
+ch4a_1, _ = Chapter.objects.get_or_create(course=c4a, title="第1章：NumPy 数组计算", defaults={'order': 1})
+
+l4a_1_1 = create_lesson(
+    chapter=ch4a_1, title="1.1 NumPy 与 ndarray 入门", order=1, lesson_type='text',
+    code_challenge_prompt="# 观察 NumPy 数组的基本写法\n# import numpy as np\n# arr = np.array([1, 2, 3, 4])\n# print(arr)\nprint('理解 ndarray 与 list 的区别')",
+    content="""# 1.1 NumPy 与 ndarray 入门
+
+## 1. 为什么需要 NumPy？
+普通列表适合基础学习，但如果要处理大量数值数据，NumPy 会更高效、更方便。
+
+## 2. ndarray 是什么？
+NumPy 的核心对象叫 `ndarray`，可以理解为“多维数组”。
+
+```python
+import numpy as np
+arr = np.array([1, 2, 3, 4])
+```
+
+## 3. 和列表有什么区别？
+- list：更通用，元素类型可以不同
+- ndarray：更适合数值计算，通常元素类型统一
+
+## 4. 常见应用
+- 成绩统计
+- 图像像素处理
+- 科学计算
+- 算法数据预处理
+"""
+)
+Quiz.objects.create(lesson=l4a_1_1, question="NumPy 中最核心的数据对象通常是？", option_a="dict", option_b="tuple", option_c="ndarray", option_d="set", correct_answer="C", explanation="NumPy 的核心对象是 ndarray。")
+Quiz.objects.create(lesson=l4a_1_1, question="NumPy 最适合处理哪类数据？", option_a="大量数值数据", option_b="网页标签", option_c="图片文字排版", option_d="系统服务", correct_answer="A", explanation="NumPy 最擅长数值计算。")
+Quiz.objects.create(lesson=l4a_1_1, question="import numpy as np 中 np 是什么？", option_a="函数", option_b="异常", option_c="别名", option_d="类名", correct_answer="C", explanation="通常使用 np 作为 numpy 的别名。")
+Quiz.objects.create(lesson=l4a_1_1, question="列表和 ndarray 的一个重要区别是？", option_a="列表不能存数字", option_b="ndarray 更适合统一类型的数值运算", option_c="列表不能遍历", option_d="ndarray 不能切片", correct_answer="B", explanation="ndarray 更适合做统一数值运算。")
+Quiz.objects.create(lesson=l4a_1_1, question="判断题：NumPy 经常用于科学计算与数据处理。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4a_1_1, question="判断题：普通 Python 列表已经完全覆盖了 NumPy 的所有优势。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，NumPy 在数值处理方面更强。")
+
+l4a_1_2 = create_lesson(
+    chapter=ch4a_1, title="1.2 数组形状、索引与运算", order=2, lesson_type='text',
+    code_challenge_prompt="# 观察二维数组和形状\n# import numpy as np\n# arr = np.array([[1, 2], [3, 4]])\n# print(arr.shape)\nprint('理解 shape、索引和逐元素运算')",
+    content="""# 1.2 数组形状、索引与运算
+
+## 1. shape 表示什么？
+数组的形状代表“有几行几列”。
+
+```python
+arr = np.array([[1, 2], [3, 4]])
+print(arr.shape)   # (2, 2)
+```
+
+## 2. 索引访问
+```python
+print(arr[0, 1])   # 第一行第二列
+```
+
+## 3. NumPy 的强项：逐元素运算
+```python
+arr = np.array([1, 2, 3])
+print(arr + 10)    # [11 12 13]
+print(arr * 2)     # [2 4 6]
+```
+
+## 4. 为什么这很重要？
+因为数据处理中经常要对一整列数据一起加减乘除，而不是一个个写循环。
+"""
+)
+Quiz.objects.create(lesson=l4a_1_2, question="shape=(2, 3) 通常表示？", option_a="2 行 3 列", option_b="3 行 2 列", option_c="2 个元素", option_d="3 个维度", correct_answer="A", explanation="二维数组中通常表示 2 行 3 列。")
+Quiz.objects.create(lesson=l4a_1_2, question="arr[0, 1] 表示？", option_a="第 0 行第 1 列", option_b="第 1 行第 0 列", option_c="第 0 列第 1 行", option_d="切片", correct_answer="A", explanation="二维数组按 行、列 访问。")
+Quiz.objects.create(lesson=l4a_1_2, question="NumPy 中 arr + 10 常表示？", option_a="给数组每个元素都加 10", option_b="只给第一个元素加 10", option_c="报错", option_d="把 10 拼接到数组后面", correct_answer="A", explanation="这是逐元素运算。")
+Quiz.objects.create(lesson=l4a_1_2, question="NumPy 在批量数值处理中的优势主要来自？", option_a="逐元素运算方便", option_b="不能做切片", option_c="必须手写循环", option_d="不支持二维数组", correct_answer="A", explanation="逐元素运算是它的重要优势。")
+Quiz.objects.create(lesson=l4a_1_2, question="判断题：二维数组可以看成表格。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，很像一个表格。")
+Quiz.objects.create(lesson=l4a_1_2, question="判断题：NumPy 不支持多维数组。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，NumPy 非常擅长多维数组。")
+
+ch4a_2, _ = Chapter.objects.get_or_create(course=c4a, title="第2章：Pandas 表格处理", defaults={'order': 2})
+
+l4a_2_1 = create_lesson(
+    chapter=ch4a_2, title="2.1 Series 与 DataFrame", order=1, lesson_type='text',
+    code_challenge_prompt="# 认识 DataFrame 的基本结构\n# import pandas as pd\n# df = pd.DataFrame({'name': ['Tom', 'Amy'], 'score': [90, 95]})\n# print(df)\nprint('理解 DataFrame 像一张表')",
+    content="""# 2.1 Series 与 DataFrame
+
+## 1. Pandas 是做什么的？
+Pandas 专门用于处理“表格型数据”。
+
+## 2. 两个核心对象
+- `Series`：一列数据
+- `DataFrame`：多列组成的一张表
+
+```python
+import pandas as pd
+df = pd.DataFrame({
+    "name": ["Tom", "Amy"],
+    "score": [90, 95]
+})
+```
+
+## 3. 为什么 DataFrame 很重要？
+它和 Excel 表格很像，非常适合：
+- 成绩表
+- 销售表
+- 考勤表
+- 统计结果表
+"""
+)
+Quiz.objects.create(lesson=l4a_2_1, question="Pandas 中最像“整张表”的对象是？", option_a="Series", option_b="DataFrame", option_c="tuple", option_d="set", correct_answer="B", explanation="DataFrame 就像一张表。")
+Quiz.objects.create(lesson=l4a_2_1, question="Series 更像什么？", option_a="一列数据", option_b="一整个项目", option_c="一幅图像", option_d="一个模块", correct_answer="A", explanation="Series 可以理解为一列数据。")
+Quiz.objects.create(lesson=l4a_2_1, question="Pandas 最适合处理哪类数据？", option_a="表格数据", option_b="声音数据", option_c="操作系统内核", option_d="网页动画", correct_answer="A", explanation="Pandas 擅长表格型数据。")
+Quiz.objects.create(lesson=l4a_2_1, question="DataFrame 和什么最像？", option_a="游戏地图", option_b="Excel 表格", option_c="栈结构", option_d="递归树", correct_answer="B", explanation="DataFrame 很像 Excel 表格。")
+Quiz.objects.create(lesson=l4a_2_1, question="判断题：Pandas 常用于成绩表、销售表等数据处理。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4a_2_1, question="判断题：DataFrame 只能有一列。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，DataFrame 可以有多列。")
+
+l4a_2_2 = create_lesson(
+    chapter=ch4a_2, title="2.2 选列、筛选与基础统计", order=2, lesson_type='text',
+    code_challenge_prompt="# 观察常见 Pandas 操作\n# df['score']\n# df[df['score'] >= 60]\n# df['score'].mean()\nprint('理解选列、筛选和平均值统计')",
+    content="""# 2.2 选列、筛选与基础统计
+
+## 1. 选列
+```python
+df["score"]
+```
+
+## 2. 条件筛选
+```python
+df[df["score"] >= 60]
+```
+
+## 3. 基础统计
+```python
+df["score"].mean()
+df["score"].max()
+df["score"].min()
+```
+
+## 4. 为什么这很重要？
+这些操作就是最基础的数据分析流程：
+- 看某一列
+- 找满足条件的数据
+- 算平均值、最大值、最小值
+"""
+)
+Quiz.objects.create(lesson=l4a_2_2, question="df['score'] 通常表示？", option_a="选择 score 这一列", option_b="删除 score 列", option_c="给 score 赋值", option_d="创建新表", correct_answer="A", explanation="这是最常见的选列方式。")
+Quiz.objects.create(lesson=l4a_2_2, question="df[df['score'] >= 60] 的作用是？", option_a="筛选及格的数据", option_b="删除所有数据", option_c="统计总人数", option_d="排序", correct_answer="A", explanation="这是条件筛选。")
+Quiz.objects.create(lesson=l4a_2_2, question="mean() 常用来做什么？", option_a="求平均值", option_b="求最大值", option_c="求行数", option_d="转成字符串", correct_answer="A", explanation="mean 就是平均值。")
+Quiz.objects.create(lesson=l4a_2_2, question="基础数据分析流程通常不包括？", option_a="选列", option_b="筛选", option_c="统计", option_d="编译内核", correct_answer="D", explanation="这不属于基础数据分析。")
+Quiz.objects.create(lesson=l4a_2_2, question="判断题：Pandas 可以方便地统计成绩平均分。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4a_2_2, question="判断题：条件筛选只在 NumPy 中存在，Pandas 不能用。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，Pandas 非常常用条件筛选。")
+
+ch4a_3, _ = Chapter.objects.get_or_create(course=c4a, title="第3章：Matplotlib 数据可视化", defaults={'order': 3})
+
+l4a_3_1 = create_lesson(
+    chapter=ch4a_3, title="3.1 折线图与柱状图", order=1, lesson_type='text',
+    code_challenge_prompt="# 认识最常见的图表类型\n# import matplotlib.pyplot as plt\n# plt.plot([1, 2, 3], [80, 85, 90])\n# plt.bar(['Tom', 'Amy'], [90, 95])\nprint('理解 plot 和 bar 的区别')",
+    content="""# 3.1 折线图与柱状图
+
+## 1. Matplotlib 是什么？
+Matplotlib 是 Python 最常见的绘图库之一。
+
+## 2. 折线图
+适合展示趋势变化，例如每天温度、每次考试成绩变化。
+
+```python
+plt.plot([1, 2, 3], [80, 85, 90])
+```
+
+## 3. 柱状图
+适合比较不同类别，例如不同同学的成绩。
+
+```python
+plt.bar(["Tom", "Amy"], [90, 95])
+```
+
+## 4. 什么时候用哪种图？
+- 看趋势：折线图
+- 看比较：柱状图
+"""
+)
+Quiz.objects.create(lesson=l4a_3_1, question="想观察成绩随时间的变化趋势，通常用哪种图？", option_a="折线图", option_b="柱状图", option_c="饼图", option_d="散点图", correct_answer="A", explanation="趋势最适合折线图。")
+Quiz.objects.create(lesson=l4a_3_1, question="想比较不同同学的分数高低，通常用哪种图？", option_a="折线图", option_b="柱状图", option_c="流程图", option_d="树图", correct_answer="B", explanation="柱状图适合做类别比较。")
+Quiz.objects.create(lesson=l4a_3_1, question="Matplotlib 最主要的作用是？", option_a="数据可视化", option_b="数据库管理", option_c="网络通信", option_d="异常处理", correct_answer="A", explanation="Matplotlib 用来画图。")
+Quiz.objects.create(lesson=l4a_3_1, question="plot 常用于？", option_a="趋势图", option_b="删除数据", option_c="创建字典", option_d="导入模块", correct_answer="A", explanation="plot 常用于绘制折线图。")
+Quiz.objects.create(lesson=l4a_3_1, question="判断题：柱状图适合比较不同类别的数值。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4a_3_1, question="判断题：折线图特别适合展示连续变化趋势。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+
+l4a_3_2 = create_lesson(
+    chapter=ch4a_3, title="3.2 标题、坐标轴与图例", order=2, lesson_type='text',
+    code_challenge_prompt="# 观察图表的常见美化设置\n# plt.title('成绩变化')\n# plt.xlabel('次数')\n# plt.ylabel('分数')\n# plt.legend()\nprint('理解标题、坐标轴和图例的作用')",
+    content="""# 3.2 标题、坐标轴与图例
+
+## 1. 图表不仅要画出来，还要看得懂
+如果没有标题和坐标轴说明，别人可能不知道这张图在表达什么。
+
+## 2. 常见设置
+```python
+plt.title("成绩变化")
+plt.xlabel("次数")
+plt.ylabel("分数")
+plt.legend()
+```
+
+## 3. 这些元素的作用
+- `title`：告诉读者这张图讲什么
+- `xlabel / ylabel`：说明横纵坐标的含义
+- `legend`：区分不同数据系列
+
+## 4. 好图表的标准
+不仅要“能画”，更要“表达清楚”。
+"""
+)
+Quiz.objects.create(lesson=l4a_3_2, question="title() 主要用来？", option_a="设置图表标题", option_b="删除图像", option_c="保存文件", option_d="创建数组", correct_answer="A", explanation="title 用来设置图表标题。")
+Quiz.objects.create(lesson=l4a_3_2, question="xlabel() 和 ylabel() 的作用是？", option_a="删除坐标轴", option_b="说明横纵坐标含义", option_c="旋转图像", option_d="生成数据", correct_answer="B", explanation="它们负责标注坐标轴。")
+Quiz.objects.create(lesson=l4a_3_2, question="legend() 常用于？", option_a="显示图例", option_b="关闭图表", option_c="创建柱状图", option_d="异常处理", correct_answer="A", explanation="legend 用于图例说明。")
+Quiz.objects.create(lesson=l4a_3_2, question="好图表最重要的一点是？", option_a="颜色越多越好", option_b="表达清楚", option_c="越复杂越好", option_d="越大越好", correct_answer="B", explanation="图表的核心是清晰表达信息。")
+Quiz.objects.create(lesson=l4a_3_2, question="判断题：没有坐标轴说明，图表的可读性通常会下降。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4a_3_2, question="判断题：图例可以帮助读者区分不同数据系列。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+
+ch4a_4, _ = Chapter.objects.get_or_create(course=c4a, title="第4章：综合实战", defaults={'order': 4})
+
+l4a_4_1 = create_lesson(
+    chapter=ch4a_4, title="4.1 用 Pandas + Matplotlib 分析成绩表", order=1, lesson_type='text',
+    code_challenge_prompt="# 思考综合流程：读表 -> 统计 -> 画图\n# import pandas as pd\n# import matplotlib.pyplot as plt\n# df = pd.DataFrame({'name': ['Tom', 'Amy'], 'score': [90, 95]})\n# print(df['score'].mean())\nprint('理解完整的数据分析流程')",
+    content="""# 4.1 用 Pandas + Matplotlib 分析成绩表
+
+## 1. 一个完整的小流程
+这门课的最终目标不是记住几个库名，而是知道如何把它们连起来用。
+
+## 2. 常见流程
+1. 用 Pandas 读入或构造成绩表  
+2. 选出需要分析的列  
+3. 统计平均分、最高分、最低分  
+4. 用 Matplotlib 画出柱状图或折线图
+
+## 3. 示例思路
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.DataFrame({
+    "name": ["Tom", "Amy", "Lily"],
+    "score": [90, 95, 88]
+})
+
+print(df["score"].mean())
+plt.bar(df["name"], df["score"])
+```
+
+## 4. 为什么放在算法前？
+因为你会先看到“Python 解决真实问题”的样子，再进入更抽象的算法学习，会更有动力。
+"""
+)
+Quiz.objects.create(lesson=l4a_4_1, question="完整的数据分析流程中，通常先做什么？", option_a="先画图", option_b="先读取或准备数据", option_c="先删除数据", option_d="先写递归", correct_answer="B", explanation="分析之前要先有数据。")
+Quiz.objects.create(lesson=l4a_4_1, question="想统计成绩平均分，最常用的库更偏向？", option_a="Pandas", option_b="Matplotlib", option_c="random", option_d="sys", correct_answer="A", explanation="Pandas 更适合做表格统计。")
+Quiz.objects.create(lesson=l4a_4_1, question="想把成绩画成图，最常用的库更偏向？", option_a="NumPy", option_b="Matplotlib", option_c="collections", option_d="time", correct_answer="B", explanation="Matplotlib 负责可视化。")
+Quiz.objects.create(lesson=l4a_4_1, question="为什么把这门课放在算法前？", option_a="因为这些库比算法更难", option_b="先建立真实应用场景，再进入算法", option_c="为了减少章节数", option_d="为了替代 GESP", correct_answer="B", explanation="这是更自然的学习路径。")
+Quiz.objects.create(lesson=l4a_4_1, question="判断题：Pandas 和 Matplotlib 可以配合使用。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，常常一起用。")
+Quiz.objects.create(lesson=l4a_4_1, question="判断题：这门课的目标之一是让学生看到 Python 的实际应用价值。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+
+
+# ==========================================
+# Course 6: GESP 5级 - 算法基础
 # ==========================================
 print("正在创建 GESP 5级 课程...")
 c5, _ = Course.objects.get_or_create(
@@ -3296,6 +3563,8 @@ c5, _ = Course.objects.get_or_create(
     description="进入算法的世界。学习算法复杂度分析、基础排序算法（冒泡、选择、插入）和查找算法（二分查找），培养计算思维。",
     defaults={'order': 5}
 )
+c5.order = 6
+c5.save(update_fields=['order'])
 
 ch5_1, _ = Chapter.objects.get_or_create(course=c5, title="第1章：算法复杂度", defaults={'order': 1})
 l5_1_1 = create_lesson(
@@ -3411,6 +3680,8 @@ c6, _ = Course.objects.get_or_create(
     description="挑战高阶编程概念。深入理解递归思想，掌握栈（Stack）和队列（Queue）的原理与实现，解决复杂逻辑问题。",
     defaults={'order': 6}
 )
+c6.order = 7
+c6.save(update_fields=['order'])
 
 ch6_1, _ = Chapter.objects.get_or_create(course=c6, title="第1章：递归", defaults={'order': 1})
 l6_1_1 = create_lesson(
@@ -3520,6 +3791,8 @@ c7, _ = Course.objects.get_or_create(
     description="《Head First Python》经典教材改编。通过生动有趣的项目驱动学习，涵盖列表、模块、文件处理、异常处理等实用技能。",
     defaults={'order': 7}
 )
+c7.order = 8
+c7.save(update_fields=['order'])
 
 # Chapter 1: The Basics
 ch7_1, _ = Chapter.objects.get_or_create(course=c7, title="第1章：基础知识 (The Basics)", defaults={'order': 1})
@@ -3834,5 +4107,161 @@ Quiz.objects.create(lesson=l7_4_2, question="判断题：一个模块只能包�
 Quiz.objects.create(lesson=l7_4_2, question="import module as alias 的作用？", option_a="导入模块所有内容", option_b="给模块起别名", option_c="只导入部分内容", option_d="重新加载模块", correct_answer="B", explanation="as 关键字用于给导入的模块指定一个别名。")
 Quiz.objects.create(lesson=l7_4_2, question="from module import * 推荐吗？", option_a="强烈推荐", option_b="不推荐", option_c="无所谓", option_d="必须使用", correct_answer="B", explanation="不推荐，容易导致命名空间污染（变量名冲突）。")
 Quiz.objects.create(lesson=l7_4_2, question="一个 .py 文件就是一个模块吗？", option_a="是", option_b="不是", option_c="只有含类的才是", option_d="只有含函数的才是", correct_answer="A", explanation="Python 中任何 .py 文件都可以被视为一个模块。")
+
+# Chapter 5: File Processing
+ch7_5, _ = Chapter.objects.get_or_create(course=c7, title="第5章：文件处理 (File Processing)", defaults={'order': 5})
+
+# 5.1 Reading Files
+l7_5_1 = create_lesson(
+    chapter=ch7_5, title="5.1 读取文本文件：open 与 read", order=1, lesson_type='code',
+    code_challenge_prompt="""# 假设 notes.txt 文件中有几行文字
+# 请用 open + read 读取它的内容
+
+with open("notes.txt", "r", encoding="utf-8") as f:
+    content = f.read()
+
+print(content)
+""",
+    content="""# 5.1 读取文本文件：open 与 read
+
+## 1. 为什么要学文件操作？
+前面的数据很多都直接写在代码里，但真实程序往往需要**从文件读取数据**。
+比如：
+- 读取成绩表
+- 读取配置文件
+- 读取用户保存的文本内容
+
+## 2. 打开文件
+Python 最常用的方式是 `open()`：
+
+```python
+f = open("notes.txt", "r", encoding="utf-8")
+content = f.read()
+f.close()
+```
+
+其中：
+- `"r"` 表示读取模式（read）
+- `encoding="utf-8"` 表示按 UTF-8 编码读取中文文本
+
+## 3. 更推荐的写法：with open
+```python
+with open("notes.txt", "r", encoding="utf-8") as f:
+    content = f.read()
+print(content)
+```
+
+`with` 的好处是：**文件用完后会自动关闭**。
+
+## 4. 常见读取方式
+- `read()`：一次读完整个文件
+- `readline()`：读一行
+- `readlines()`：读成多行列表
+"""
+)
+Quiz.objects.create(lesson=l7_5_1, question="open('a.txt', 'r') 中 'r' 表示？", option_a="写入", option_b="读取", option_c="追加", option_d="删除", correct_answer="B", explanation="'r' 是 read，表示读取模式。")
+Quiz.objects.create(lesson=l7_5_1, question="读取整个文件内容最常用的方法是？", option_a="write()", option_b="append()", option_c="read()", option_d="close()", correct_answer="C", explanation="read() 用于读取文件内容。")
+Quiz.objects.create(lesson=l7_5_1, question="with open(...) as f 的主要好处是？", option_a="自动关闭文件", option_b="自动删除文件", option_c="自动压缩文件", option_d="自动创建图表", correct_answer="A", explanation="with 会在结束后自动关闭文件。")
+Quiz.objects.create(lesson=l7_5_1, question="readline() 的作用是？", option_a="读取一整列", option_b="读取一行", option_c="写入一行", option_d="删除一行", correct_answer="B", explanation="readline() 一次读取一行。")
+Quiz.objects.create(lesson=l7_5_1, question="读取中文文本时，常见编码参数写作？", option_a="encoding='gbk-only'", option_b="encoding='utf-8'", option_c="encoding='python'", option_d="encoding='ascii-all'", correct_answer="B", explanation="UTF-8 是最常见的文本编码。")
+Quiz.objects.create(lesson=l7_5_1, question="判断题：文件读取完成后，最好及时关闭文件。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，避免资源占用。")
+Quiz.objects.create(lesson=l7_5_1, question="判断题：with open 是为了让代码更安全、更易维护。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，尤其体现在自动关闭文件。")
+Quiz.objects.create(lesson=l7_5_1, question="readlines() 一般返回什么？", option_a="一个整数", option_b="一个字符串", option_c="一个行列表", option_d="一个字典", correct_answer="C", explanation="readlines() 会把每一行组成列表。")
+Quiz.objects.create(lesson=l7_5_1, question="如果文件不存在，open('x.txt', 'r') 常会抛出？", option_a="IndexError", option_b="FileNotFoundError", option_c="TypeError", option_d="SyntaxError", correct_answer="B", explanation="读取不存在的文件通常抛出 FileNotFoundError。")
+Quiz.objects.create(lesson=l7_5_1, question="文件操作最适合保存哪类数据？", option_a="需要长期保留的文本或记录", option_b="只能保存图片", option_c="只能保存数字", option_d="只能保存列表", correct_answer="A", explanation="文件常用于长期保存文本和程序数据。")
+
+# 5.2 Writing Files
+l7_5_2 = create_lesson(
+    chapter=ch7_5, title="5.2 写入与追加：write、w 模式、a 模式", order=2, lesson_type='code',
+    code_challenge_prompt="""# 将一条学习记录写入 study_log.txt
+with open("study_log.txt", "a", encoding="utf-8") as f:
+    f.write("今天完成了文件操作练习\\n")
+
+print("记录已写入")
+""",
+    content="""# 5.2 写入与追加：write、w 模式、a 模式
+
+## 1. 写文件的两种常见模式
+- `"w"`：写入模式，如果文件已存在会**覆盖原内容**
+- `"a"`：追加模式，在文件末尾继续写
+
+## 2. 写入示例
+```python
+with open("hello.txt", "w", encoding="utf-8") as f:
+    f.write("你好，Python！")
+```
+
+## 3. 追加示例
+```python
+with open("log.txt", "a", encoding="utf-8") as f:
+    f.write("新增一条记录\\n")
+```
+
+## 4. 为什么追加很有用？
+像学习日志、运行记录、签到信息，这些内容通常不是覆盖，而是**一条一条接着写**。
+
+## 5. 一个习惯
+写文件时要想清楚：
+- 是要覆盖旧内容？
+- 还是保留旧内容继续追加？
+"""
+)
+Quiz.objects.create(lesson=l7_5_2, question="open('a.txt', 'w') 中 'w' 模式表示？", option_a="读取", option_b="写入并可能覆盖原内容", option_c="追加", option_d="只读", correct_answer="B", explanation="'w' 会写入文件，旧内容可能被覆盖。")
+Quiz.objects.create(lesson=l7_5_2, question="想在文件末尾继续添加内容，应该使用？", option_a="'r'", option_b="'w'", option_c="'a'", option_d="'x'", correct_answer="C", explanation="'a' 是追加模式。")
+Quiz.objects.create(lesson=l7_5_2, question="把字符串写入文件最常用的方法是？", option_a="read()", option_b="write()", option_c="append()", option_d="insert()", correct_answer="B", explanation="write() 用来写入字符串。")
+Quiz.objects.create(lesson=l7_5_2, question="学习日志更适合使用哪种模式？", option_a="'w'", option_b="'a'", option_c="'r'", option_d="'rb'", correct_answer="B", explanation="日志通常是一条条追加。")
+Quiz.objects.create(lesson=l7_5_2, question="使用 'w' 模式操作已存在文件时，最需要注意什么？", option_a="会自动加密", option_b="内容可能被覆盖", option_c="只能写一行", option_d="不能写中文", correct_answer="B", explanation="'w' 模式会清空旧内容后重写。")
+Quiz.objects.create(lesson=l7_5_2, question="判断题：write() 写入换行时，通常需要自己写 '\\n'。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，write 不会自动换行。")
+Quiz.objects.create(lesson=l7_5_2, question="判断题：追加模式适合记录多次运行结果。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，追加模式不会覆盖旧记录。")
+Quiz.objects.create(lesson=l7_5_2, question="写文件时使用 with open 的主要原因之一是？", option_a="自动保存图片", option_b="自动关闭文件", option_c="自动生成目录", option_d="自动排序文本", correct_answer="B", explanation="with 可以自动关闭文件。")
+Quiz.objects.create(lesson=l7_5_2, question="如果想生成一个新的文本报告，通常更适合先用哪种模式？", option_a="'w'", option_b="'a'", option_c="'r'", option_d="'None'", correct_answer="A", explanation="生成全新报告常用 w 模式。")
+Quiz.objects.create(lesson=l7_5_2, question="文件写入和追加最核心的区别是？", option_a="是否支持中文", option_b="是否会保留原内容", option_c="是否需要 import", option_d="是否可以打印", correct_answer="B", explanation="w 可能覆盖，a 会保留原内容并继续写。")
+
+# 5.3 Practical File Project
+l7_5_3 = create_lesson(
+    chapter=ch7_5, title="5.3 综合实战：学习日志文件", order=3, lesson_type='code',
+    code_challenge_prompt="""# 用文件记录今天完成的任务
+task = "完成 NumPy 课程"
+
+with open("study_log.txt", "a", encoding="utf-8") as f:
+    f.write(task + "\\n")
+
+with open("study_log.txt", "r", encoding="utf-8") as f:
+    print(f.read())
+""",
+    content="""# 5.3 综合实战：学习日志文件
+
+## 1. 实战目标
+把“写入”和“读取”连起来，做一个最基础的学习日志。
+
+## 2. 第一步：把今天完成的任务写入文件
+```python
+task = "完成 NumPy 课程"
+with open("study_log.txt", "a", encoding="utf-8") as f:
+    f.write(task + "\\n")
+```
+
+## 3. 第二步：把日志再读出来
+```python
+with open("study_log.txt", "r", encoding="utf-8") as f:
+    print(f.read())
+```
+
+## 4. 这节课练到了什么？
+- 追加写入
+- 读取文本
+- `with open`
+- 日志型小项目思维
+
+## 5. 为什么它适合初学者？
+因为这是非常真实的编程任务：把程序结果保存下来，而不是只打印在屏幕上。
+"""
+)
+Quiz.objects.create(lesson=l7_5_3, question="学习日志项目中，先把任务保存下来更适合用哪种操作？", option_a="读取", option_b="追加写入", option_c="删除", option_d="排序", correct_answer="B", explanation="日志通常使用追加写入。")
+Quiz.objects.create(lesson=l7_5_3, question="想把保存后的日志再次显示出来，下一步应做什么？", option_a="再 append 一次", option_b="打开文件读取", option_c="删除文件", option_d="创建字典", correct_answer="B", explanation="读取文件才能看到保存内容。")
+Quiz.objects.create(lesson=l7_5_3, question="学习日志最适合说明文件操作的哪种价值？", option_a="让代码更短", option_b="把结果长期保存下来", option_c="替代列表", option_d="替代函数", correct_answer="B", explanation="文件操作的重要价值之一是持久保存数据。")
+Quiz.objects.create(lesson=l7_5_3, question="下面哪种场景最像学习日志项目？", option_a="记录签到信息", option_b="只打印 Hello", option_c="画流程图", option_d="定义空元组", correct_answer="A", explanation="签到、打卡、日志都属于记录型文件应用。")
+Quiz.objects.create(lesson=l7_5_3, question="判断题：文件操作让程序结果不只停留在屏幕输出上。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，文件可以保存结果。")
+Quiz.objects.create(lesson=l7_5_3, question="判断题：日志型小项目适合帮助初学者理解文件读写。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这种场景直观且实用。")
 
 print("所有课程创建完成！")
