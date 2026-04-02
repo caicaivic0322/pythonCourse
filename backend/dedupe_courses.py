@@ -14,6 +14,8 @@ from courses.models import Course, Lesson, UserCourseProgress, UserLessonProgres
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--title', default='GESP 2级：逻辑进阶')
+    parser.add_argument('--keep-id', type=int)
+    parser.add_argument('--keep-order', type=int)
     parser.add_argument('--apply', action='store_true')
     return parser.parse_args()
 
@@ -25,7 +27,19 @@ def course_weight(course):
     return (len(chapters), lessons, quizzes, course.id)
 
 
-def choose_keep_course(courses):
+def choose_keep_course(courses, keep_id=None, keep_order=None):
+    if keep_id is not None:
+        for course in courses:
+            if course.id == keep_id:
+                return course
+        raise ValueError(f'未找到要保留的课程 id={keep_id}')
+
+    if keep_order is not None:
+        matched = [course for course in courses if course.order == keep_order]
+        if not matched:
+            raise ValueError(f'未找到要保留的课程 order={keep_order}')
+        return sorted(matched, key=course_weight, reverse=True)[0]
+
     return sorted(courses, key=course_weight, reverse=True)[0]
 
 
@@ -122,13 +136,13 @@ def summarize_course(course):
 
 
 @transaction.atomic
-def dedupe(title, apply_changes):
+def dedupe(title, apply_changes, keep_id=None, keep_order=None):
     courses = list(Course.objects.filter(title=title).order_by('id'))
     if len(courses) <= 1:
         print(f'未发现重复课程：{title}')
         return
 
-    keep_course = choose_keep_course(courses)
+    keep_course = choose_keep_course(courses, keep_id=keep_id, keep_order=keep_order)
     duplicate_courses = [course for course in courses if course.id != keep_course.id]
 
     print(f'课程标题：{title}')
@@ -161,4 +175,4 @@ def dedupe(title, apply_changes):
 
 if __name__ == '__main__':
     args = parse_args()
-    dedupe(args.title, args.apply)
+    dedupe(args.title, args.apply, keep_id=args.keep_id, keep_order=args.keep_order)
