@@ -123,3 +123,22 @@ class CourseSeedContentTests(APITestCase):
         self.assertIn('## 4. add、discard 与 remove', lesson_412.content)
         self.assertIn('## 5. 属性和方法的区别', lesson_421.content)
         self.assertIn('## 3. 为什么要在 __init__ 里初始化', lesson_422.content)
+
+        course5 = Course.objects.get(title='GESP 5级：算法基础')
+        chapter51 = Chapter.objects.get(course=course5, title='第1章：算法复杂度')
+        chapter52 = Chapter.objects.get(course=course5, title='第2章：排序与查找')
+        self.assertGreaterEqual(chapter52.lessons.count(), 4)
+
+        lesson_511 = Lesson.objects.get(chapter=chapter51, title='1.1 时间复杂度 Big O')
+        lesson_512 = Lesson.objects.get(chapter=chapter51, title='1.2 空间复杂度与复杂度估算')
+        lesson_521 = Lesson.objects.get(chapter=chapter52, title='2.1 冒泡排序 Bubble Sort')
+        lesson_522 = Lesson.objects.get(chapter=chapter52, title='2.2 二分查找 Binary Search')
+        lesson_523 = Lesson.objects.get(chapter=chapter52, title='2.3 选择排序 Selection Sort')
+        lesson_524 = Lesson.objects.get(chapter=chapter52, title='2.4 插入排序 Insertion Sort')
+
+        self.assertIn('## 4. 为什么不看“跑了几秒”', lesson_511.content)
+        self.assertIn('## 4. 常见空间复杂度直觉', lesson_512.content)
+        self.assertIn('## 4. 一轮一轮发生了什么', lesson_521.content)
+        self.assertIn('## 4. 为什么必须有序', lesson_522.content)
+        self.assertIn('## 4. 和冒泡排序有什么区别', lesson_523.content)
+        self.assertIn('## 4. 为什么叫“插入”', lesson_524.content)

@@ -4633,6 +4633,35 @@ l5_1_1 = create_lesson(
 
 ## 3. 空间复杂度
 算法运行需要占用的额外内存空间。
+
+## 4. 为什么不看“跑了几秒”
+同一个算法在不同电脑上运行，秒数可能不同；  
+但如果数据量从 `n` 变成 `10n`，算法增长得快不快，这才是更稳定、更重要的判断标准。
+
+所以复杂度分析关注的是：
+- 数据规模变大时会怎样
+- 循环层数会不会变多
+- 操作次数是线性增长还是平方增长
+
+## 5. 常数、系数和低阶项为什么常被忽略
+例如：
+- `O(2n)` 记作 `O(n)`
+- `O(n + 100)` 也常记作 `O(n)`
+
+因为当 `n` 很大时，真正决定趋势的是“最高增长项”。
+
+## 6. 一个直觉对比
+如果 `n = 10000`：
+- `O(n)` 大约处理一万次
+- `O(n^2)` 大约处理一亿次
+
+这就是为什么算法复杂度在数据量大时特别关键。
+
+## 7. 本节总结
+这一节真正要建立的不是死记符号，而是复杂度直觉：
+- 单层循环常常是 `O(n)`
+- 双层嵌套循环常常是 `O(n^2)`
+- 每次减半的问题常常会出现 `O(log n)`
 """
 )
 Quiz.objects.create(lesson=l5_1_1, question="访问列表索引 a[i] 的时间复杂度？", option_a="O(1)", option_b="O(n)", option_c="O(log n)", option_d="O(n^2)", correct_answer="A", explanation="数组索引访问是常数时间。")
@@ -4645,6 +4674,62 @@ Quiz.objects.create(lesson=l5_1_1, question="判断题：空间复杂度是指�
 Quiz.objects.create(lesson=l5_1_1, question="O(1) 叫做？", option_a="常数复杂度", option_b="线性复杂度", option_c="对数复杂度", option_d="指数复杂度", correct_answer="A", explanation="常数级。")
 Quiz.objects.create(lesson=l5_1_1, question="归并排序的时间复杂度是？", option_a="O(n^2)", option_b="O(n log n)", option_c="O(n)", option_d="O(1)", correct_answer="B", explanation="线性对数级。")
 Quiz.objects.create(lesson=l5_1_1, question="O(2n) 和 O(n) 在复杂度分析中一样吗？", option_a="一样", option_b="不一样", option_c="O(2n) 更慢", option_d="O(n) 更慢", correct_answer="A", explanation="常数系数忽略。")
+
+l5_1_2 = create_lesson(
+    chapter=ch5_1, title="1.2 空间复杂度与复杂度估算", order=2, lesson_type='text',
+    code_challenge_prompt="# 观察下面代码额外申请了多少空间\nnums = [1, 2, 3, 4]\ncopy_nums = nums[:]\nprint(len(copy_nums))",
+    content="""# 1.2 空间复杂度与复杂度估算
+
+## 1. 什么是空间复杂度？
+空间复杂度关注的是：算法运行时，**额外**需要多少内存。
+
+注意，不是代码文件有多大，也不是电脑内存总大小，而是程序执行过程中多申请了多少辅助空间。
+
+## 2. 常见空间复杂度直觉
+- `O(1)`：只用了少量额外变量
+- `O(n)`：额外开了一个和输入规模差不多的数组/列表
+- `O(log n)`：常见于递归调用栈比较浅的情况
+
+## 3. 例子
+### 例 1：原地交换
+```python
+a, b = b, a
+```
+
+通常认为额外空间很少，接近 `O(1)`。
+
+### 例 2：复制列表
+```python
+copy_nums = nums[:]
+```
+
+如果 `nums` 有 `n` 个元素，新列表也有 `n` 个元素，因此额外空间通常看作 `O(n)`。
+
+## 4. 常见空间复杂度直觉
+以后做题时，可以这样想：
+- 有没有新建和原数组差不多大的容器？
+- 有没有使用递归？
+- 是否只是用了几个辅助变量？
+
+## 5. 时间复杂度和空间复杂度的权衡
+有些算法更快，但更占内存；  
+有些算法更省内存，但运行更慢。
+
+算法设计常常是在“时间”和“空间”之间找平衡。
+
+## 6. 本节总结
+这节的目标不是让你算得特别严谨，而是能形成判断：
+- 新建大容器，空间通常会增大
+- 只用少数变量，空间通常较小
+- 复杂度分析不只有时间，也有空间
+"""
+)
+Quiz.objects.create(lesson=l5_1_2, question="空间复杂度主要关注什么？", option_a="代码有多少行", option_b="程序运行时额外占用多少内存", option_c="电脑内存总大小", option_d="文件体积", correct_answer="B", explanation="空间复杂度看的是运行时额外空间。")
+Quiz.objects.create(lesson=l5_1_2, question="复制一个长度为 n 的列表，额外空间通常是？", option_a="O(1)", option_b="O(log n)", option_c="O(n)", option_d="O(n^2)", correct_answer="C", explanation="复制出一个同规模列表，额外空间通常是 O(n)。")
+Quiz.objects.create(lesson=l5_1_2, question="只使用少量辅助变量的算法，空间复杂度通常更接近？", option_a="O(1)", option_b="O(n)", option_c="O(n^2)", option_d="O(2^n)", correct_answer="A", explanation="额外变量很少时通常是常数空间。")
+Quiz.objects.create(lesson=l5_1_2, question="判断题：空间复杂度分析只在递归题里有意义。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，任何算法都可以分析空间复杂度。")
+Quiz.objects.create(lesson=l5_1_2, question="判断题：算法越快，空间复杂度一定越小。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，时间和空间常常需要权衡。")
+Quiz.objects.create(lesson=l5_1_2, question="下面哪种情况更可能增加空间复杂度？", option_a="只交换两个变量", option_b="创建一个和输入同样大的新列表", option_c="访问一次 arr[0]", option_d="打印一个数字", correct_answer="B", explanation="新建同规模容器通常意味着更高的额外空间。")
 
 ch5_2, _ = Chapter.objects.get_or_create(course=c5, title="第2章：排序与查找", defaults={'order': 2})
 l5_2_1 = create_lesson(
@@ -4669,6 +4754,33 @@ def bubble_sort(arr):
 ## 3. 复杂度
 - 时间：O(n^2)
 - 空间：O(1)
+
+## 4. 一轮一轮发生了什么
+冒泡排序最适合理解“局部比较，逐步逼近整体有序”。
+
+第一轮：
+- 最大值被推到最后
+
+第二轮：
+- 次大值被推到倒数第二位
+
+所以每完成一轮，后面就多一个“已经排好”的位置。
+
+## 5. 为什么它适合入门？
+虽然效率不高，但它的逻辑非常直观：
+- 比较相邻元素
+- 发现顺序错了就交换
+- 一轮结束后，最大值到末尾
+
+## 6. 常见优化
+如果某一轮下来**一次交换都没有发生**，说明数组已经有序，可以提前结束。
+
+这也是为什么最好情况可以接近 `O(n)`。
+
+## 7. 本节总结
+冒泡排序最重要的学习价值不是“以后常用”，而是让你第一次真正理解：
+- 排序是怎么通过重复比较逐步完成的
+- 双重循环为什么常常对应 `O(n^2)`
 """
 )
 Quiz.objects.create(lesson=l5_2_1, question="冒泡排序的时间复杂度？", option_a="O(n)", option_b="O(n^2)", option_c="O(n log n)", option_d="O(1)", correct_answer="B", explanation="双重循环。")
@@ -4707,6 +4819,27 @@ def binary_search(arr, target):
             right = mid - 1
     return -1
 ```
+
+## 4. 为什么必须有序
+二分查找之所以快，是因为每次比较后都能放心地丢掉一半数据。
+
+但如果数组无序：
+- 你看到中间值比目标大
+- 并不能说明目标一定在左边
+
+所以“有序”不是可有可无，而是二分查找成立的前提。
+
+## 5. 指针移动的本质
+- `arr[mid] < target`：说明目标只可能在右半边，移动 `left`
+- `arr[mid] > target`：说明目标只可能在左半边，移动 `right`
+
+这其实就是“不断缩小搜索区间”。
+
+## 6. 本节总结
+二分查找真正要掌握的是：
+- 只能在有序数据上用
+- 每次排除一半范围
+- 速度快的原因来自“减半”
 """
 )
 Quiz.objects.create(lesson=l5_2_2, question="二分查找的前提条件？", option_a="数组无序", option_b="数组有序", option_c="数组必须全正数", option_d="数组长度为偶数", correct_answer="B", explanation="必须有序。")
@@ -4719,6 +4852,96 @@ Quiz.objects.create(lesson=l5_2_2, question="判断题：线性查找比二分�
 Quiz.objects.create(lesson=l5_2_2, question="二分查找能用于链表吗？", option_a="能，效率很高", option_b="能，但效率不如数组", option_c="不能", option_d="会报错", correct_answer="B", explanation="链表不支持随机访问，定位中间节点需要 O(n)，导致整体效率下降。")
 Quiz.objects.create(lesson=l5_2_2, question="target 不在数组中时，二分查找通常返回？", option_a="0", option_b="-1", option_c="None", option_d="False", correct_answer="B", explanation="约定俗成返回 -1。")
 Quiz.objects.create(lesson=l5_2_2, question="二分查找属于哪种算法策略？", option_a="贪心", option_b="分治", option_c="动态规划", option_d="回溯", correct_answer="B", explanation="分而治之。")
+
+l5_2_3 = create_lesson(
+    chapter=ch5_2, title="2.3 选择排序 Selection Sort", order=3, lesson_type='code',
+    code_challenge_prompt="# 实现选择排序\narr = [64, 25, 12, 22, 11]\n# 请补全代码",
+    content="""# 2.3 选择排序 Selection Sort
+
+## 1. 原理
+每一轮从“未排序部分”中找出最小值，放到当前应在的位置。
+
+## 2. 代码实现
+```python
+def selection_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        min_index = i
+        for j in range(i + 1, n):
+            if arr[j] < arr[min_index]:
+                min_index = j
+        arr[i], arr[min_index] = arr[min_index], arr[i]
+    return arr
+```
+
+## 3. 复杂度
+- 时间：O(n^2)
+- 空间：O(1)
+
+## 4. 和冒泡排序有什么区别
+两者复杂度都常是 `O(n^2)`，但思路不同：
+- 冒泡排序：不断比较相邻元素，把大元素往后推
+- 选择排序：每轮直接找最小值，放到前面
+
+## 5. 本节总结
+选择排序的关键在于：
+- 当前轮要确定“当前位置应该放谁”
+- 找最小值是核心动作
+"""
+)
+Quiz.objects.create(lesson=l5_2_3, question="选择排序每一轮主要做什么？", option_a="把最大值冒到最后", option_b="从未排序部分选出最小值", option_c="随机交换", option_d="二分查找", correct_answer="B", explanation="选择排序每轮找出最小值放到当前位。")
+Quiz.objects.create(lesson=l5_2_3, question="选择排序的时间复杂度通常是？", option_a="O(1)", option_b="O(log n)", option_c="O(n)", option_d="O(n^2)", correct_answer="D", explanation="两层循环，通常是 O(n^2)。")
+Quiz.objects.create(lesson=l5_2_3, question="选择排序和冒泡排序的共同点之一是？", option_a="都基于分治", option_b="都常见于 O(n^2)", option_c="都要求有序数组", option_d="都使用递归", correct_answer="B", explanation="二者都是经典 O(n^2) 排序算法。")
+Quiz.objects.create(lesson=l5_2_3, question="判断题：选择排序每一轮结束后，前面会多一个已经确定的位置。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，每轮会确定当前最小元素的位置。")
+Quiz.objects.create(lesson=l5_2_3, question="判断题：选择排序依赖相邻交换不断冒泡。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，这是冒泡排序的特点。")
+Quiz.objects.create(lesson=l5_2_3, question="如果第 i 轮找到了更小元素，通常会做什么？", option_a="删除元素", option_b="交换到第 i 位", option_c="直接返回", option_d="反转数组", correct_answer="B", explanation="会把最小值交换到当前位置。")
+
+l5_2_4 = create_lesson(
+    chapter=ch5_2, title="2.4 插入排序 Insertion Sort", order=4, lesson_type='code',
+    code_challenge_prompt="# 实现插入排序\narr = [5, 2, 4, 6, 1, 3]\n# 请补全代码",
+    content="""# 2.4 插入排序 Insertion Sort
+
+## 1. 原理
+把数组想成“左边已经排好，右边还没排好”。  
+每次从右边拿一个元素，插入到左边合适的位置。
+
+## 2. 代码实现
+```python
+def insertion_sort(arr):
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and arr[j] > key:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+    return arr
+```
+
+## 3. 复杂度
+- 最坏情况：O(n^2)
+- 最好情况：接近 O(n)
+- 空间：O(1)
+
+## 4. 为什么叫“插入”
+因为每次都是把当前元素插入到前面已经有序的那一段里。
+
+## 5. 和前两种排序的区别
+- 冒泡：通过交换把大元素往后推
+- 选择：每轮找最小值放前面
+- 插入：维护前缀有序，把新元素插入进去
+
+## 6. 本节总结
+插入排序适合理解“局部有序逐步扩张”的思路。  
+在数据本来就接近有序时，它往往比冒泡、选择更自然。
+"""
+)
+Quiz.objects.create(lesson=l5_2_4, question="插入排序的核心思路是？", option_a="每轮找最小值", option_b="把当前元素插入到前面有序部分", option_c="每次减半", option_d="随机交换", correct_answer="B", explanation="插入排序维护前缀有序。")
+Quiz.objects.create(lesson=l5_2_4, question="插入排序中 key 通常表示什么？", option_a="当前准备插入的元素", option_b="数组长度", option_c="最小值", option_d="目标下标", correct_answer="A", explanation="key 常用来保存当前待插入元素。")
+Quiz.objects.create(lesson=l5_2_4, question="插入排序最好情况常接近？", option_a="O(1)", option_b="O(log n)", option_c="O(n)", option_d="O(n^2)", correct_answer="C", explanation="数组接近有序时插入排序最好情况可接近 O(n)。")
+Quiz.objects.create(lesson=l5_2_4, question="判断题：插入排序每次都从未排序部分拿一个元素处理。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l5_2_4, question="判断题：插入排序必须额外开一个和原数组一样大的新数组。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，插入排序通常是原地排序。")
+Quiz.objects.create(lesson=l5_2_4, question="下列哪个最能描述插入排序？", option_a="不断减半", option_b="相邻冒泡", option_c="维护前面有序，再插入新元素", option_d="先建树再遍历", correct_answer="C", explanation="这正是插入排序的核心过程。")
 
 
 # ==========================================
