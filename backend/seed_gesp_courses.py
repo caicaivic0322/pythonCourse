@@ -1792,6 +1792,68 @@ print(nums[1:4])  # [1, 2, 3]
 print(nums[:3])   # [0, 1, 2] (从头开始)
 print(nums[3:])   # [3, 4, 5] (直到最后)
 ```
+
+## 6. 引用与拷贝
+列表是可变对象，这意味着“变量名”和“列表本体”要分开理解。
+
+```python
+a = [1, 2, 3]
+b = a
+b[0] = 9
+print(a)  # [9, 2, 3]
+```
+
+这里不是 `b` 复制出了一份新列表，而是 `a` 和 `b` 指向同一个列表。
+
+如果想要复制一份，可以这样做：
+
+```python
+a = [1, 2, 3]
+b = a[:]
+b[0] = 9
+print(a)  # [1, 2, 3]
+print(b)  # [9, 2, 3]
+```
+
+## 7. 二维列表示意
+列表里的元素还可以继续是列表。
+
+```python
+table = [
+    [95, 88, 76],
+    [90, 91, 92]
+]
+print(table[0][1])  # 88
+```
+
+这就像一个小表格：
+- 第一层索引：第几行
+- 第二层索引：第几列
+
+## 8. 常见错误
+### 错误 A：把第一个元素当成索引 1
+Python 索引从 0 开始，这是最常见的初学者错误。
+
+### 错误 B：取超出范围的索引
+```python
+lst = [10, 20, 30]
+# print(lst[3])  # 会报错
+```
+
+合法索引只有 `0, 1, 2`。
+
+## 9. 列表适合什么问题？
+当你遇到这些需求时，列表通常是首选：
+- 有一串按顺序保存的数据
+- 需要根据位置访问元素
+- 后面还可能继续增删改
+
+## 10. 本节总结
+这一节要真正掌握的是：
+- 列表会按顺序保存多个数据
+- 索引从 0 开始
+- 可以用切片取出一部分
+- 变量名复制不等于真正拷贝列表
 """
 )
 
@@ -1956,6 +2018,71 @@ print(len(nums))     # 4
 print(1 in nums)     # True
 print(nums.count(1)) # 2
 ```
+
+## 5. remove、pop、del 的区别
+这三个删除方式很容易混淆。
+
+### `remove(x)`
+- 按“值”删除
+- 删除第一个匹配项
+
+### `pop(index)`
+- 按“位置”删除
+- 会返回被删除的元素
+
+### `del lst[index]`
+- 也是按位置删除
+- 但不返回元素
+
+如果你需要“删掉并顺手拿到这个值”，优先想到 `pop()`。
+
+## 6. append vs extend
+初学者经常把它们搞混。
+
+```python
+lst = [1, 2]
+lst.append([3, 4])
+print(lst)  # [1, 2, [3, 4]]
+```
+
+`append()` 是把整个对象当成一个元素塞进去。
+
+```python
+lst = [1, 2]
+lst.extend([3, 4])
+print(lst)  # [1, 2, 3, 4]
+```
+
+`extend()` 则是把另一个可迭代对象里的元素逐个加入。
+
+## 7. 修改与插入的区别
+- 修改：原位置有内容，直接替换
+- 插入：保留原内容，把新元素塞进去
+
+```python
+lst = [10, 20, 30]
+lst[1] = 99         # [10, 99, 30]
+lst.insert(1, 77)   # [10, 77, 99, 30]
+```
+
+## 8. 一个真实场景
+比如你在做一个待办清单程序：
+
+```python
+todos = ["做作业", "背单词"]
+todos.append("练钢琴")
+todos.remove("背单词")
+print(todos)
+```
+
+列表最强的地方，就在于它很适合表示“会变化的一串数据”。
+
+## 9. 本节总结
+列表操作最核心的思路是：
+- 想加内容：`append / insert`
+- 想删内容：`remove / pop / del`
+- 想改内容：索引赋值
+- 想查内容：`in / count / index / len`
 """
 )
 
@@ -2081,43 +2208,150 @@ l2_2_1 = create_lesson(
 
 字符串和列表很像，也有索引和切片，但字符串是**不可变**的（不能直接修改某个字符）。
 
-## 1. 大小写转换
-- `s.upper()`: 全大写
-- `s.lower()`: 全小写
-- `s.capitalize()`: 首字母大写
+## 1. 为什么字符串方法这么重要？
+在真实编程里，很多输入的数据本质上都是字符串：
+- 用户输入的姓名
+- 一行一行的文本
+- 逗号分隔的数据
+- 文件中的内容
+
+所以学会字符串处理，等于学会“整理文字数据”的基础能力。
+
+## 2. 大小写转换
+- `s.upper()`：全大写
+- `s.lower()`：全小写
+- `s.capitalize()`：首字母大写
+- `s.title()`：每个单词首字母大写
 
 ```python
-s = "Hello"
-print(s.upper()) # "HELLO"
+s = "hello python"
+print(s.upper())      # HELLO PYTHON
+print(s.capitalize()) # Hello python
+print(s.title())      # Hello Python
 ```
 
-## 2. 查找与替换
-- `s.find(sub)`: 查找子串的位置，找不到返回 -1。
-- `s.replace(old, new)`: 替换。
+## 3. 查找与替换
+- `s.find(sub)`：查找子串位置，找不到返回 `-1`
+- `s.count(sub)`：统计某段内容出现了多少次
+- `s.replace(old, new)`：把旧内容替换成新内容
 
 ```python
-s = "I love Python"
-print(s.replace("Python", "Coding")) # "I love Coding"
+s = "I love Python, Python is fun"
+print(s.find("Python"))       # 7
+print(s.count("Python"))      # 2
+print(s.replace("Python", "Coding"))
 ```
 
-## 3. 分割与合并 (重点)
-- `s.split(sep)`: 把字符串切成列表。
-- `sep.join(list)`: 把列表拼成字符串。
+## 4. 分割与合并 (重点)
+- `s.split(sep)`：把字符串切成列表
+- `sep.join(list)`：把列表拼成字符串
 
 ```python
 s = "apple,banana,orange"
 lst = s.split(",")   # ['apple', 'banana', 'orange']
-
-print("-".join(lst)) # "apple-banana-orange"
+print("-".join(lst)) # apple-banana-orange
 ```
 
-## 4. 去除空白
-- `s.strip()`: 去除首尾空格（或换行符）。
+这种“拆开再重组”的过程，在整理数据时特别常见。
+
+## 5. 去除空白
+- `s.strip()`：去除首尾空格或换行
+- `s.lstrip()`：只去左边
+- `s.rstrip()`：只去右边
 
 ```python
 s = "  hello  "
-print(s.strip()) # "hello"
+print(s.strip())   # hello
+print(s.lstrip())  # hello  
+print(s.rstrip())  #   hello
 ```
+
+## 6. 判断字符串特征
+- `s.isalpha()`：是否全是字母
+- `s.isdigit()`：是否全是数字
+- `s.isalnum()`：是否只由字母和数字组成
+- `sub in s`：检查子串是否存在
+
+```python
+print("abc".isalpha())   # True
+print("123".isdigit())   # True
+print("a1b2".isalnum())  # True
+print("py" in "python")  # True
+```
+
+## 7. 常见误区
+### 误区 A：字符串可以像列表一样改字符
+```python
+s = "cat"
+# s[0] = "b"  # 会报错
+```
+
+### 误区 B：find 找不到会报错
+不会。它会返回 `-1`，所以很适合配合判断使用。
+
+## 8. 一个实际例子
+假设用户输入了：
+
+```python
+name = "  alice  "
+```
+
+我们可能会这样处理：
+
+```python
+name = name.strip().title()
+print(name)  # Alice
+```
+
+这就是字符串方法在真实场景中的价值：把“脏数据”整理成整洁的数据。
+
+## 9. 方法组合思维
+字符串方法最重要的不只是“会一个个背下来”，而是学会把它们串起来用。
+
+例如下面这段输入：
+
+```python
+raw = "  python,java,c++  "
+```
+
+如果我们想得到一个更整洁的列表，可以这样做：
+
+```python
+items = raw.strip().split(",")
+print(items)  # ['python', 'java', 'c++']
+```
+
+这里其实连续做了两步：
+- 先 `strip()` 清除首尾无用空格
+- 再 `split()` 按逗号拆开
+
+很多题目的关键，不是某一个方法很难，而是你能不能想到“先做什么、后做什么”。
+
+## 10. 小练习思路
+### 例 1：整理邮箱输入
+```python
+email = "  student@example.com  "
+email = email.strip().lower()
+print(email)
+```
+
+### 例 2：统计单词出现次数
+```python
+text = "python python java"
+print(text.count("python"))  # 2
+```
+
+### 例 3：把名字列表变成一句话
+```python
+names = ["Tom", "Amy", "Lily"]
+print("、".join(names))
+```
+
+## 11. 本节总结
+这一节真正要掌握的不是“方法名字很多”，而是这三类能力：
+- 知道该用哪个方法处理哪类问题
+- 能把多个方法组合起来使用
+- 能把原始字符串一步步整理成有用的信息
 """
 )
 
@@ -2262,12 +2496,91 @@ print(chr(66))   # 'B'
 - **大小写转换**：小写比大写大 32。
   `'a' - 'A' = 32`
 
-## 4. 字符串比较
-字符串比较实际上是比较 ASCII 码的大小。
+## 4. 字符运算的直觉
+为什么知道 ASCII 很有用？因为我们可以理解很多“看起来神奇”的比较结果。
+
+例如：
+- `'B'` 比 `'A'` 大，因为 66 > 65
+- `'a'` 比 `'Z'` 大，因为 97 > 90
+- `'0'` 到 `'9'` 是连续的一段数字字符
+
+## 5. 字符串比较
+字符串比较实际上是按字符一个一个比较 ASCII 码的大小。
 ```python
 print('a' > 'A') # True (97 > 65)
 print('apple' > 'banana') # False (比较第一个字母 'a' < 'b')
+print('abc' < 'abd')      # True (比较到第三个字符 c < d)
 ```
+
+## 6. 一个容易错的点
+```python
+print('10' > '2')  # False
+```
+
+这不是在比数字 10 和 2，而是在比字符串：
+- 先比较 `'1'` 和 `'2'`
+- 因为 `'1'` 更小，所以结果是 False
+
+## 7. 大小写与编码
+```python
+print(ord('A'))  # 65
+print(ord('a'))  # 97
+```
+
+这也是为什么：
+
+```python
+print('Apple' < 'apple')  # True
+```
+
+因为大写字母的 ASCII 码通常比小写字母小。
+
+## 8. ASCII 和 Unicode 的关系
+ASCII 只是最早、最基础的编码表，只包含英文字符、数字和常见符号。  
+汉字、表情符号等更丰富的字符，一般使用更大的编码体系，比如 Unicode。
+
+在 GESP 二级阶段，重点先掌握：
+- `ord()`
+- `chr()`
+- 字符比较
+- 大小写字母和数字字符的编码规律
+
+## 9. 编码与排序的关系
+为什么学了 ASCII 以后，很多排序结果 suddenly 就能看懂了？
+
+因为字符串排序底层还是要比较字符编码。
+
+例如：
+
+```python
+words = ["apple", "Banana", "cat"]
+print(sorted(words))
+```
+
+结果中大写字母开头的单词，可能会排在小写字母前面。  
+原因不是“英语规则”，而是：
+- `'B'` 的 ASCII 更小
+- 所以 `"Banana"` 会更靠前
+
+## 10. 实战中的启发
+如果你发现字符串排序结果“看起来怪怪的”，先别急着怀疑 Python，先想一想：
+- 是不是大小写混在一起了？
+- 是不是在按字符比较，而不是按数字比较？
+
+比如：
+
+```python
+print(sorted(["2", "10", "1"]))  # ['1', '10', '2']
+```
+
+这不是数字从小到大的排序，而是字符串按字符比较的排序。
+
+## 11. 本节总结
+学 ASCII 的目标，不是死记硬背所有编号，而是建立这几个直觉：
+- 字符本质上对应数字
+- 字符比较本质上是数字比较
+- 字符串比较是逐字符比较
+- 数字字符串和真正的数字，不是一回事
 """
 )
 
@@ -2383,6 +2696,246 @@ Quiz.objects.create(
     explanation="错误，ASCII 只有 128 个字符，不包含汉字（汉字在 Unicode 中）。"
 )
 
+# 2.3 字符串切片与格式化
+l2_2_3 = create_lesson(
+    chapter=ch2_2, title="2.3 字符串切片与格式化输出", order=3, lesson_type='text',
+    code_challenge_prompt="# 提取字符串 'Python' 的前 3 个字符，并格式化输出一条消息\ns = 'Python'\nprint(s[:3])\nname = 'Tom'\nscore = 95\nprint(f'{name} 的分数是 {score}')",
+    content="""# 2.3 字符串切片与格式化输出
+
+## 1. 字符串切片是什么？
+切片就是“从一段字符串里取出一部分”。
+
+```python
+s = "Python"
+print(s[0:2])  # Py
+print(s[:3])   # Pyt
+print(s[2:])   # thon
+print(s[-3:])  # hon
+```
+
+## 2. 切片规则回顾
+- `s[a:b]`：从索引 `a` 取到 `b` 之前
+- 左闭右开：取到前面，不取后面
+- 可以省略开头或结尾
+
+## 3. 为什么切片很常用？
+因为很多文本处理任务都需要：
+- 取前缀
+- 取后缀
+- 截取中间一段
+- 判断某种格式
+
+例如：
+
+```python
+filename = "photo.jpg"
+print(filename[-4:])  # .jpg
+```
+
+## 4. 字符串格式化输出
+当我们要把变量嵌入文字中时，就需要格式化输出。
+
+### 方法 A：f-string（推荐）
+```python
+name = "Tom"
+score = 95
+print(f"{name} 的分数是 {score}")
+```
+
+### 方法 B：字符串拼接
+```python
+print(name + " 的分数是 " + str(score))
+```
+
+## 5. 为什么推荐 f-string？
+- 写法更清晰
+- 不容易漏掉空格
+- 不必手动频繁转换类型
+
+## 6. 实际场景
+比如你要生成一句学习反馈：
+
+```python
+student = "Amy"
+lesson = "字符串进阶"
+print(f"{student} 已完成《{lesson}》学习")
+```
+
+这就是程序生成自然语言信息的最基础方式。
+
+## 7. 宽度与对齐
+有时候我们不仅希望输出“对”，还希望输出“整齐”。
+
+```python
+name = "Tom"
+score = 95
+print(f"{name:>6}")
+print(f"{score:0>4}")
+```
+
+可以理解为：
+- `>6`：右对齐，总宽度 6
+- `0>4`：右对齐，不够的地方用 0 补齐
+
+在二级阶段不要求你掌握特别复杂的格式控制，但要知道：  
+f-string 不只是“把变量放进去”，也可以控制输出样子。
+
+## 8. 常见格式化错误
+### 错误 A：忘记加 f
+```python
+name = "Tom"
+print("{name}")   # 这里只会原样输出
+print(f"{name}")  # 这样才会输出变量值
+```
+
+### 错误 B：数字和字符串直接拼接
+```python
+score = 95
+# print("score=" + score)  # 报错
+print("score=" + str(score))
+print(f"score={score}")
+```
+
+## 9. 本节总结
+这一节你要形成两个核心习惯：
+- 看到一段字符串时，会想到能不能用切片提取出想要的部分
+- 需要输出变量时，优先想到用 f-string 表达
+"""
+)
+Quiz.objects.create(lesson=l2_2_3, question="'Python'[:2] 的结果是？", option_a="'Py'", option_b="'Pyt'", option_c="'yt'", option_d="'on'", correct_answer="A", explanation="切片左闭右开，取索引 0 和 1。")
+Quiz.objects.create(lesson=l2_2_3, question="'Python'[2:] 的结果是？", option_a="'Py'", option_b="'thon'", option_c="'yth'", option_d="'on'", correct_answer="B", explanation="从索引 2 一直到结尾。")
+Quiz.objects.create(lesson=l2_2_3, question="'Python'[-3:] 的结果是？", option_a="'Pyt'", option_b="'hon'", option_c="'tho'", option_d="'on'", correct_answer="B", explanation="负索引从后往前数，最后 3 个字符是 hon。")
+Quiz.objects.create(lesson=l2_2_3, question="格式化输出最推荐的写法是？", option_a="注释", option_b="f-string", option_c="for 循环", option_d="input", correct_answer="B", explanation="现代 Python 中最常推荐的是 f-string。")
+Quiz.objects.create(lesson=l2_2_3, question="f'{name} 的分数是 {score}' 中花括号的作用是？", option_a="写注释", option_b="插入变量值", option_c="定义列表", option_d="定义字典", correct_answer="B", explanation="花括号里可以放变量或表达式。")
+Quiz.objects.create(lesson=l2_2_3, question="判断题：切片时右边界位置对应的字符会被取到。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，切片右边界不包含。")
+Quiz.objects.create(lesson=l2_2_3, question="判断题：f-string 可以直接把数字变量放进字符串中输出。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这也是它方便的地方。")
+Quiz.objects.create(lesson=l2_2_3, question="'photo.jpg'[-4:] 的结果是？", option_a="'jpg'", option_b="'.jpg'", option_c="'photo'", option_d="'oto.'", correct_answer="B", explanation="最后四个字符是 .jpg。")
+Quiz.objects.create(lesson=l2_2_3, question="下列哪项最适合描述切片用途？", option_a="从字符串中截取一部分", option_b="删除变量", option_c="创建循环", option_d="处理异常", correct_answer="A", explanation="切片本质上就是截取子串。")
+Quiz.objects.create(lesson=l2_2_3, question="如果 name='Tom'，那么 f'Hello, {name}' 的结果是？", option_a="'Hello, {name}'", option_b="'Hello, Tom'", option_c="'TomHello'", option_d="报错", correct_answer="B", explanation="f-string 会把变量 name 的值替换进去。")
+
+# 2.4 综合实战
+l2_2_4 = create_lesson(
+    chapter=ch2_2, title="2.4 综合实战：整理学生成绩字符串", order=4, lesson_type='code',
+    code_challenge_prompt="""# 已知原始数据如下
+raw = " Tom,89 ; Amy,95 ; Lily,100 "
+
+# 目标：
+# 1. 去掉首尾空格
+# 2. 先按 ; 分割成每位学生的数据
+# 3. 再按 , 分离姓名和分数
+# 4. 打印格式化结果
+print(raw)
+""",
+    content="""# 2.4 综合实战：整理学生成绩字符串
+
+## 1. 题目背景
+真实数据往往不是整整齐齐的。  
+比如老师给你一行原始成绩数据：
+
+```python
+raw = " Tom,89 ; Amy,95 ; Lily,100 "
+```
+
+我们希望把它整理成更清晰的输出。
+
+## 2. 第一步：去除首尾空白
+```python
+raw = raw.strip()
+```
+
+## 3. 第二步：按分号切分
+```python
+items = raw.split(";")
+```
+
+这时每一项还可能带空格，所以要继续处理。
+
+## 4. 第三步：逐个整理
+```python
+for item in items:
+    item = item.strip()
+    name, score = item.split(",")
+    print(f"{name} 同学的成绩是 {score}")
+```
+
+## 5. 这道题练到了什么？
+- `strip()`：清理多余空格
+- `split()`：拆分字符串
+- 变量接收多个结果：`name, score = ...`
+- `f-string`：格式化输出
+
+## 6. 为什么这道题重要？
+因为它已经非常接近真实的数据处理任务了。  
+很多编程题看似复杂，本质上就是：
+- 先把字符串拆开
+- 再把数据整理好
+- 最后按要求输出
+
+## 7. 升级任务：生成成绩报告
+如果我们不只是想打印每个人的成绩，还想统计人数与平均分，就可以继续往下做。
+
+```python
+raw = " Tom,89 ; Amy,95 ; Lily,100 "
+items = raw.strip().split(";")
+
+total = 0
+count = 0
+
+for item in items:
+    item = item.strip()
+    name, score = item.split(",")
+    score = int(score)
+    total += score
+    count += 1
+    print(f"{name} 同学的成绩是 {score}")
+
+print(f"平均分是 {total / count}")
+```
+
+这一步已经从“字符串整理”进一步走向“基础数据处理”了。
+
+## 8. 易错点总结
+### 易错点 A：忘记先 strip
+如果不先去掉多余空格，得到的数据就可能带着空格，影响后续处理。
+
+### 易错点 B：split 后的结果还是字符串
+```python
+score = "89"
+```
+
+它虽然看起来像数字，但本质上还是字符串。  
+如果要参与数学运算，需要：
+
+```python
+score = int(score)
+```
+
+### 易错点 C：分隔符写错
+如果原始数据用的是 `;`，却写成 `split(",")`，得到的结果就会不对。
+
+## 9. 本节总结
+这一节是第 2 章最重要的综合应用课之一。  
+它把前面学过的：
+- `strip`
+- `split`
+- 切片与变量拆包
+- f-string
+
+放到了同一个真实任务里。  
+能把这一题真正理解透，后面很多字符串处理题都会变得更容易。
+"""
+)
+Quiz.objects.create(lesson=l2_2_4, question="处理原始成绩字符串时，第一步更适合先做什么？", option_a="排序", option_b="strip 去掉首尾空格", option_c="转字典", option_d="转集合", correct_answer="B", explanation="原始数据前后有多余空格，先清理最合理。")
+Quiz.objects.create(lesson=l2_2_4, question="把 'Tom,89 ; Amy,95' 按 ';' 拆开应使用？", option_a="join", option_b="find", option_c="split", option_d="replace", correct_answer="C", explanation="split 用于按指定分隔符切分字符串。")
+Quiz.objects.create(lesson=l2_2_4, question="name, score = item.split(',') 体现了什么写法？", option_a="异常处理", option_b="多变量接收拆分结果", option_c="递归", option_d="布尔判断", correct_answer="B", explanation="split 后得到两个元素，可以分别接收。")
+Quiz.objects.create(lesson=l2_2_4, question="格式化输出“Tom 同学的成绩是 89”最推荐的方式是？", option_a="f-string", option_b="continue", option_c="pass", option_d="del", correct_answer="A", explanation="f-string 更直观清晰。")
+Quiz.objects.create(lesson=l2_2_4, question="如果 item=' Amy,95 '，先调用哪个方法更适合？", option_a="upper()", option_b="strip()", option_c="isdigit()", option_d="count()", correct_answer="B", explanation="先去掉多余空格，再进一步拆分。")
+Quiz.objects.create(lesson=l2_2_4, question="判断题：字符串整理题常常要连续使用多个字符串方法。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，真实题目经常需要组合使用多个方法。")
+Quiz.objects.create(lesson=l2_2_4, question="判断题：'Tom,89'.split(',') 会得到一个列表。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，结果类似 ['Tom', '89']。")
+Quiz.objects.create(lesson=l2_2_4, question="这类“整理字符串”题最核心的思路是？", option_a="先拆分，再清理，再输出", option_b="先递归，再排序", option_c="先建类，再继承", option_d="先建栈，再出栈", correct_answer="A", explanation="这是字符串数据整理的典型流程。")
+Quiz.objects.create(lesson=l2_2_4, question="' Tom,89 '.strip() 的结果是？", option_a="' Tom,89 '", option_b="'Tom,89'", option_c="'Tom'", option_d="'89'", correct_answer="B", explanation="strip 会去掉首尾空格。")
+Quiz.objects.create(lesson=l2_2_4, question="字符串综合题最常见的最终目标之一是？", option_a="把无序文本整理成结构化输出", option_b="只打印一个字符", option_c="把所有内容删掉", option_d="强制转元组", correct_answer="A", explanation="真正目的是把原始文本整理成可用数据。")
+
 ch2_3, _ = Chapter.objects.get_or_create(course=c2, title="第3章：常见数据结构", defaults={'order': 3})
 
 l2_3_1 = create_lesson(
@@ -2431,6 +2984,35 @@ t = (1, 2, 3)
 ```
 
 学会判断“数据是否需要变化”，是选择列表还是元组的关键。
+
+## 7. 元组解包
+元组非常常见的另一个用途，是“一次返回多个值”。
+
+```python
+point = (3, 5)
+x, y = point
+print(x)  # 3
+print(y)  # 5
+```
+
+这叫做**解包**。
+
+## 8. 元组适合的真实场景
+- 地图上的坐标 `(x, y)`
+- 日期 `(year, month, day)`
+- 颜色 `(r, g, b)`
+- 比赛结果 `(胜, 平, 负)`
+
+这些数据的共同点是：
+- 有顺序
+- 各位置有固定含义
+- 一般不希望随意更改
+
+## 9. 本节总结
+元组不是“不能改的列表”这么简单。  
+它更像是在告诉别人：
+- 这是一组固定结构的数据
+- 里面每个位置都有明确意义
 """
 )
 
@@ -2492,6 +3074,44 @@ student["city"] = "深圳"
 
 ## 6. 一个重要提醒
 字典里的键通常应该是**唯一**的，重复键会覆盖旧值。
+
+## 7. get 与 KeyError
+如果直接访问一个不存在的键，会报错：
+
+```python
+student = {"name": "Tom"}
+# print(student["age"])  # KeyError
+```
+
+更稳妥的方式是使用 `get()`：
+
+```python
+print(student.get("age"))       # None
+print(student.get("age", 0))    # 0
+```
+
+## 8. 遍历字典的思路
+很多时候我们不只是想查一个值，而是想把整张“表”都看一遍。
+
+```python
+student = {"name": "Tom", "age": 12, "score": 95}
+for key, value in student.items():
+    print(key, value)
+```
+
+这在打印信息、生成报告、批量检查字段时非常常见。
+
+## 9. 字典最强的地方
+字典最大的优势不是“语法好看”，而是：
+- 查询快
+- 读起来更清楚
+- 适合表示“属性很多的一条记录”
+
+## 10. 本节总结
+看到这种问题时，应优先想到字典：
+- 按名字取数据
+- 一条记录有多个字段
+- 想表达“键 -> 值”的对应关系
 """
 )
 
@@ -2543,6 +3163,44 @@ print(a - b)  # 差集 {1, 2}
 ## 5. 注意事项
 - 集合没有固定顺序，所以不能像列表那样用索引访问。
 - 集合中的元素必须是可哈希的，初学阶段可以简单理解为：通常放数字、字符串、元组，不放列表。
+
+## 6. add/remove/discard
+集合除了能直接创建，也可以在运行过程中不断变化。
+
+```python
+s = {1, 2, 3}
+s.add(4)
+s.remove(2)
+print(s)
+```
+
+需要注意：
+- `remove(x)`：元素不存在时会报错
+- `discard(x)`：元素不存在也不会报错
+
+```python
+s.discard(100)  # 安全，不报错
+```
+
+## 7. 集合最适合什么问题？
+看到下面这类任务时，集合通常很有优势：
+- 名单去重
+- 判断一个元素是否出现过
+- 比较两个集合有哪些相同/不同
+
+## 8. 一个实际例子
+```python
+submitted = ["Tom", "Amy", "Tom", "Lily"]
+unique_students = set(submitted)
+print(unique_students)
+```
+
+这就能快速算出“到底有多少位不同的同学提交过”。
+
+## 9. 本节总结
+集合的核心不是“存很多东西”，而是这两个字：
+- 去重
+- 判存在
 """
 )
 
@@ -2599,6 +3257,32 @@ unique_signup = set(signup)
 - 要去重或快速查存在：**集合**
 
 真正的编程能力，不只是会写语法，更是知道什么时候该用哪种数据结构。
+
+## 4. 一个选型思考流程
+以后遇到容器题时，可以按这个顺序问自己：
+
+1. 这组数据有没有顺序？
+2. 后面会不会修改？
+3. 是按位置取，还是按名字取？
+4. 有没有“去重”需求？
+
+如果你能按这 4 个问题思考，通常就不会乱选。
+
+## 5. 常见误选
+### 误选 A：明明要按字段读取，却还在用列表
+这会让代码越来越难看懂。
+
+### 误选 B：明明只想去重，却还在手写很多判断
+这时集合通常更直接。
+
+### 误选 C：固定数据写成列表
+虽然也能用，但表达力不如元组。
+
+## 6. 本节总结
+这一节不是单纯背结论，而是训练“数据结构选型意识”。  
+真正的提升，是你看到题目时能主动判断：
+- 为什么用它？
+- 用别的为什么不合适？
 """
 )
 
@@ -2682,6 +3366,45 @@ for name, course in records:
 
 ## 5. 最终目标
 你不只是会用某一种数据结构，而是能根据问题主动选择合适的数据结构。
+
+## 6. 升级任务：最受欢迎课程
+在统计每门课程选择人数之后，我们还可以继续问：
+
+- 哪门课最受欢迎？
+
+例如：
+
+```python
+most_popular = ""
+max_count = 0
+
+for course, count in course_counts.items():
+    if count > max_count:
+        max_count = count
+        most_popular = course
+
+print(most_popular, max_count)
+```
+
+这样，这道题就从“基础统计”进一步升级成了“小型分析题”。
+
+## 7. 易错点
+### 易错点 A：忘记初始化字典计数
+如果还没有这门课，就必须先设为 0。
+
+### 易错点 B：去重和计数混在一起没想清楚
+- 去重：集合
+- 计数：字典
+
+### 易错点 C：没有意识到 records 中每项其实是元组
+只要想通这一点，`for name, course in records` 就会很自然。
+
+## 8. 本节总结
+这一节是第3章最有代表性的综合题。  
+它真正训练的是：
+- 先读懂数据长什么样
+- 再判断应该用哪些结构
+- 最后把它们配合起来解决问题
 """
 )
 
