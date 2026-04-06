@@ -3455,6 +3455,41 @@ def square(x):
 
 result = square(5) # 25
 ```
+
+## 4. return 与 print 的区别
+这是函数学习里最容易混淆的点之一。
+
+```python
+def show_square(x):
+    print(x * x)
+
+def get_square(x):
+    return x * x
+```
+
+- `print()`：只是把结果显示出来
+- `return`：把结果“交还”给调用者，后面还能继续使用
+
+```python
+a = get_square(5)
+print(a + 1)   # 26
+```
+
+## 5. 为什么函数能让代码更高级？
+函数最大的价值，不只是“能重复调用”，而是让你给一段逻辑起名字。
+
+例如：
+- `calc_total()`
+- `is_prime()`
+- `format_name()`
+
+当名字起得好时，程序可读性会明显提升。
+
+## 6. 本节总结
+学完这一节要真正掌握：
+- 会用 `def` 定义函数
+- 知道参数是输入，`return` 是输出
+- 分得清 `print` 和 `return`
 """
 )
 Quiz.objects.create(lesson=l3_1_1, question="如果不写 return 语句，函数默认返回什么？", option_a="0", option_b="False", option_c="None", option_d="Error", correct_answer="C", explanation="默认返回 None。")
@@ -3488,6 +3523,42 @@ def add():
     global score
     score += 1
 ```
+
+## 4. 遮蔽现象
+如果函数内部定义了和外部同名的变量，那么函数里会优先使用内部那一个。
+
+```python
+name = "Tom"
+
+def show():
+    name = "Amy"
+    print(name)   # Amy
+
+show()
+print(name)       # Tom
+```
+
+这叫做“遮蔽”。
+
+## 5. 什么时候需要 global？
+只有在函数内部**重新赋值**全局变量时才需要 `global`。
+
+如果只是读取，通常不需要。
+
+## 6. LEGB 直觉理解
+Python 找变量时，一般按下面顺序查找：
+- Local：当前函数内部
+- Enclosing：外层嵌套函数
+- Global：当前文件全局
+- Built-in：Python 内置名称
+
+这就是 LEGB。
+
+## 7. 本节总结
+作用域这节最关键的不是背名词，而是理解：
+- 同名变量可能不是同一个变量
+- 局部变量通常不会影响全局变量
+- 真要改全局值时要格外小心
 """
 )
 Quiz.objects.create(lesson=l3_1_2, question="如何修改全局变量？", option_a="直接赋值", option_b="global 声明", option_c="extern", option_d="public", correct_answer="B", explanation="使用 global。")
@@ -3546,6 +3617,31 @@ x, y = calc(8, 3)
 
 ## 5. 使用函数拆解问题
 函数的意义不仅是“能调用”，更重要的是把复杂问题分成多个小步骤，让程序更清晰、便于复用和测试。
+
+## 6. 参数设计习惯
+写函数时可以先问自己：
+- 这段功能需要哪些输入？
+- 哪些参数最常变化？
+- 哪些参数可以给默认值？
+
+这样写出来的函数会更自然。
+
+## 7. 返回多个值为什么有用？
+有时一个函数处理后会得到不止一个结果。
+
+```python
+def calc(a, b):
+    return a + b, a - b
+```
+
+这样可以一次把多个结果交出去，而不必写很多全局变量。
+
+## 8. 本节总结
+这一节真正要掌握的是：
+- 按顺序传参：位置参数
+- 给默认值：默认参数
+- 写名字传参：关键字参数
+- 一个函数可以返回多个结果
 """
 )
 Quiz.objects.create(lesson=l3_1_3, question="调用 add(3, 5) 时，3 和 5 属于哪类参数传递方式？", option_a="关键字参数", option_b="位置参数", option_c="默认参数", option_d="匿名参数", correct_answer="B", explanation="按顺序传入的参数叫位置参数。")
@@ -3588,6 +3684,31 @@ print(t[0]) # 1
 
 ## 4. 单元素元组
 注意：`(1)` 是数字 1，`(1,)` 才是元组！
+
+## 5. 元组为什么常和函数一起出现？
+因为函数返回多个值时，Python 往往会把它们打包成元组。
+
+```python
+def info():
+    return "Tom", 12
+
+data = info()
+print(data)   # ('Tom', 12)
+```
+
+## 6. 元组适合固定结构数据
+比如：
+- 坐标 `(x, y)`
+- 日期 `(year, month, day)`
+- 成绩记录 `(name, score)`
+
+这些数据都有固定位置和固定意义。
+
+## 7. 本节总结
+元组最大的价值是：
+- 结构固定
+- 语义明确
+- 不容易被误修改
 """
 )
 Quiz.objects.create(lesson=l3_2_1, question="t = (1, 2, 3)，t[0] = 10 会发生什么？", option_a="t变成(10,2,3)", option_b="报错", option_c="t不变", option_d="t变成[10,2,3]", correct_answer="B", explanation="元组是不可变的，不能修改。")
@@ -3627,6 +3748,40 @@ except Exception as e:
 ## 3. else 和 finally
 - `else`: 没有发生异常时执行。
 - `finally`: 无论是否发生异常，**都会执行**（常用于关闭文件）。
+
+## 4. 精准捕获 vs 一把抓
+异常处理并不是“有 except 就行”，更重要的是尽量知道自己在处理什么错误。
+
+```python
+try:
+    num = int("abc")
+except ValueError:
+    print("输入格式不对")
+```
+
+这就比直接写一个很宽泛的 `except Exception` 更清楚。
+
+## 5. 为什么异常处理很重要？
+如果程序一出错就直接中断，用户体验会很差。  
+异常处理的意义是：
+- 避免程序立刻崩掉
+- 给出更友好的提示
+- 让程序更稳健
+
+## 6. raise 的直觉
+`raise` 表示“我主动告诉程序这里出问题了”。
+
+```python
+age = -1
+if age < 0:
+    raise ValueError("年龄不能为负数")
+```
+
+## 7. 本节总结
+异常处理的核心不是“把错误藏起来”，而是：
+- 识别错误
+- 合理处理
+- 给出清楚反馈
 """
 )
 Quiz.objects.create(lesson=l3_2_2, question="处理异常使用哪个关键字？", option_a="catch", option_b="except", option_c="error", option_d="handle", correct_answer="B", explanation="try-except 结构。")
@@ -3678,6 +3833,23 @@ math.sqrt(25)
 ```
 
 这种写法可以清楚地看出函数来自哪个模块。
+
+## 5. 标准库和第三方库
+模块不只有一种来源。
+
+- 标准库：Python 自带，如 `math`、`random`
+- 第三方库：需要额外安装，如 `numpy`、`pandas`
+- 自定义模块：你自己写的 `.py` 文件
+
+## 6. 为什么模块化很重要？
+当程序只有十几行时，可能感觉不到模块的价值。  
+但一旦代码变长，如果不拆模块，很快就会变得难找、难改、难复用。
+
+## 7. 本节总结
+学完这节要形成的意识是：
+- `.py` 文件本身就可以是模块
+- 模块让代码更清晰
+- `import 模块名` 是最基础也最推荐先掌握的方式
 """
 )
 Quiz.objects.create(lesson=l3_3_1, question="Python 中一个普通的 .py 文件通常可以看作什么？", option_a="变量", option_b="模块", option_c="异常", option_d="元组", correct_answer="B", explanation="一个 .py 文件通常就是一个模块。")
@@ -3719,6 +3891,33 @@ print(rnd.randint(1, 10))
 
 ## 4. 一个习惯
 初学时更推荐先理解 `import 模块名` 的方式，再学习 `from ... import ...` 和 `as`。
+
+## 5. 什么时候适合用别名？
+别名常见于两种情况：
+- 模块名太长
+- 领域里有约定俗成的缩写
+
+例如：
+
+```python
+import numpy as np
+import pandas as pd
+```
+
+## 6. from ... import ... 的优点和风险
+优点：
+- 写起来更短
+- 某些场景更方便
+
+风险：
+- 看代码时不容易立刻知道函数来自哪个模块
+- 容易和别的同名函数混淆
+
+## 7. 本节总结
+这节要学会的不是背语法，而是能根据场景选择：
+- 想更清楚：`import 模块名`
+- 想更简洁：`from ... import ...`
+- 想更顺手：`as` 起别名
 """
 )
 Quiz.objects.create(lesson=l3_3_2, question="from math import sqrt 后，调用平方根函数应写作？", option_a="math.sqrt(9)", option_b="sqrt(9)", option_c="import.sqrt(9)", option_d="from.sqrt(9)", correct_answer="B", explanation="直接导入了 sqrt，因此可以直接写 sqrt(9)。")
@@ -3767,6 +3966,27 @@ print(say_hi("Tom"))
 
 ## 4. 模块化思维
 当程序越来越大时，把不同职责的代码放到不同模块中，是非常重要的编程习惯。
+
+## 5. 为什么不要把所有函数都塞进 main.py
+如果所有逻辑都写在一个文件里，通常会遇到这些问题：
+- 文件越来越长
+- 想找某个函数很麻烦
+- 复用困难
+- 多人协作容易冲突
+
+所以，随着代码变大，把功能分到不同模块里是很自然的下一步。
+
+## 6. 一种常见拆分方式
+例如做一个小项目时，可以这样分：
+- `main.py`：主流程
+- `score_tools.py`：成绩计算
+- `text_tools.py`：字符串处理
+
+## 7. 本节总结
+模块拆分不是为了“文件看起来高级”，而是为了：
+- 结构清晰
+- 更好维护
+- 更易复用
 """
 )
 Quiz.objects.create(lesson=l3_3_3, question="自己写的 helpers.py 能不能作为模块导入？", option_a="能", option_b="不能", option_c="只有系统模块才行", option_d="必须联网才行", correct_answer="A", explanation="自己的 .py 文件也可以作为模块。")
@@ -3838,6 +4058,20 @@ from score_tools import avg, is_pass
 - 先封装函数
 - 再组织到模块
 - 最后在主程序里复用
+
+## 6. 一个更完整的项目思维
+以后遇到小项目时，可以这样想：
+- 哪些功能值得单独写成函数？
+- 哪些函数可以放进工具模块？
+- 主程序是否只保留“流程控制”？
+
+如果能形成这种思维，就已经进入了“代码组织”的层面。
+
+## 7. 本节总结
+综合题最重要的不是写出两个函数，而是理解：
+- 重复逻辑应该抽出来
+- 抽出来的函数可以继续组织成模块
+- 主程序的职责应尽量简单明确
 """
 )
 Quiz.objects.create(lesson=l3_3_4, question="把成绩计算函数放入 score_tools.py，最主要体现了什么思想？", option_a="递归", option_b="模块化", option_c="切片", option_d="排序", correct_answer="B", explanation="把功能拆到独立文件中是模块化思想。")
@@ -3885,6 +4119,32 @@ d = {"name": "Alice", "age": 12}
 
 ## 3. 遍历
 - `d.keys()`, `d.values()`, `d.items()`
+
+## 4. 键是否存在时的处理
+直接访问不存在的键，可能会报错：
+
+```python
+d = {"name": "Tom"}
+# print(d["age"])   # KeyError
+```
+
+更稳妥的方式是：
+
+```python
+print(d.get("age"))
+print(d.get("age", 0))
+```
+
+## 5. 字典为什么比列表更适合“记录型数据”
+如果一名学生有姓名、年龄、班级、成绩等信息，用字典会比列表清楚很多。
+
+因为：
+- 读取时按字段名
+- 不用死记第几个位置是什么
+- 更适合做真实业务数据
+
+## 6. 本节总结
+GESP 4级学字典，不只是复习“键值对”，而是开始把字典看成一种“组织复杂数据”的核心工具。
 """
 )
 Quiz.objects.create(lesson=l4_1_1, question="d = {'a': 1}，d['b'] = 2 后 d 是？", option_a="{'a':1}", option_b="{'a':1, 'b':2}", option_c="报错", option_d="{'b':2}", correct_answer="B", explanation="新增键值对。")
@@ -3922,6 +4182,30 @@ print(list(set(lst))) # [1, 2, 3]
 - `&` 交集
 - `|` 并集
 - `-` 差集
+
+## 4. add、discard 与 remove
+集合除了去重，还经常会动态变化。
+
+```python
+s = {1, 2, 3}
+s.add(4)
+s.discard(2)
+```
+
+需要特别注意：
+- `remove(x)`：如果元素不存在会报错
+- `discard(x)`：如果元素不存在不会报错
+
+## 5. 集合的典型业务场景
+- 去重后的用户名单
+- 已访问节点集合
+- 两个班级共同报名的学生
+
+## 6. 本节总结
+集合最强的地方不是“长得像大括号”，而是：
+- 自动去重
+- 快速判断存在
+- 做交并差分析
 """
 )
 Quiz.objects.create(lesson=l4_1_2, question="创建空集合使用？", option_a="{}", option_b="[]", option_c="set()", option_d="()", correct_answer="C", explanation="{} 是空字典。")
@@ -3962,6 +4246,24 @@ my_dog.bark() # 调用方法
 
 ## 4. self 是什么？
 `self` 代表对象自己。在类的方法中，第一个参数必须是 `self`。
+
+## 5. 属性和方法的区别
+在面向对象里，对象通常同时包含两类东西：
+- **属性**：描述对象“有什么”
+- **方法**：描述对象“能做什么”
+
+比如狗对象：
+- 属性：名字、年龄
+- 方法：叫、奔跑
+
+## 6. 为什么要学类？
+因为当数据和行为需要绑定在一起时，类会比单纯的变量和函数更自然。
+
+## 7. 本节总结
+这一节最关键的是建立直觉：
+- 类像模板
+- 对象像具体实例
+- `self` 让对象可以访问自己的属性和方法
 """
 )
 Quiz.objects.create(lesson=l4_2_1, question="定义类使用哪个关键字？", option_a="def", option_b="class", option_c="object", option_d="struct", correct_answer="B", explanation="class。")
@@ -3996,6 +4298,31 @@ print(s1.name)
 
 ## 2. 属性
 `self.name` 是对象的属性，每个对象都有自己独立的一份。
+
+## 3. 为什么要在 __init__ 里初始化
+如果对象一创建就应该具备某些信息，那么把这些信息写进 `__init__` 最自然。
+
+例如学生对象创建时，就应该马上拥有：
+- 姓名
+- 年龄
+- 班级
+
+## 4. 一个完整一点的例子
+```python
+class Student:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def introduce(self):
+        return f"我是 {self.name}，今年 {self.age} 岁"
+```
+
+## 5. 本节总结
+`__init__` 的核心意义不是“语法特殊”，而是：
+- 对象一创建就进入可用状态
+- 属性初始化集中在一个地方
+- 类的结构更清晰
 """
 )
 Quiz.objects.create(lesson=l4_2_2, question="构造函数的名字是？", option_a="init", option_b="__init__", option_c="start", option_d="create", correct_answer="B", explanation="__init__。")
