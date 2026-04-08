@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './Profile.module.css';
-import api from '../api/axios';
+import { getUserStats } from '../lib/dataService';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -11,8 +11,8 @@ const Profile = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await api.get('users/stats/');
-        setStats(response.data);
+        const response = await getUserStats(user.id);
+        setStats(response);
       } catch (error) {
         console.error('Failed to fetch user stats:', error);
       }

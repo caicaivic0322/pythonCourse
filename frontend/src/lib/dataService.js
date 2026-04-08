@@ -36,6 +36,12 @@ function getErrorMessage(error, fallback) {
   );
 }
 
+function buildServiceError(error, fallback) {
+  const serviceError = new Error(getErrorMessage(error, fallback));
+  serviceError.status = error?.response?.status;
+  return serviceError;
+}
+
 export async function loginWithUsernameOrEmail(identifier, password) {
   try {
     const { data } = await api.post('users/login/', {
@@ -55,7 +61,7 @@ export async function loginWithUsernameOrEmail(identifier, password) {
 
     return { token: data.token, user };
   } catch (error) {
-    throw new Error(getErrorMessage(error, '用户名或密码错误'));
+    throw buildServiceError(error, '用户名或密码错误');
   }
 }
 
@@ -67,7 +73,7 @@ export async function registerUser(username, email, password) {
       password,
     });
   } catch (error) {
-    throw new Error(getErrorMessage(error, '注册失败，请稍后重试'));
+    throw buildServiceError(error, '注册失败，请稍后重试');
   }
 
   return loginWithUsernameOrEmail(username, password);
@@ -97,7 +103,7 @@ export async function getUserStats() {
     const { data } = await api.get('users/stats/');
     return data;
   } catch (error) {
-    throw new Error(getErrorMessage(error, '获取学习统计失败'));
+    throw buildServiceError(error, '获取学习统计失败');
   }
 }
 
@@ -106,7 +112,7 @@ export async function getCourses() {
     const { data } = await api.get('courses/');
     return data;
   } catch (error) {
-    throw new Error(getErrorMessage(error, '获取课程列表失败'));
+    throw buildServiceError(error, '获取课程列表失败');
   }
 }
 
@@ -115,7 +121,7 @@ export async function getCourseDetail(_userId, courseId) {
     const { data } = await api.get(`courses/${courseId}/`);
     return data;
   } catch (error) {
-    throw new Error(getErrorMessage(error, '获取课程详情失败'));
+    throw buildServiceError(error, '获取课程详情失败');
   }
 }
 
@@ -124,7 +130,7 @@ export async function getLessonDetail(_userId, lessonId) {
     const { data } = await api.get(`courses/lessons/${lessonId}/`);
     return data;
   } catch (error) {
-    throw new Error(getErrorMessage(error, '获取课时内容失败'));
+    throw buildServiceError(error, '获取课时内容失败');
   }
 }
 
@@ -135,7 +141,7 @@ export async function submitLessonQuiz(_userId, lessonId, quizAnswers) {
     });
     return data;
   } catch (error) {
-    throw new Error(getErrorMessage(error, '提交测验失败'));
+    throw buildServiceError(error, '提交测验失败');
   }
 }
 

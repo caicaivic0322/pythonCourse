@@ -1,23 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, FileText, Lock, PlayCircle, Sparkles } from 'lucide-react';
-import api from '../api/axios';
 import CodeRunner from '../components/CodeRunner';
+import { useAuth } from '../contexts/AuthContext';
+import { getCourseDetail } from '../lib/dataService';
+import { resolveCourseDetailErrorMessage } from '../lib/courseErrorState';
 import styles from './CourseDetail.module.css';
 
 const CourseDetail = () => {
+  const { user } = useAuth();
   const { id } = useParams();
   const [course, setCourse] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const response = await api.get(`courses/${id}/`);
-        setCourse(response.data);
+        if (!user?.id) {
+          setErrorMessage('请先登录后再查看该课程。');
+          return;
+        }
+
+        setErrorMessage('');
+        const response = await getCourseDetail(user.id, id);
+        setCourse(response);
       } catch (error) {
         console.error('Failed to fetch course:', error);
+        setErrorMessage(resolveCourseDetailErrorMessage(error));
       } finally {
         setLoading(false);
       }
@@ -26,7 +37,7 @@ const CourseDetail = () => {
     if (id) {
       fetchCourse();
     }
-  }, [id]);
+  }, [id, user?.id]);
 
   const getLessonIcon = (lesson) => {
     if (lesson.is_locked) return <Lock size={18} />;
@@ -56,7 +67,7 @@ const CourseDetail = () => {
   const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
   if (loading) return <div className="loading-panel">课程详情加载中...</div>;
-  if (!course) return <div className="empty-panel">未找到该课程。</div>;
+  if (!course) return <div className="empty-panel">{errorMessage || '未找到该课程。'}</div>;
 
   return (
     <div className="page-shell">

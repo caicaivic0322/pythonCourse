@@ -8,6 +8,199 @@ import { useAuth } from '../contexts/AuthContext';
 import { getLessonDetail, submitLessonQuiz } from '../lib/dataService';
 import styles from './LessonDetail.module.css';
 
+const blockKeywords = ['def', 'if', 'elif', 'else', 'for', 'while', 'try', 'except', 'finally', 'with', 'class', 'match', 'case'];
+const dedentKeywords = new Set(['elif', 'else', 'except', 'finally', 'case']);
+const inlineBlockEndToken = '__INLINE_BLOCK_END__';
+
+const splitTopLevelStatements = (text) => {
+  const statements = [];
+  let current = '';
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let parenthesesDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const previousChar = text[index - 1];
+
+    if (char === "'" && !inDoubleQuote && previousChar !== '\\') {
+      inSingleQuote = !inSingleQuote;
+    } else if (char === '"' && !inSingleQuote && previousChar !== '\\') {
+      inDoubleQuote = !inDoubleQuote;
+    } else if (!inSingleQuote && !inDoubleQuote) {
+      if (char === '(') parenthesesDepth += 1;
+      if (char === ')') parenthesesDepth = Math.max(parenthesesDepth - 1, 0);
+      if (char === '[') bracketDepth += 1;
+      if (char === ']') bracketDepth = Math.max(bracketDepth - 1, 0);
+      if (char === '{') braceDepth += 1;
+      if (char === '}') braceDepth = Math.max(braceDepth - 1, 0);
+    }
+
+    if (
+      char === ';' &&
+      !inSingleQuote &&
+      !inDoubleQuote &&
+      parenthesesDepth === 0 &&
+      bracketDepth === 0 &&
+      braceDepth === 0
+    ) {
+      if (current.trim()) {
+        statements.push(current.trim());
+      }
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) {
+    statements.push(current.trim());
+  }
+
+  return statements;
+};
+
+const findTopLevelColonIndex = (text) => {
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let parenthesesDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const previousChar = text[index - 1];
+
+    if (char === "'" && !inDoubleQuote && previousChar !== '\\') {
+      inSingleQuote = !inSingleQuote;
+    } else if (char === '"' && !inSingleQuote && previousChar !== '\\') {
+      inDoubleQuote = !inDoubleQuote;
+    } else if (!inSingleQuote && !inDoubleQuote) {
+      if (char === '(') parenthesesDepth += 1;
+      if (char === ')') parenthesesDepth = Math.max(parenthesesDepth - 1, 0);
+      if (char === '[') bracketDepth += 1;
+      if (char === ']') bracketDepth = Math.max(bracketDepth - 1, 0);
+      if (char === '{') braceDepth += 1;
+      if (char === '}') braceDepth = Math.max(braceDepth - 1, 0);
+    }
+
+    if (
+      char === ':' &&
+      !inSingleQuote &&
+      !inDoubleQuote &&
+      parenthesesDepth === 0 &&
+      bracketDepth === 0 &&
+      braceDepth === 0
+    ) {
+      return index;
+    }
+  }
+
+  return -1;
+};
+
+const startsWithBlockKeyword = (text) => blockKeywords.some((keyword) => new RegExp(`^${keyword}\\b`).test(text.trim()));
+
+const expandInlinePythonStatement = (statement) => {
+  const trimmedStatement = statement.trim();
+  if (!startsWithBlockKeyword(trimmedStatement)) {
+    return [trimmedStatement];
+  }
+
+  const colonIndex = findTopLevelColonIndex(trimmedStatement);
+  if (colonIndex === -1 || colonIndex === trimmedStatement.length - 1) {
+    return [trimmedStatement];
+  }
+
+  const head = trimmedStatement.slice(0, colonIndex + 1).trimEnd();
+  const tail = trimmedStatement.slice(colonIndex + 1).trim();
+
+  if (!tail) {
+    return [head];
+  }
+
+  return [head, ...splitTopLevelStatements(tail).flatMap(expandInlinePythonStatement), inlineBlockEndToken];
+};
+
+const extractQuestionSuffix = (text) => {
+  const patterns = [
+    /(.*?)(\s+会输出吗？)$/u,
+    /(.*?)(\s+最后输出？)$/u,
+    /(.*?)(\s+输出？)$/u,
+    /(.*?)(\s+执行后.+)$/u,
+    /(.*?)(\s+的结果是？)$/u,
+    /(.*?)(\s+的值是？)$/u,
+    /(.*?)(\s+外部访问.+？)$/u,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      return {
+        code: match[1].trim(),
+        suffix: match[2].trim(),
+      };
+    }
+  }
+
+  return {
+    code: text.trim(),
+    suffix: '',
+  };
+};
+
+const looksLikeCodeQuestion = (text) => {
+  const normalizedText = text.trim();
+  const statementCount = splitTopLevelStatements(normalizedText).length;
+
+  return (
+    statementCount > 1 &&
+    /^[A-Za-z_({[\-"'0-9]/.test(normalizedText) &&
+    /(?:=|print\(|input\(|def\s+\w+|if\s+|for\s+|while\s+|class\s+)/.test(normalizedText)
+  );
+};
+
+const formatQuizQuestion = (question) => {
+  const normalizedQuestion = (question || '').replace(/\r\n/g, '\n').trim();
+  if (!normalizedQuestion || !looksLikeCodeQuestion(normalizedQuestion)) {
+    return null;
+  }
+
+  const { code: codeText, suffix } = extractQuestionSuffix(normalizedQuestion);
+  const statements = splitTopLevelStatements(codeText).flatMap(expandInlinePythonStatement);
+
+  let indentLevel = 0;
+  const lines = statements.reduce((formattedLines, statement) => {
+    if (statement === inlineBlockEndToken) {
+      indentLevel = Math.max(indentLevel - 1, 0);
+      return formattedLines;
+    }
+
+    const trimmedStatement = statement.trim();
+    const keyword = trimmedStatement.split(/\s+/)[0];
+
+    if (dedentKeywords.has(keyword)) {
+      indentLevel = Math.max(indentLevel - 1, 0);
+    }
+
+    const line = `${'    '.repeat(indentLevel)}${trimmedStatement}`;
+    if (startsWithBlockKeyword(trimmedStatement) && trimmedStatement.endsWith(':')) {
+      indentLevel += 1;
+    }
+
+    formattedLines.push(line);
+    return formattedLines;
+  }, []);
+
+  return {
+    code: lines.join('\n'),
+    suffix,
+  };
+};
+
 const LessonDetail = () => {
   const { user } = useAuth();
   const { id } = useParams();
@@ -211,9 +404,20 @@ const LessonDetail = () => {
               <div className={styles.quizList}>
                 {lesson.quizzes.map((quiz, qIdx) => {
                   const isSubmitted = Boolean(quizResult);
+                  const formattedQuestion = formatQuizQuestion(quiz.question);
                   return (
                     <div key={quiz.id} className={styles.quizItem}>
-                      <p className={styles.quizQuestion}>Q{qIdx + 1}. {quiz.question}</p>
+                      <div className={styles.quizQuestion}>
+                        <span className={styles.quizQuestionNumber}>Q{qIdx + 1}.</span>
+                        {formattedQuestion ? (
+                          <div className={styles.quizQuestionBody}>
+                            <pre className={styles.quizQuestionCode}>{formattedQuestion.code}</pre>
+                            {formattedQuestion.suffix && <span className={styles.quizQuestionSuffix}>{formattedQuestion.suffix}</span>}
+                          </div>
+                        ) : (
+                          <span>{quiz.question}</span>
+                        )}
+                      </div>
                       <div className={styles.quizOptions}>
                         {[
                           { key: 'A', text: quiz.option_a },

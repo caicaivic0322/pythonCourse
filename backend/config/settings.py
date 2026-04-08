@@ -89,6 +89,22 @@ CSRF_TRUSTED_ORIGINS = _as_list(
     default='http://localhost,http://127.0.0.1'
 )
 
+USE_X_FORWARDED_HOST = _as_bool(os.environ.get('USE_X_FORWARDED_HOST'), default=not DEBUG)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+SECURE_SSL_REDIRECT = _as_bool(os.environ.get('SECURE_SSL_REDIRECT'), default=False)
+SESSION_COOKIE_SECURE = _as_bool(os.environ.get('SESSION_COOKIE_SECURE'), default=not DEBUG)
+CSRF_COOKIE_SECURE = _as_bool(os.environ.get('CSRF_COOKIE_SECURE'), default=not DEBUG)
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0' if DEBUG else '31536000'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _as_bool(
+    os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS'),
+    default=not DEBUG,
+)
+SECURE_HSTS_PRELOAD = _as_bool(os.environ.get('SECURE_HSTS_PRELOAD'), default=False)
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [

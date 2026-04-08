@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Play, Sparkles } from 'lucide-react';
-import api from '../api/axios';
+import { useAuth } from '../contexts/AuthContext';
+import { getCourses } from '../lib/dataService';
 import styles from './CourseList.module.css';
 
 const CourseList = () => {
+  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -12,8 +14,9 @@ const CourseList = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await api.get('courses/');
-        setCourses(response.data);
+        if (!user?.id) return;
+        const response = await getCourses(user.id);
+        setCourses(response);
       } catch (error) {
         console.error('Failed to fetch courses:', error);
       } finally {
@@ -22,7 +25,7 @@ const CourseList = () => {
     };
 
     fetchCourses();
-  }, []);
+  }, [user?.id]);
 
   const isAllLocked = courses.length > 0 && courses.every((course) => course.is_locked);
 
