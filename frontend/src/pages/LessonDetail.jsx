@@ -360,17 +360,11 @@ const LessonDetail = () => {
                   children={lesson.content}
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    code({ inline, className, children, ...props }) {
-                      return inline ? (
+                    code({ className, children, ...props }) {
+                      return (
                         <code {...props} className={className}>
                           {children}
                         </code>
-                      ) : (
-                        <pre>
-                          <code {...props} className={className}>
-                            {children}
-                          </code>
-                        </pre>
                       );
                     },
                   }}
