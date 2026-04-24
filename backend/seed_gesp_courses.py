@@ -6,21 +6,44 @@ django.setup()
 
 from courses.models import Course, Chapter, Lesson, Quiz
 
+def create_chapter(course, title, order, previous_titles=None):
+    previous_titles = previous_titles or []
+    chapter = Chapter.objects.filter(course=course, title=title).order_by('id').first()
+    if chapter is None and previous_titles:
+        chapter = Chapter.objects.filter(course=course, title__in=previous_titles).order_by('order', 'id').first()
+
+    if chapter is None:
+        chapter = Chapter.objects.create(course=course, title=title, order=order)
+    else:
+        chapter.title = title
+        chapter.order = order
+        chapter.save()
+    return chapter
+
 def create_lesson(**kwargs):
     """
     Helper function to update or create a lesson.
     This prevents duplicate lessons and ensures content is updated.
     It also clears existing quizzes for the lesson to avoid duplicates.
+    previous_titles can be used to safely rename a lesson without losing
+    existing user progress that points at the old lesson row.
     """
     chapter = kwargs.get('chapter')
     title = kwargs.get('title')
-    defaults = {k: v for k, v in kwargs.items() if k not in ['chapter', 'title']}
+    previous_titles = kwargs.get('previous_titles') or []
+    defaults = {k: v for k, v in kwargs.items() if k not in ['chapter', 'title', 'previous_titles']}
     
-    lesson, created = Lesson.objects.update_or_create(
-        chapter=chapter,
-        title=title,
-        defaults=defaults
-    )
+    lesson = Lesson.objects.filter(chapter=chapter, title=title).order_by('id').first()
+    if lesson is None and previous_titles:
+        lesson = Lesson.objects.filter(chapter=chapter, title__in=previous_titles).order_by('order', 'id').first()
+
+    if lesson is None:
+        lesson = Lesson.objects.create(chapter=chapter, title=title, **defaults)
+    else:
+        lesson.title = title
+        for field, value in defaults.items():
+            setattr(lesson, field, value)
+        lesson.save()
     
     # Clear existing quizzes to prevent duplication when re-seeding
     # This ensures we always have the latest set of quizzes defined in this script
@@ -4519,13 +4542,23 @@ c4, _ = Course.objects.get_or_create(
     defaults={'order': 4}
 )
 
-ch4_1, _ = Chapter.objects.get_or_create(course=c4, title="第1章：字典与集合", defaults={'order': 1})
+ch4_1 = create_chapter(c4, title="第1章：字典与集合进阶应用", order=1, previous_titles=["第1章：字典与集合"])
 
-# 1.1 字典
+# 1.1 字典进阶
 l4_1_1 = create_lesson(
-    chapter=ch4_1, title="1.1 字典 Dictionary", order=1, lesson_type='text',
-    code_challenge_prompt="# 创建字典并访问\nd = {'name': 'Tom', 'age': 18}\nprint(d['name'])",
-    content="""# 1.1 字典 Dictionary
+    chapter=ch4_1, title="1.1 字典进阶：嵌套、计数与数据建模", previous_titles=["1.1 字典 Dictionary"], order=1, lesson_type='text',
+    code_challenge_prompt="# 用字典统计每门课的报名人数\nrecords = [\n    {'name': 'Tom', 'course': 'Python'},\n    {'name': 'Amy', 'course': 'C++'},\n    {'name': 'Lily', 'course': 'Python'},\n]\ncounts = {}\nfor record in records:\n    course = record['course']\n    counts[course] = counts.get(course, 0) + 1\nprint(counts)",
+    content="""# 1.1 字典进阶：嵌套、计数与数据建模
+
+## 0. 和 GESP 2级有什么不同？
+GESP 2级已经学过字典基础：键值对、按键访问、`items()` 遍历。
+
+本节不再把重点放在“字典是什么”，而是把字典当成真实程序里的**数据建模工具**：
+- 用列表 + 字典表达多条记录
+- 用嵌套结构表达复杂数据
+- 用字典做统计计数
+- 处理缺失字段和默认值
+- 把字典思维迁移到 JSON / API 数据
 
 ## 1. 什么是字典？
 字典（dict）是一种用**键值对**保存数据的容器。
@@ -4838,7 +4871,7 @@ print(result)
 再进一步：把每个学生姓名也保存进去，尝试输出所有不及格学生名单。
 
 ## 13. 本节总结
-GESP 4级学字典，不只是记住 `{}` 和键值对，而是掌握一种组织复杂数据的方法。
+GESP 4级学字典，不是重复“键值对”，而是掌握一种组织复杂数据和完成基础统计的方法。
 
 必须掌握：
 - 字典靠键访问值
@@ -4849,22 +4882,32 @@ GESP 4级学字典，不只是记住 `{}` 和键值对，而是掌握一种组�
 - 列表 + 字典可以表达真实项目中的复杂数据
 """
 )
-Quiz.objects.create(lesson=l4_1_1, question="d = {'a': 1}，d['b'] = 2 后 d 是？", option_a="{'a':1}", option_b="{'a':1, 'b':2}", option_c="报错", option_d="{'b':2}", correct_answer="B", explanation="新增键值对。")
-Quiz.objects.create(lesson=l4_1_1, question="字典的键必须是？", option_a="可变的", option_b="不可变的", option_c="字符串", option_d="整数", correct_answer="B", explanation="不可变类型（Hashable）。")
-Quiz.objects.create(lesson=l4_1_1, question="d.get('x', 0) 如果 x 不存在返回？", option_a="None", option_b="0", option_c="报错", option_d="False", correct_answer="B", explanation="返回默认值 0。")
-Quiz.objects.create(lesson=l4_1_1, question="d.items() 返回什么？", option_a="键列表", option_b="值列表", option_c="键值对元组列表", option_d="字符串", correct_answer="C", explanation="键值对。")
-Quiz.objects.create(lesson=l4_1_1, question="清空字典用什么方法？", option_a="delete()", option_b="clean()", option_c="clear()", option_d="empty()", correct_answer="C", explanation="clear()。")
-Quiz.objects.create(lesson=l4_1_1, question="判断题：字典是有序的（Python 3.7+）。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
-Quiz.objects.create(lesson=l4_1_1, question="判断题：字典可以有重复的键。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，键唯一。")
-Quiz.objects.create(lesson=l4_1_1, question="d = {'a': 1, 'b': 2}; len(d) 是？", option_a="1", option_b="2", option_c="3", option_d="0", correct_answer="B", explanation="两个键值对。")
-Quiz.objects.create(lesson=l4_1_1, question="d.pop('a') 的作用是？", option_a="获取 'a' 的值", option_b="删除 'a' 并返回其值", option_c="删除 'a' 但不返回值", option_d="报错", correct_answer="B", explanation="删除并返回。")
-Quiz.objects.create(lesson=l4_1_1, question="如何合并两个字典 d1 和 d2？", option_a="d1 + d2", option_b="d1.update(d2)", option_c="d1.append(d2)", option_d="d1.add(d2)", correct_answer="B", explanation="update 方法。")
+Quiz.objects.create(lesson=l4_1_1, question="records = [{'course':'Python'}, {'course':'C++'}, {'course':'Python'}]，统计课程人数最适合用？", option_a="字符串拼接", option_b="字典计数", option_c="只用元组", option_d="只用 bool", correct_answer="B", explanation="课程名可以作为键，人数作为值。")
+Quiz.objects.create(lesson=l4_1_1, question="count[ch] = count.get(ch, 0) + 1 的核心作用是？", option_a="删除字符", option_b="统计出现次数", option_c="排序字符", option_d="转换大小写", correct_answer="B", explanation="get 提供默认值，再加 1 完成计数。")
+Quiz.objects.create(lesson=l4_1_1, question="列表里放多个学生字典，最适合表达什么？", option_a="多条结构相同的记录", option_b="一个固定坐标", option_c="单个数字", option_d="无限循环", correct_answer="A", explanation="列表表示多条记录，字典表示每条记录的字段。")
+Quiz.objects.create(lesson=l4_1_1, question="student.get('score', 0) 的进阶价值是？", option_a="无条件报错", option_b="处理缺失字段时给默认值", option_c="删除字段", option_d="排序字段", correct_answer="B", explanation="真实数据里字段可能缺失，get 可提供默认值。")
+Quiz.objects.create(lesson=l4_1_1, question="update() 遇到已有键时会怎样？", option_a="保留旧值", option_b="用新值覆盖旧值", option_c="自动变列表", option_d="报错", correct_answer="B", explanation="update 合并时相同键会被新值覆盖。")
+Quiz.objects.create(lesson=l4_1_1, question="判断题：GESP 4级这里的字典重点是复杂数据组织和统计，不只是基础访问。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这和 GESP 2级入门定位不同。")
+Quiz.objects.create(lesson=l4_1_1, question="判断题：列表 + 字典常用于表达 JSON / API 里的多条记录。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这是实际项目中的常见结构。")
+Quiz.objects.create(lesson=l4_1_1, question="遍历列表中的学生字典时，student['score'] 访问的是？", option_a="当前这条学生记录的 score 字段", option_b="所有学生总分", option_c="列表长度", option_d="课程标题", correct_answer="A", explanation="每次循环中的 student 是一条字典记录。")
+Quiz.objects.create(lesson=l4_1_1, question="下面哪项最像“数据建模”？", option_a="用 {'name':'Amy','score':95} 表达学生记录", option_b="只写 print(1)", option_c="无限 while", option_d="删除所有变量", correct_answer="A", explanation="用字段组织一条记录，就是基础数据建模。")
+Quiz.objects.create(lesson=l4_1_1, question="字典计数题中，键通常表示什么？", option_a="被统计对象", option_b="固定缩进", option_c="代码行号", option_d="异常类型", correct_answer="A", explanation="例如字符、课程名、用户名都可以作为被统计对象。")
 
-# 1.2 集合 Set
+# 1.2 集合进阶
 l4_1_2 = create_lesson(
-    chapter=ch4_1, title="1.2 集合 Set", order=2, lesson_type='code',
-    code_challenge_prompt="# 集合去重\nlst = [1, 2, 2, 3, 3, 3]\ns = set(lst)\nprint(s)",
-    content="""# 1.2 集合 Set
+    chapter=ch4_1, title="1.2 集合进阶：关系运算与去重策略", previous_titles=["1.2 集合 Set"], order=2, lesson_type='code',
+    code_challenge_prompt="# 用集合分析两个班的报名关系\npython = {'Tom', 'Amy', 'Lily'}\nrobot = {'Amy', 'Jack', 'Lily'}\nprint('都报名:', python & robot)\nprint('至少报名一门:', python | robot)\nprint('只报 Python:', python - robot)",
+    content="""# 1.2 集合进阶：关系运算与去重策略
+
+## 0. 和 GESP 2级有什么不同？
+GESP 2级已经学过集合基础：自动去重、不能索引、简单交并差。
+
+本节重点放在进阶应用：
+- 保序去重
+- 名单关系分析
+- 已访问集合
+- `remove` / `discard` 的安全差异
+- `frozenset` 和“可哈希”直觉
 
 ## 1. 什么是集合？
 集合（set）是一种保存**不重复元素**的容器。
@@ -5140,7 +5183,7 @@ print(python ^ robot)
 ```
 
 ## 11. 本节总结
-集合最强的地方不是“长得像大括号”，而是：
+GESP 4级学集合，不是重复“自动去重”，而是把集合作为关系分析和状态记录工具：
 - 自动去重
 - 快速判断元素是否存在
 - 用交并差解决名单、标签、访问记录问题
@@ -5148,16 +5191,16 @@ print(python ^ robot)
 - 空集合必须用 `set()`
 """
 )
-Quiz.objects.create(lesson=l4_1_2, question="创建空集合使用？", option_a="{}", option_b="[]", option_c="set()", option_d="()", correct_answer="C", explanation="{} 是空字典。")
-Quiz.objects.create(lesson=l4_1_2, question="set([1, 2, 2]) 的结果？", option_a="{1, 2, 2}", option_b="{1, 2}", option_c="[1, 2]", option_d="报错", correct_answer="B", explanation="自动去重。")
-Quiz.objects.create(lesson=l4_1_2, question="{1, 2} & {2, 3} 的结果？", option_a="{1, 2, 3}", option_b="{2}", option_c="{1, 3}", option_d="{}", correct_answer="B", explanation="交集。")
-Quiz.objects.create(lesson=l4_1_2, question="集合中的元素必须是？", option_a="可变的", option_b="不可变的", option_c="有序的", option_d="无限制", correct_answer="B", explanation="不可变（Hashable）。")
-Quiz.objects.create(lesson=l4_1_2, question="s.add(1) 的作用？", option_a="添加元素", option_b="删除元素", option_c="排序", option_d="求和", correct_answer="A", explanation="添加。")
-Quiz.objects.create(lesson=l4_1_2, question="判断题：集合是有序的，可以通过索引访问。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，无序。")
-Quiz.objects.create(lesson=l4_1_2, question="判断题：集合不能包含重复元素。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
-Quiz.objects.create(lesson=l4_1_2, question="s = {1, 2}; s.remove(3) 会？", option_a="什么都不做", option_b="报错 KeyError", option_c="自动添加 3", option_d="清空集合", correct_answer="B", explanation="remove 不存在的元素会报错，discard 不会。")
-Quiz.objects.create(lesson=l4_1_2, question="集合支持索引吗？", option_a="支持", option_b="不支持", option_c="支持正数索引", option_d="支持负数索引", correct_answer="B", explanation="集合是无序的。")
-Quiz.objects.create(lesson=l4_1_2, question="len({1, 1, 2}) 的结果是？", option_a="3", option_b="2", option_c="1", option_d="0", correct_answer="B", explanation="自动去重后只有 {1, 2}。")
+Quiz.objects.create(lesson=l4_1_2, question="想保留原顺序去重，常见做法是？", option_a="直接 list(set(nums))", option_b="用 seen 集合配合 result 列表", option_c="只用字符串", option_d="只用元组", correct_answer="B", explanation="set 去重不保序，seen + result 可以保留首次出现顺序。")
+Quiz.objects.create(lesson=l4_1_2, question="python & robot 适合表示什么？", option_a="两边共同拥有的成员", option_b="所有成员", option_c="只在 python 的成员", option_d="随机成员", correct_answer="A", explanation="& 是交集。")
+Quiz.objects.create(lesson=l4_1_2, question="visited = set() 在搜索类问题中常用来做什么？", option_a="记录已访问对象", option_b="保存最终作文", option_c="创建函数", option_d="表示缩进", correct_answer="A", explanation="已访问集合能避免重复处理。")
+Quiz.objects.create(lesson=l4_1_2, question="remove 和 discard 的关键区别是？", option_a="discard 不存在时不报错", option_b="remove 不会删除", option_c="discard 只能删数字", option_d="二者完全一样", correct_answer="A", explanation="discard 更适合不确定元素是否存在的场景。")
+Quiz.objects.create(lesson=l4_1_2, question="frozenset 的特点是？", option_a="不可变集合", option_b="有序集合", option_c="重复集合", option_d="列表别名", correct_answer="A", explanation="frozenset 是不可变集合。")
+Quiz.objects.create(lesson=l4_1_2, question="判断题：GESP 4级集合重点是关系分析，不只是 set(list) 去重。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，交并差和状态记录才是进阶重点。")
+Quiz.objects.create(lesson=l4_1_2, question="判断题：集合推导式会自动去重。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，集合本身不保留重复元素。")
+Quiz.objects.create(lesson=l4_1_2, question="python - robot 表示什么？", option_a="只在 python 中、不在 robot 中的成员", option_b="两边都有", option_c="全部成员", option_d="清空集合", correct_answer="A", explanation="- 是差集。")
+Quiz.objects.create(lesson=l4_1_2, question="只报名一门课的人可以用什么运算？", option_a="^", option_b="&", option_c="len", option_d="append", correct_answer="A", explanation="^ 是对称差集，表示只在其中一边的元素。")
+Quiz.objects.create(lesson=l4_1_2, question="集合不能放列表作为元素，原因是列表？", option_a="可变，不可哈希", option_b="太长", option_c="只能排序", option_d="必须是中文", correct_answer="A", explanation="集合元素必须可哈希，列表可变所以不行。")
 
 ch4_2, _ = Chapter.objects.get_or_create(course=c4, title="第2章：面向对象编程 OOP", defaults={'order': 2})
 
