@@ -3996,9 +3996,19 @@ ch3_2, _ = Chapter.objects.get_or_create(course=c3, title="第2章：元组与�
 
 # 2.1 元组 Tuple
 l3_2_1 = create_lesson(
-    chapter=ch3_2, title="2.1 元组 Tuple", order=1, lesson_type='text',
+    chapter=ch3_2, title="2.1 元组进阶：解包、返回值与不可变数据", previous_titles=["2.1 元组 Tuple"], order=1, lesson_type='text',
     code_challenge_prompt="# 创建一个元组并尝试修改（会报错，请观察）\nt = (1, 2, 3)\nprint(t[0])\n# t[0] = 10",
-    content="""# 2.1 元组 Tuple
+    content="""# 2.1 元组进阶：解包、返回值与不可变数据
+
+## 0. 和 GESP 2级有什么不同？
+GESP 2级已经把元组作为“不可变序列”讲过。
+
+本节不重复基础语法，重点放在元组的进阶用途：
+- 函数返回多个值
+- 元组解包
+- 固定结构数据
+- 元组作为字典键
+- 元组中包含可变对象时的易错点
 
 ## 1. 什么是元组？
 元组就像是**不可变的列表**。一旦创建，就不能修改（不能增加、删除、修改元素）。
@@ -7518,17 +7528,26 @@ Quiz.objects.create(lesson=l7_1_2, question="time.sleep() 的参数单位是？"
 Quiz.objects.create(lesson=l7_1_2, question="range(1, 10, 2) 生成的最后一个数是？", option_a="10", option_b="9", option_c="8", option_d="11", correct_answer="B", explanation="生成 1, 3, 5, 7, 9。")
 
 # Chapter 2: List Data
-ch7_2, _ = Chapter.objects.get_or_create(course=c7, title="第2章：列表数据 (List Data)", defaults={'order': 2})
+ch7_2 = create_chapter(c7, title="第2章：列表项目实践 (List Data)", order=2, previous_titles=["第2章：列表数据 (List Data)"])
 
 # 2.1 Creating Lists
 l7_2_1 = create_lesson(
-    chapter=ch7_2, title="2.1 列表初探：电影列表", order=1, lesson_type='code',
+    chapter=ch7_2, title="2.1 项目实践：电影列表建模", previous_titles=["2.1 列表初探：电影列表"], order=1, lesson_type='code',
     code_challenge_prompt="""# 创建一个列表 movies，包含以下电影：
 # "The Holy Grail", "The Life of Brian", "The Meaning of Life"
 movies = ["The Holy Grail", "The Life of Brian", "The Meaning of Life"]
 print(movies[1])
 """,
-    content="""# 2.1 列表初探
+    content="""# 2.1 项目实践：电影列表建模
+
+## 0. 和 GESP 2级列表有什么不同？
+GESP 2级讲列表的定义、索引、增删改查。
+
+Head First Python 这一章不再按考点讲列表，而是用“电影数据”做项目练习：
+- 用列表保存一组真实数据
+- 理解列表里可以混合不同类型
+- 从数据出发思考如何组织程序
+- 为后面的嵌套列表和递归函数铺垫
 
 ## 1. 一切皆对象
 在 Python 中，变量不需要声明类型。你可以把任何东西赋值给变量。
@@ -7616,7 +7635,7 @@ Quiz.objects.create(lesson=l7_2_1, question="空列表 [] 的布尔值是？", o
 
 # 2.2 List Methods
 l7_2_2 = create_lesson(
-    chapter=ch7_2, title="2.2 列表操作：增删改", order=2, lesson_type='code',
+    chapter=ch7_2, title="2.2 项目实践：维护电影列表", previous_titles=["2.2 列表操作：增删改"], order=2, lesson_type='code',
     code_challenge_prompt="""# 1. 创建 movies 列表
 # 2. 使用 append 添加 "Terry Jones"
 # 3. 使用 pop 删除最后一个元素
@@ -7626,7 +7645,16 @@ print(movies)
 movies.pop()
 print(movies)
 """,
-    content="""# 2.2 列表操作
+    content="""# 2.2 项目实践：维护电影列表
+
+## 0. 和 GESP 2级列表操作有什么不同？
+这里不只是背 `append`、`pop`、`remove`。
+
+本节把这些方法放进“维护电影清单”的场景：
+- 添加新电影
+- 删除临时数据
+- 合并演员列表
+- 比较 `append` 和 `extend` 对项目数据结构的影响
 
 ## 1. 常用方法
 列表自带了很多好用的方法（Method）：
@@ -7709,7 +7737,7 @@ Quiz.objects.create(lesson=l7_2_2, question="del list[0] 的作用是？", optio
 
 # 2.3 Nested Lists
 l7_2_3 = create_lesson(
-    chapter=ch7_2, title="2.3 嵌套列表与循环", order=3, lesson_type='code',
+    chapter=ch7_2, title="2.3 项目实践：嵌套列表与递归遍历", previous_titles=["2.3 嵌套列表与循环"], order=3, lesson_type='code',
     code_challenge_prompt="""# 遍历嵌套列表
 movies = ["The Holy Grail", 1975, ["Terry Jones", 91]]
 for item in movies:
@@ -7719,7 +7747,15 @@ for item in movies:
     else:
         print(item)
 """,
-    content="""# 2.3 嵌套列表与循环
+    content="""# 2.3 项目实践：嵌套列表与递归遍历
+
+## 0. 和普通列表遍历有什么不同？
+GESP 2级主要处理一层列表。
+
+Head First 这里开始处理“列表里面还有列表”的真实结构。重点不只是循环，而是：
+- 判断数据类型
+- 处理多层嵌套
+- 为递归函数 `print_lol` 做准备
 
 ## 1. 列表里的列表
 列表可以包含其他列表。
@@ -7791,11 +7827,11 @@ Quiz.objects.create(lesson=l7_2_3, question="for 循环可以遍历嵌套列表�
 
 
 # Chapter 3: Structured Data
-ch7_3, _ = Chapter.objects.get_or_create(course=c7, title="第3章：结构化数据 (Structured Data)", defaults={'order': 3})
+ch7_3 = create_chapter(c7, title="第3章：结构化项目数据 (Structured Data)", order=3, previous_titles=["第3章：结构化数据 (Structured Data)"])
 
 # 3.1 Dictionaries
 l7_3_1 = create_lesson(
-    chapter=ch7_3, title="3.1 字典：更好的数据结构", order=1, lesson_type='code',
+    chapter=ch7_3, title="3.1 项目实践：电影信息字典", previous_titles=["3.1 字典：更好的数据结构"], order=1, lesson_type='code',
     code_challenge_prompt="""# 创建一个字典表示电影信息
 movie = {
     "title": "The Holy Grail",
@@ -7804,7 +7840,12 @@ movie = {
 }
 print(movie["year"])
 """,
-    content="""# 3.1 字典：更好的数据结构
+    content="""# 3.1 项目实践：电影信息字典
+
+## 0. 和前面字典课程有什么不同？
+GESP 2级讲“用名字找数据”，GESP 4级讲“嵌套、计数、建模”。
+
+Head First 这里把字典放进电影项目中：从列表的“位置含义”升级到字典的“字段含义”，让数据更像真实对象。
 
 ## 1. 列表的问题
 用列表存储数据时，我们必须记住索引的含义（索引 0 是标题？索引 1 是年份？）。这很麻烦。
@@ -7876,11 +7917,11 @@ Quiz.objects.create(lesson=l7_3_1, question="字典的键可以是元组吗？",
 Quiz.objects.create(lesson=l7_3_1, question="{} 代表什么？", option_a="空列表", option_b="空元组", option_c="空字典", option_d="空集合", correct_answer="C", explanation="{} 默认表示空字典，空集合需要用 set()。")
 
 # Chapter 4: Code Reuse
-ch7_4, _ = Chapter.objects.get_or_create(course=c7, title="第4章：代码复用 (Code Reuse)", defaults={'order': 4})
+ch7_4 = create_chapter(c7, title="第4章：项目代码复用 (Code Reuse)", order=4, previous_titles=["第4章：代码复用 (Code Reuse)"])
 
 # 4.1 Functions
 l7_4_1 = create_lesson(
-    chapter=ch7_4, title="4.1 函数：print_lol", order=1, lesson_type='code',
+    chapter=ch7_4, title="4.1 项目实践：print_lol 递归函数", previous_titles=["4.1 函数：print_lol"], order=1, lesson_type='code',
     code_challenge_prompt="""# 定义一个递归函数 print_lol 打印嵌套列表
 def print_lol(the_list):
     for item in the_list:
@@ -7892,7 +7933,12 @@ def print_lol(the_list):
 movies = ["The Holy Grail", 1975, ["Terry Jones", 91]]
 print_lol(movies)
 """,
-    content="""# 4.1 函数：print_lol
+    content="""# 4.1 项目实践：print_lol 递归函数
+
+## 0. 和 GESP 函数课程有什么不同？
+GESP 3级讲函数定义、返回值、参数和作用域。
+
+Head First 这里用一个真实函数 `print_lol` 解决嵌套列表输出问题。重点是把函数作为“项目工具”，而不是孤立语法点。
 
 ## 1. 不要重复代码 (DRY)
 如果你发现自己在复制粘贴代码，你就应该写一个函数。
@@ -7960,9 +8006,14 @@ Quiz.objects.create(lesson=l7_4_1, question="定义函数时参数列表里的�
 
 # 4.2 Modules
 l7_4_2 = create_lesson(
-    chapter=ch7_4, title="4.2 模块：nester.py", order=2, lesson_type='text',
+    chapter=ch7_4, title="4.2 项目实践：封装 nester.py 模块", previous_titles=["4.2 模块：nester.py"], order=2, lesson_type='text',
     code_challenge_prompt="# 假设我们将 print_lol 保存到了 nester.py\n# import nester\n# nester.print_lol(movies)",
-    content="""# 4.2 模块：nester.py
+    content="""# 4.2 项目实践：封装 nester.py 模块
+
+## 0. 和 GESP 模块课程有什么不同？
+GESP 3级讲 `import`、`from...import` 和模块拆分原则。
+
+Head First 这里把 `print_lol` 真的封装成 `nester.py`，重点是完成一次“从函数到可复用模块”的项目化迁移。
 
 ## 1. 什么是模块？
 模块就是一个包含 Python 代码的文件（.py）。

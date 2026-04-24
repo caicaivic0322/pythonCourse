@@ -108,9 +108,11 @@ class CourseSeedContentTests(APITestCase):
 
         course3 = Course.objects.get(title='GESP 3级：函数与模块')
         lesson_311 = Lesson.objects.get(chapter__course=course3, title='1.1 函数定义与返回值')
+        lesson_321 = Lesson.objects.get(chapter__course=course3, title='2.1 元组进阶：解包、返回值与不可变数据')
         lesson_322 = Lesson.objects.get(chapter__course=course3, title='2.2 异常处理 try-except')
         lesson_333 = Lesson.objects.get(chapter__course=course3, title='3.3 自定义模块与代码拆分')
         self.assertIn('## 4. return 与 print 的区别', lesson_311.content)
+        self.assertIn('## 0. 和 GESP 2级有什么不同？', lesson_321.content)
         self.assertIn('## 4. 精准捕获 vs 一把抓', lesson_322.content)
         self.assertIn('## 5. 为什么不要把所有函数都塞进 main.py', lesson_333.content)
 
@@ -127,6 +129,16 @@ class CourseSeedContentTests(APITestCase):
         self.assertIn('## 9. 易错点', lesson_421.content)
         self.assertIn('## 3. 参数和属性不要混淆', lesson_422.content)
         self.assertIn('## 10. 综合练习：BankAccount', lesson_422.content)
+
+        head_first = Course.objects.get(title='Head First Python')
+        hf_list = Lesson.objects.get(chapter__course=head_first, title='2.1 项目实践：电影列表建模')
+        hf_dict = Lesson.objects.get(chapter__course=head_first, title='3.1 项目实践：电影信息字典')
+        hf_fn = Lesson.objects.get(chapter__course=head_first, title='4.1 项目实践：print_lol 递归函数')
+        hf_module = Lesson.objects.get(chapter__course=head_first, title='4.2 项目实践：封装 nester.py 模块')
+        self.assertIn('## 0. 和 GESP 2级列表有什么不同？', hf_list.content)
+        self.assertIn('## 0. 和前面字典课程有什么不同？', hf_dict.content)
+        self.assertIn('## 0. 和 GESP 函数课程有什么不同？', hf_fn.content)
+        self.assertIn('## 0. 和 GESP 模块课程有什么不同？', hf_module.content)
 
         course5 = Course.objects.get(title='GESP 5级：算法基础')
         chapter51 = Chapter.objects.get(course=course5, title='第1章：算法复杂度')
