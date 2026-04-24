@@ -121,6 +121,10 @@ class CourseSeedContentTests(APITestCase):
         lesson_412 = Lesson.objects.get(chapter__course=course4, title='1.2 集合进阶：关系运算与去重策略')
         lesson_421 = Lesson.objects.get(chapter__course=course4, title='2.1 类与对象基础')
         lesson_422 = Lesson.objects.get(chapter__course=course4, title='2.2 构造函数 __init__')
+        lesson_423 = Lesson.objects.get(chapter__course=course4, title='2.3 封装：把数据和规则放进类里')
+        lesson_424 = Lesson.objects.get(chapter__course=course4, title='2.4 继承与方法重写')
+        lesson_425 = Lesson.objects.get(chapter__course=course4, title='2.5 类属性、实例属性与对象列表')
+        lesson_426 = Lesson.objects.get(chapter__course=course4, title='2.6 综合项目：学生成绩管理系统')
         self.assertIn('## 0. 和 GESP 2级有什么不同？', lesson_411.content)
         self.assertIn('## 8. 计数问题：字典高频应用', lesson_411.content)
         self.assertIn('## 0. 和 GESP 2级有什么不同？', lesson_412.content)
@@ -129,6 +133,16 @@ class CourseSeedContentTests(APITestCase):
         self.assertIn('## 9. 易错点', lesson_421.content)
         self.assertIn('## 3. 参数和属性不要混淆', lesson_422.content)
         self.assertIn('## 10. 综合练习：BankAccount', lesson_422.content)
+        self.assertIn('## 2. 用方法保护修改规则', lesson_423.content)
+        self.assertIn('## 4. super() 调用父类', lesson_424.content)
+        self.assertIn('## 7. 用对象列表完成统计', lesson_425.content)
+        self.assertIn('## 7. 用字典统计等级人数', lesson_426.content)
+        self.assertEqual(lesson_423.quizzes.count(), 8)
+        self.assertEqual(lesson_426.quizzes.count(), 8)
+        self.assertEqual(
+            Lesson.objects.filter(chapter__course=course4, chapter__title='第2章：面向对象编程 OOP').count(),
+            6,
+        )
 
         head_first = Course.objects.get(title='Head First Python')
         hf_list = Lesson.objects.get(chapter__course=head_first, title='2.1 项目实践：电影列表建模')

@@ -5839,6 +5839,854 @@ Quiz.objects.create(lesson=l4_2_2, question="析构函数的名字是？", optio
 Quiz.objects.create(lesson=l4_2_2, question="s.age = 13 是修改谁的属性？", option_a="类", option_b="对象 s", option_c="所有对象", option_d="全局变量", correct_answer="B", explanation="实例属性。")
 Quiz.objects.create(lesson=l4_2_2, question="__str__ 方法的作用是？", option_a="字符串转对象", option_b="对象转字符串（打印时显示）", option_c="构造函数", option_d="析构函数", correct_answer="B", explanation="定义对象的字符串表示。")
 
+# 2.3 Encapsulation
+l4_2_3 = create_lesson(
+    chapter=ch4_2, title="2.3 封装：把数据和规则放进类里", order=3, lesson_type='code',
+    code_challenge_prompt="# 用封装保护账户余额\nclass BankAccount:\n    def __init__(self, owner, balance):\n        self.owner = owner\n        self._balance = balance\n\n    def deposit(self, amount):\n        if amount > 0:\n            self._balance += amount\n\n    def withdraw(self, amount):\n        if 0 < amount <= self._balance:\n            self._balance -= amount\n            return True\n        return False\n\n    def get_balance(self):\n        return self._balance\n\naccount = BankAccount('Tom', 100)\naccount.deposit(50)\nprint(account.get_balance())",
+    content="""# 2.3 封装：把数据和规则放进类里
+
+## 1. 什么是封装？
+封装（Encapsulation）指把对象的数据和操作这些数据的方法放在同一个类里。
+
+前面写过银行账户：
+
+```python
+class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner
+        self.balance = balance
+```
+
+如果外部代码可以随意改余额：
+
+```python
+account.balance = -999
+```
+
+程序就会出现不合理状态。封装要解决的问题就是：**数据不能被随便改，修改必须经过规则。**
+
+## 2. 用方法保护修改规则
+更合理的写法是让外部通过方法存钱和取钱：
+
+```python
+class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner
+        self._balance = balance
+
+    def deposit(self, amount):
+        if amount > 0:
+            self._balance += amount
+
+    def withdraw(self, amount):
+        if 0 < amount <= self._balance:
+            self._balance -= amount
+            return True
+        return False
+
+    def get_balance(self):
+        return self._balance
+```
+
+这里的关键不是下划线本身，而是设计思路：
+- 余额是对象内部状态
+- 外部想改余额，必须调用方法
+- 方法里负责检查金额是否合法
+- 对象始终保持合理状态
+
+## 3. 单下划线属性
+`_balance` 前面的单下划线是一种约定：这个属性属于类的内部实现，不建议外部直接访问。
+
+```python
+print(account._balance)  # 能访问，但不推荐
+```
+
+Python 不会强制禁止访问单下划线属性。它更像一个提醒：这个属性以后可能变化，外部代码不要依赖它。
+
+## 4. 双下划线属性
+双下划线会触发名称改写：
+
+```python
+class BankAccount:
+    def __init__(self, balance):
+        self.__balance = balance
+```
+
+这时外部直接写 `account.__balance` 通常访问不到原属性。
+
+初学阶段不要把双下划线理解成绝对安全。它更适合避免子类或外部代码无意中改到内部属性。
+
+## 5. 为什么不要直接暴露全部属性？
+直接暴露属性会让规则分散在外部：
+
+```python
+if amount > 0:
+    account.balance += amount
+```
+
+如果项目里有很多地方都这样写，规则一改就要到处找。封装后规则集中在类里：
+
+```python
+account.deposit(amount)
+```
+
+这样代码更容易维护，也更符合“对象自己管理自己状态”的思想。
+
+## 6. getter 和 setter
+读取内部数据可以用 getter：
+
+```python
+def get_balance(self):
+    return self._balance
+```
+
+修改内部数据可以用 setter，但 setter 里要检查规则：
+
+```python
+def set_balance(self, balance):
+    if balance >= 0:
+        self._balance = balance
+```
+
+不是所有属性都需要 getter/setter。只有当你需要保护规则、隐藏内部细节或统一接口时，才值得这样设计。
+
+## 7. property 简介
+Python 可以用 `@property` 让方法像属性一样读取：
+
+```python
+class BankAccount:
+    def __init__(self, balance):
+        self._balance = balance
+
+    @property
+    def balance(self):
+        return self._balance
+```
+
+使用时：
+
+```python
+account = BankAccount(100)
+print(account.balance)
+```
+
+`@property` 适合让外部读起来简单，同时内部仍然保留控制权。
+
+## 8. 封装和字典的区别
+用字典也能保存账户：
+
+```python
+account = {"owner": "Tom", "balance": 100}
+```
+
+但字典不能天然约束修改规则。任何地方都能写：
+
+```python
+account["balance"] = -999
+```
+
+类可以把数据和规则绑在一起：
+- 属性保存数据
+- 方法负责规则
+- 对象负责维护自己的状态
+
+这就是从“数据结构”升级到“对象模型”的关键。
+
+## 9. 常见错误
+### 错误 1：把封装理解成“不让别人看”
+封装的重点不是神秘，而是把规则集中起来。
+
+### 错误 2：所有属性都加双下划线
+过度隐藏会让代码难调试。多数情况下，单下划线约定就够了。
+
+### 错误 3：方法里不做检查
+如果 `deposit()` 不检查金额，封装就失去意义：
+
+```python
+def deposit(self, amount):
+    self._balance += amount
+```
+
+如果传入 `-100`，余额反而减少。
+
+## 10. 综合练习：安全账户
+实现一个 `BankAccount`：
+1. `owner` 表示账户主人
+2. `_balance` 表示余额
+3. `deposit(amount)` 只允许正数
+4. `withdraw(amount)` 不能超过余额
+5. `get_balance()` 返回当前余额
+6. `__str__()` 打印账户摘要
+
+## 11. 本节总结
+封装是 OOP 的核心能力之一。
+
+必须掌握：
+- 对象不只是保存数据，还要维护数据规则
+- 外部代码应通过方法修改内部状态
+- 单下划线表示内部属性约定
+- getter/setter/property 都是控制访问方式的工具
+- 封装能让代码更稳定、更容易维护
+"""
+)
+Quiz.objects.create(lesson=l4_2_3, question="封装最主要解决什么问题？", option_a="把数据和规则集中在类里", option_b="让代码不能运行", option_c="删除所有属性", option_d="替代循环", correct_answer="A", explanation="封装让对象自己管理自己的数据和规则。")
+Quiz.objects.create(lesson=l4_2_3, question="_balance 前面的单下划线通常表示？", option_a="内部属性约定", option_b="语法错误", option_c="全局变量", option_d="必须删除", correct_answer="A", explanation="单下划线表示不建议外部直接访问。")
+Quiz.objects.create(lesson=l4_2_3, question="deposit(amount) 中检查 amount > 0 的目的是什么？", option_a="保护余额规则", option_b="让方法更慢", option_c="创建对象", option_d="继承父类", correct_answer="A", explanation="存款金额必须为正数，这是业务规则。")
+Quiz.objects.create(lesson=l4_2_3, question="@property 的作用之一是？", option_a="让方法像属性一样读取", option_b="删除对象", option_c="创建列表", option_d="停止程序", correct_answer="A", explanation="@property 可以保留内部控制，又让外部访问简洁。")
+Quiz.objects.create(lesson=l4_2_3, question="直接 account.balance = -999 的风险是？", option_a="让对象进入不合理状态", option_b="自动修复余额", option_c="变成字符串", option_d="没有任何风险", correct_answer="A", explanation="外部随意修改可能破坏对象规则。")
+Quiz.objects.create(lesson=l4_2_3, question="判断题：封装不是为了神秘，而是为了集中规则。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4_2_3, question="判断题：Python 单下划线属性绝对不能被外部访问。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，单下划线是约定，不是强制禁止。")
+Quiz.objects.create(lesson=l4_2_3, question="下面哪个更符合封装？", option_a="account.withdraw(30)", option_b="account._balance = -30", option_c="balance = -30", option_d="del account", correct_answer="A", explanation="通过方法执行规则更符合封装。")
+
+# 2.4 Inheritance
+l4_2_4 = create_lesson(
+    chapter=ch4_2, title="2.4 继承与方法重写", order=4, lesson_type='code',
+    code_challenge_prompt="# 定义父类 Animal 和子类 Dog\nclass Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return '...'\n\nclass Dog(Animal):\n    def speak(self):\n        return self.name + ' says Wang!'\n\npet = Dog('Lucky')\nprint(pet.speak())",
+    content="""# 2.4 继承与方法重写
+
+## 1. 为什么需要继承？
+如果很多类有共同属性和方法，重复写会很麻烦。
+
+例如：
+
+```python
+class Dog:
+    def __init__(self, name):
+        self.name = name
+
+class Cat:
+    def __init__(self, name):
+        self.name = name
+```
+
+`Dog` 和 `Cat` 都有 `name`，都可以发出声音。继承可以把共同部分放到父类里。
+
+## 2. 定义父类和子类
+```python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def speak(self):
+        return "..."
+
+class Dog(Animal):
+    pass
+```
+
+`Animal` 是父类，`Dog` 是子类。`Dog(Animal)` 表示 `Dog` 继承 `Animal`。
+
+```python
+d = Dog("Lucky")
+print(d.name)
+print(d.speak())
+```
+
+子类对象可以使用父类中定义的属性和方法。
+
+## 3. 方法重写
+不同动物叫声不同，所以子类可以重写父类方法：
+
+```python
+class Dog(Animal):
+    def speak(self):
+        return self.name + " says Wang!"
+
+class Cat(Animal):
+    def speak(self):
+        return self.name + " says Miao!"
+```
+
+调用时：
+
+```python
+animals = [Dog("Lucky"), Cat("Coco")]
+
+for animal in animals:
+    print(animal.speak())
+```
+
+同样调用 `speak()`，不同对象给出不同结果。
+
+## 4. super() 调用父类
+如果子类既想使用父类初始化逻辑，又想增加自己的属性，可以用 `super()`：
+
+```python
+class Student:
+    def __init__(self, name):
+        self.name = name
+
+class PrimaryStudent(Student):
+    def __init__(self, name, grade):
+        super().__init__(name)
+        self.grade = grade
+```
+
+`super().__init__(name)` 表示调用父类的初始化方法，避免重复写 `self.name = name`。
+
+## 5. is-a 关系
+继承适合表达“子类是一种父类”。
+
+合理：
+- Dog 是一种 Animal
+- Cat 是一种 Animal
+- PrimaryStudent 是一种 Student
+
+不合理：
+- School 继承 Student
+- Course 继承 Teacher
+
+如果不是“是一种”的关系，就不要为了少写代码强行继承。
+
+## 6. 继承 vs 组合
+有些关系不是继承，而是组合。
+
+```python
+class Course:
+    def __init__(self, title, teacher):
+        self.title = title
+        self.teacher = teacher
+```
+
+课程不是老师，但课程“有一个”老师。这叫组合关系。
+
+判断方法：
+- A 是一种 B：可以考虑继承
+- A 有一个 B：更适合组合
+
+## 7. 多态直觉
+当多个子类都有同名方法时，主程序可以用统一方式调用：
+
+```python
+def make_sound(animal):
+    print(animal.speak())
+
+make_sound(Dog("Lucky"))
+make_sound(Cat("Coco"))
+```
+
+这就是多态的直觉：同一个接口，不同对象有不同表现。
+
+## 8. 常见错误
+### 错误 1：忘记调用父类 __init__
+```python
+class Dog(Animal):
+    def __init__(self, name, age):
+        self.age = age
+```
+
+这样 `name` 没有初始化。应写：
+
+```python
+super().__init__(name)
+self.age = age
+```
+
+### 错误 2：把继承当作复制粘贴工具
+继承表达的是类型关系，不是“我想少写几行代码”。
+
+### 错误 3：父类太具体
+父类应该放共同、稳定的内容。太具体的内容放到父类，会让子类很难复用。
+
+## 9. 综合练习：角色系统
+设计一个游戏角色系统：
+
+```python
+class Character:
+    def __init__(self, name, hp):
+        self.name = name
+        self.hp = hp
+
+    def attack(self):
+        return 10
+
+class Warrior(Character):
+    def attack(self):
+        return 20
+
+class Mage(Character):
+    def attack(self):
+        return 15
+```
+
+创建多个角色，遍历它们并输出攻击力。
+
+## 10. 本节总结
+继承让我们把共同能力放到父类，把差异放到子类。
+
+必须掌握：
+- `class Child(Parent)` 表示继承
+- 子类可以使用父类方法
+- 子类可以重写父类方法
+- `super()` 用于调用父类逻辑
+- 继承适合 is-a 关系
+- 组合适合 has-a 关系
+"""
+)
+Quiz.objects.create(lesson=l4_2_4, question="class Dog(Animal) 表示？", option_a="Dog 继承 Animal", option_b="Animal 继承 Dog", option_c="Dog 是函数", option_d="删除 Animal", correct_answer="A", explanation="括号里的类是父类。")
+Quiz.objects.create(lesson=l4_2_4, question="子类重新定义父类同名方法叫？", option_a="方法重写", option_b="切片", option_c="取余", option_d="排序", correct_answer="A", explanation="子类覆盖父类方法称为重写。")
+Quiz.objects.create(lesson=l4_2_4, question="super().__init__(name) 的常见作用是？", option_a="调用父类初始化逻辑", option_b="结束程序", option_c="创建集合", option_d="删除属性", correct_answer="A", explanation="super() 常用于复用父类初始化。")
+Quiz.objects.create(lesson=l4_2_4, question="继承最适合表达哪种关系？", option_a="is-a", option_b="has-a", option_c="随机关系", option_d="字符串关系", correct_answer="A", explanation="子类是一种父类。")
+Quiz.objects.create(lesson=l4_2_4, question="Course 有一个 Teacher 更适合？", option_a="组合", option_b="继承", option_c="递归", option_d="异常", correct_answer="A", explanation="有一个是 has-a，适合组合。")
+Quiz.objects.create(lesson=l4_2_4, question="判断题：子类对象可以使用父类中定义的方法。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4_2_4, question="判断题：继承只是为了少写代码，类型关系不重要。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，继承应表达合理类型关系。")
+Quiz.objects.create(lesson=l4_2_4, question="同样调用 speak()，Dog 和 Cat 返回不同结果，这体现了？", option_a="多态直觉", option_b="文件写入", option_c="ASCII 编码", option_d="集合去重", correct_answer="A", explanation="同一接口，不同对象不同表现。")
+
+# 2.5 Class Attributes
+l4_2_5 = create_lesson(
+    chapter=ch4_2, title="2.5 类属性、实例属性与对象列表", order=5, lesson_type='code',
+    code_challenge_prompt="# 统计创建了多少个学生对象\nclass Student:\n    school = 'PyMaster'\n    count = 0\n\n    def __init__(self, name, score):\n        self.name = name\n        self.score = score\n        Student.count += 1\n\nstudents = [Student('Amy', 95), Student('Bob', 80)]\nprint(Student.school)\nprint(Student.count)",
+    content="""# 2.5 类属性、实例属性与对象列表
+
+## 1. 实例属性回顾
+实例属性写在 `self` 上，属于某一个对象：
+
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+```
+
+每个学生对象都有自己的 `name` 和 `score`。
+
+## 2. 类属性是什么？
+类属性写在类里面、方法外面，属于类本身：
+
+```python
+class Student:
+    school = "PyMaster"
+
+    def __init__(self, name):
+        self.name = name
+```
+
+`school` 对所有学生都一样，因此适合做类属性。
+
+访问方式：
+
+```python
+print(Student.school)
+s = Student("Amy")
+print(s.school)
+```
+
+推荐用 `Student.school` 表达它属于类。
+
+## 3. 类属性和实例属性怎么选？
+判断标准：
+
+| 数据特点 | 放哪里 |
+| :--- | :--- |
+| 每个对象不同 | 实例属性 |
+| 所有对象共享 | 类属性 |
+| 会随对象行为变化 | 通常是实例属性 |
+| 表示整体统计或统一配置 | 可以是类属性 |
+
+例子：
+- 学生姓名：实例属性
+- 学校名称：类属性
+- 学生成绩：实例属性
+- 已创建学生数量：类属性
+
+## 4. 用类属性统计对象数量
+```python
+class Student:
+    count = 0
+
+    def __init__(self, name):
+        self.name = name
+        Student.count += 1
+
+s1 = Student("Amy")
+s2 = Student("Bob")
+print(Student.count)
+```
+
+每创建一个对象，`__init__` 就执行一次，`Student.count` 就加 1。
+
+## 5. 小心同名覆盖
+如果实例属性和类属性同名，访问时容易混淆：
+
+```python
+class Student:
+    school = "PyMaster"
+
+s = Student()
+s.school = "Other"
+
+print(s.school)
+print(Student.school)
+```
+
+`s.school` 创建了一个实例属性，不是修改类属性。
+
+初学阶段建议：不要让实例属性和类属性同名。
+
+## 6. 对象列表
+真实程序很少只创建一个对象，常常是一组对象：
+
+```python
+students = [
+    Student("Amy", 95),
+    Student("Bob", 80),
+    Student("Cindy", 58)
+]
+```
+
+对象列表可以像普通列表一样遍历：
+
+```python
+for student in students:
+    print(student.name, student.score)
+```
+
+这时列表负责“保存多个对象”，对象负责“保存自己的数据和行为”。
+
+## 7. 用对象列表完成统计
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def is_passed(self):
+        return self.score >= 60
+
+students = [
+    Student("Amy", 95),
+    Student("Bob", 80),
+    Student("Cindy", 58)
+]
+
+passed = 0
+for student in students:
+    if student.is_passed():
+        passed += 1
+
+print("及格人数:", passed)
+```
+
+这里已经把列表、循环、函数、类整合在一起。
+
+## 8. 对象列表 vs 字典列表
+字典列表：
+
+```python
+students = [{"name": "Amy", "score": 95}]
+```
+
+对象列表：
+
+```python
+students = [Student("Amy", 95)]
+```
+
+字典适合轻量数据；对象适合数据和行为绑定在一起的场景。
+
+如果只是保存数据，字典足够。如果还要频繁调用 `is_passed()`、`level()`、`update_score()` 这样的行为，对象更清晰。
+
+## 9. 常见错误
+### 错误 1：用对象访问类属性并修改
+```python
+s.school = "Other"
+```
+
+这通常创建实例属性，不是修改所有学生的学校。
+
+### 错误 2：把共享列表做成类属性
+```python
+class Team:
+    members = []
+```
+
+如果所有对象共享同一个 `members`，很容易互相污染。可变数据一般应放进 `__init__`。
+
+### 错误 3：对象列表里混入字典
+```python
+students = [Student("Amy", 95), {"name": "Bob"}]
+```
+
+遍历时一会儿用 `student.name`，一会儿用 `student["name"]`，代码会混乱。
+
+## 10. 综合练习：班级对象列表
+实现 `Student` 类：
+1. 类属性 `school = "PyMaster"`
+2. 实例属性 `name`、`score`
+3. 方法 `is_passed()`
+4. 方法 `level()`
+5. 创建 5 个学生对象放入列表
+6. 输出平均分、及格人数、优秀学生名单
+
+## 11. 本节总结
+类属性和实例属性的核心区别是“共享”与“独立”。
+
+必须掌握：
+- 实例属性属于对象
+- 类属性属于类
+- 用类名访问类属性更清楚
+- 对象列表是 OOP 和数据结构结合的常见写法
+- 可变共享数据不要随便做类属性
+"""
+)
+Quiz.objects.create(lesson=l4_2_5, question="写在类里面、方法外面的变量通常叫？", option_a="类属性", option_b="局部变量", option_c="异常", option_d="切片", correct_answer="A", explanation="类属性属于类本身。")
+Quiz.objects.create(lesson=l4_2_5, question="self.name 通常表示？", option_a="实例属性", option_b="类属性", option_c="模块名", option_d="文件名", correct_answer="A", explanation="写在 self 上的是对象自己的属性。")
+Quiz.objects.create(lesson=l4_2_5, question="所有学生共享的 school 更适合放哪里？", option_a="类属性", option_b="每次输入", option_c="局部变量", option_d="异常对象", correct_answer="A", explanation="共享信息适合作为类属性。")
+Quiz.objects.create(lesson=l4_2_5, question="每个学生不同的 score 更适合放哪里？", option_a="实例属性", option_b="类属性", option_c="模块属性", option_d="常量", correct_answer="A", explanation="每个对象不同的数据应放实例属性。")
+Quiz.objects.create(lesson=l4_2_5, question="对象列表适合保存什么？", option_a="多个对象", option_b="单个字符串", option_c="语法错误", option_d="导入语句", correct_answer="A", explanation="列表可以保存多个 Student 对象。")
+Quiz.objects.create(lesson=l4_2_5, question="判断题：可变列表成员通常不适合随便作为类属性共享。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，容易导致不同对象互相影响。")
+Quiz.objects.create(lesson=l4_2_5, question="判断题：s.school = 'Other' 一定会修改 Student.school。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，这通常创建或修改实例属性。")
+Quiz.objects.create(lesson=l4_2_5, question="对象列表中调用 student.is_passed() 体现了什么？", option_a="数据和行为绑定", option_b="字符串切片", option_c="集合交集", option_d="文件追加", correct_answer="A", explanation="对象既有数据，也有方法。")
+
+# 2.6 OOP Project
+l4_2_6 = create_lesson(
+    chapter=ch4_2, title="2.6 综合项目：学生成绩管理系统", order=6, lesson_type='code',
+    code_challenge_prompt="# 用类组织学生成绩管理\nclass Student:\n    def __init__(self, name, score):\n        self.name = name\n        self.score = score\n\n    def is_passed(self):\n        return self.score >= 60\n\nclass GradeBook:\n    def __init__(self):\n        self.students = []\n\n    def add_student(self, student):\n        self.students.append(student)\n\n    def average_score(self):\n        total = 0\n        for student in self.students:\n            total += student.score\n        return total / len(self.students)\n\nbook = GradeBook()\nbook.add_student(Student('Amy', 95))\nbook.add_student(Student('Bob', 80))\nprint(book.average_score())",
+    content="""# 2.6 综合项目：学生成绩管理系统
+
+## 1. 项目目标
+这一节把 GESP 4级的字典、集合和 OOP 串起来，做一个小型学生成绩管理系统。
+
+目标功能：
+- 用 `Student` 表示一名学生
+- 用 `GradeBook` 管理多名学生
+- 添加学生
+- 计算平均分
+- 找出及格学生
+- 统计等级人数
+- 防止重复添加同名学生
+
+## 2. 先设计 Student 类
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def is_passed(self):
+        return self.score >= 60
+
+    def level(self):
+        if self.score >= 90:
+            return "优秀"
+        elif self.score >= 60:
+            return "及格"
+        return "不及格"
+
+    def __str__(self):
+        return f"{self.name}: {self.score}"
+```
+
+`Student` 负责单个学生自己的数据和规则。
+
+## 3. 再设计 GradeBook 类
+`GradeBook` 负责管理一组学生：
+
+```python
+class GradeBook:
+    def __init__(self):
+        self.students = []
+```
+
+这里 `students` 是实例属性。每个成绩册有自己的学生列表，不应该做成类属性。
+
+## 4. 添加学生
+```python
+def add_student(self, student):
+    self.students.append(student)
+```
+
+调用：
+
+```python
+book = GradeBook()
+book.add_student(Student("Amy", 95))
+```
+
+这个写法体现了组合关系：`GradeBook` 有多个 `Student`，但 `GradeBook` 不是一种 `Student`。
+
+## 5. 计算平均分
+```python
+def average_score(self):
+    if len(self.students) == 0:
+        return 0
+
+    total = 0
+    for student in self.students:
+        total += student.score
+    return total / len(self.students)
+```
+
+注意先处理空列表，否则会出现除以 0 的错误。
+
+## 6. 筛选及格学生
+```python
+def passed_students(self):
+    result = []
+    for student in self.students:
+        if student.is_passed():
+            result.append(student)
+    return result
+```
+
+这里不是直接判断 `student.score >= 60`，而是调用 `student.is_passed()`。这样及格规则集中在 `Student` 类里。
+
+## 7. 用字典统计等级人数
+```python
+def level_counts(self):
+    counts = {}
+    for student in self.students:
+        level = student.level()
+        counts[level] = counts.get(level, 0) + 1
+    return counts
+```
+
+这一步把 OOP 和字典计数结合起来：
+- 对象提供等级
+- 字典负责统计次数
+
+## 8. 用集合防止重复姓名
+可以在 `GradeBook` 里维护一个姓名集合：
+
+```python
+class GradeBook:
+    def __init__(self):
+        self.students = []
+        self.names = set()
+
+    def add_student(self, student):
+        if student.name in self.names:
+            return False
+        self.students.append(student)
+        self.names.add(student.name)
+        return True
+```
+
+这一步把集合用于“已出现数据”的快速判断。
+
+## 9. 完整版本
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def is_passed(self):
+        return self.score >= 60
+
+    def level(self):
+        if self.score >= 90:
+            return "优秀"
+        elif self.score >= 60:
+            return "及格"
+        return "不及格"
+
+    def __str__(self):
+        return f"{self.name}: {self.score}"
+
+
+class GradeBook:
+    def __init__(self):
+        self.students = []
+        self.names = set()
+
+    def add_student(self, student):
+        if student.name in self.names:
+            return False
+        self.students.append(student)
+        self.names.add(student.name)
+        return True
+
+    def average_score(self):
+        if len(self.students) == 0:
+            return 0
+        total = 0
+        for student in self.students:
+            total += student.score
+        return total / len(self.students)
+
+    def passed_students(self):
+        result = []
+        for student in self.students:
+            if student.is_passed():
+                result.append(student)
+        return result
+
+    def level_counts(self):
+        counts = {}
+        for student in self.students:
+            level = student.level()
+            counts[level] = counts.get(level, 0) + 1
+        return counts
+
+
+book = GradeBook()
+book.add_student(Student("Amy", 95))
+book.add_student(Student("Bob", 80))
+book.add_student(Student("Cindy", 58))
+
+print("平均分:", book.average_score())
+print("等级统计:", book.level_counts())
+
+for student in book.passed_students():
+    print("及格:", student)
+```
+
+## 10. 设计复盘
+这个项目里每个类都有清晰职责：
+
+| 类 | 职责 |
+| :--- | :--- |
+| `Student` | 管理单个学生的数据和判断规则 |
+| `GradeBook` | 管理多个学生并完成统计 |
+
+数据结构也有分工：
+- 列表 `students` 保存对象顺序
+- 集合 `names` 防止重复
+- 字典 `counts` 统计等级人数
+
+## 11. 常见错误
+### 错误 1：GradeBook 继承 Student
+成绩册不是一种学生，所以不该继承。
+
+### 错误 2：把所有逻辑都写进一个类
+`Student` 不应该负责全班平均分；`GradeBook` 不应该负责单个学生等级细节。
+
+### 错误 3：空列表求平均分
+```python
+return total / len(self.students)
+```
+
+当没有学生时会除以 0，要提前处理。
+
+## 12. 升级任务
+继续扩展项目：
+1. 添加 `remove_student(name)`
+2. 添加 `top_student()`
+3. 添加 `update_score(name, score)`
+4. 添加 `to_dict()` 把对象转成字典
+5. 用菜单循环实现交互式成绩管理
+
+## 13. 本节总结
+GESP 4级的 OOP 不是只会写 `class`，而是能用类组织真实问题。
+
+必须掌握：
+- 单个对象负责自己的数据和行为
+- 管理类负责多个对象的集合与统计
+- 字典适合计数
+- 集合适合去重和快速判断
+- 列表适合保存多个对象
+- 继承不是万能，组合常常更合适
+"""
+)
+Quiz.objects.create(lesson=l4_2_6, question="Student 类最适合负责什么？", option_a="单个学生的数据和规则", option_b="全班所有统计", option_c="删除课程", option_d="启动服务器", correct_answer="A", explanation="Student 表示一名学生。")
+Quiz.objects.create(lesson=l4_2_6, question="GradeBook 和 Student 更适合是什么关系？", option_a="组合", option_b="继承", option_c="异常", option_d="字符串", correct_answer="A", explanation="成绩册有多个学生，不是一种学生。")
+Quiz.objects.create(lesson=l4_2_6, question="防止重复添加同名学生，最适合用？", option_a="集合", option_b="浮点数", option_c="递归", option_d="文件名", correct_answer="A", explanation="集合适合记录已出现姓名。")
+Quiz.objects.create(lesson=l4_2_6, question="统计等级人数适合用？", option_a="字典计数", option_b="只用 print", option_c="删除列表", option_d="异常捕获", correct_answer="A", explanation="等级作为键，人数作为值。")
+Quiz.objects.create(lesson=l4_2_6, question="average_score 需要先处理空列表，原因是？", option_a="避免除以 0", option_b="避免继承", option_c="避免集合去重", option_d="避免字符串拼接", correct_answer="A", explanation="没有学生时 len(self.students) 为 0。")
+Quiz.objects.create(lesson=l4_2_6, question="判断题：GradeBook 继承 Student 是合理设计。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，成绩册不是一种学生。")
+Quiz.objects.create(lesson=l4_2_6, question="判断题：对象列表可以和循环、字典、集合一起使用。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这正是综合项目的价值。")
+Quiz.objects.create(lesson=l4_2_6, question="passed_students 中调用 student.is_passed() 的好处是？", option_a="及格规则集中在 Student 类", option_b="让代码不能运行", option_c="跳过所有对象", option_d="清空列表", correct_answer="A", explanation="对象自己的规则放在对象内部更清晰。")
 
 # ==========================================
 # Course 5: Python 应用进阶 - 数据分析与可视化
