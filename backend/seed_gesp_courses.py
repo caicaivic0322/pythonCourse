@@ -740,6 +740,44 @@ print(a) # 15
 ## 4. 易错点
 - 除法 `/` 永远返回 `float`。
 - 负数整除 `//` 是向小取整（往负无穷方向），不是简单的去掉小数。
+
+## 5. 取模的常见应用
+取模 `%` 不只是求余数，它经常用于判断规律。
+
+### 判断奇偶
+```python
+if x % 2 == 0:
+    print("偶数")
+else:
+    print("奇数")
+```
+
+### 取个位数
+```python
+n = 123
+print(n % 10)  # 3
+```
+
+### 判断能否整除
+```python
+if n % 3 == 0:
+    print("能被 3 整除")
+```
+
+## 6. 运算结果类型
+```python
+print(type(10 + 3))  # int
+print(type(10 / 2))  # float
+print(type(10 // 3)) # int
+```
+
+只要使用 `/`，结果就是浮点数，即使看起来刚好整除。
+
+## 7. 小练习
+给定一个三位数 `n = 456`：
+1. 输出个位数
+2. 输出十位数
+3. 判断它是否能被 3 整除
 """
 )
 
@@ -1052,6 +1090,43 @@ result = 2 + 3 * 4 > 10 and 5 < 2
 ## 3. 建议
 虽然有优先级规则，但写代码时**建议多用括号**，让代码更易读，也不容易出错。
 例如：`(2 + 3) * 4` 显然比 `2 + 3 * 4` 意图更明确（如果你的本意是先加）。
+
+## 4. 同级运算顺序
+大多数同级运算从左到右：
+
+```python
+print(10 - 3 - 2)  # 5
+```
+
+先算 `10 - 3 = 7`，再算 `7 - 2 = 5`。
+
+但幂运算 `**` 比较特殊，通常从右往左结合：
+
+```python
+print(2 ** 3 ** 2)  # 512
+```
+
+先算 `3 ** 2 = 9`，再算 `2 ** 9 = 512`。
+
+## 5. 布尔表达式里更要加括号
+```python
+is_valid = (age >= 12 and score >= 60) or is_vip
+```
+
+括号能让读代码的人马上看懂你的判断意图。
+
+## 6. 易错点
+- `and` 优先级高于 `or`
+- `not` 优先级高于 `and`
+- 比较运算会先于逻辑运算完成
+- 不确定时就加括号
+
+## 7. 小练习
+手算并用 Python 验证：
+1. `2 + 3 * 4`
+2. `(2 + 3) * 4`
+3. `True or False and False`
+4. `not (3 > 2)`
 """
 )
 
@@ -1203,6 +1278,51 @@ else:
 - 忘记冒号 `:`。
 - 缩进不一致（Python 对缩进要求非常严格，通常使用 4 个空格）。
 - `elif` 拼写错误（不是 `elseif`）。
+
+## 5. 条件顺序很重要
+多分支会从上到下检查，先满足谁就执行谁。
+
+错误示例：
+
+```python
+score = 95
+if score >= 60:
+    print("及格")
+elif score >= 90:
+    print("优秀")
+```
+
+这会输出“及格”，不会输出“优秀”。因为 `score >= 60` 已经先成立。
+
+正确写法：
+
+```python
+if score >= 90:
+    print("优秀")
+elif score >= 60:
+    print("及格")
+```
+
+## 6. 嵌套 if
+```python
+age = 13
+score = 90
+
+if age >= 12:
+    if score >= 80:
+        print("可以参加进阶班")
+```
+
+嵌套 if 可以表达更复杂条件，但不要嵌套太深，太深会难读。
+
+## 7. 小练习
+根据分数输出等级：
+- `>= 90`：优秀
+- `>= 80`：良好
+- `>= 60`：及格
+- `< 60`：不及格
+
+注意条件顺序。
 """
 )
 
@@ -1346,6 +1466,43 @@ print(total)        # 5050
 ## 5. 易错点
 - `range(5)` 是从 0 开始，到 4 结束，不包含 5。
 - 循环结束后，循环变量 `i` 会保留最后一次的值。
+
+## 6. 遍历字符串和列表
+`for` 不只能配合 `range`，还能遍历可迭代对象。
+
+```python
+for ch in "Python":
+    print(ch)
+```
+
+```python
+names = ["Tom", "Amy", "Jack"]
+for name in names:
+    print(name)
+```
+
+## 7. 倒序循环
+```python
+for i in range(5, 0, -1):
+    print(i)
+```
+
+输出 `5, 4, 3, 2, 1`。
+
+## 8. 嵌套循环
+```python
+for i in range(3):
+    for j in range(2):
+        print(i, j)
+```
+
+嵌套循环常用于表格、坐标、二维列表。它也常意味着更高的时间复杂度。
+
+## 9. 小练习
+1. 打印 1 到 10
+2. 打印 10 到 1
+3. 输出字符串 `"GESP"` 的每个字符
+4. 求 1 到 100 中所有偶数的和
 """
 )
 
@@ -1485,6 +1642,44 @@ while True:
 ## 5. 什么时候用 while？
 - 不知道具体要循环多少次。
 - 比如：一直输入密码，直到输对为止。
+
+## 6. 输入直到正确
+```python
+password = ""
+while password != "123456":
+    password = input("请输入密码：")
+print("登录成功")
+```
+
+这种场景不知道用户会输错几次，所以 `while` 更自然。
+
+## 7. while 和 for 怎么选
+- 已知循环次数：优先 `for`
+- 不知道次数，只知道停止条件：优先 `while`
+
+例如：
+- 打印 10 次：`for`
+- 一直猜数字直到猜对：`while`
+
+## 8. while + else
+Python 的 `while` 也可以配合 `else`：
+
+```python
+n = 3
+while n > 0:
+    print(n)
+    n -= 1
+else:
+    print("循环正常结束")
+```
+
+如果循环不是被 `break` 打断，`else` 会执行。
+
+## 9. 小练习
+写一个猜数字程序：
+1. 答案固定为 `7`
+2. 用户反复输入数字
+3. 猜对后输出“猜对了”
 """
 )
 
@@ -1633,6 +1828,55 @@ for i in range(2, n):
 else:
     print("是素数") # 只有循环完整走完没发现因子，才执行这里
 ```
+
+## 5. break 常见场景
+- 找到目标后停止搜索
+- 用户输入 `q` 后退出
+- 检测到错误条件后提前结束
+
+```python
+while True:
+    cmd = input("请输入命令：")
+    if cmd == "q":
+        break
+```
+
+## 6. continue 常见场景
+- 跳过不合格数据
+- 跳过空字符串
+- 跳过某些特殊值
+
+```python
+scores = [90, -1, 80, -1, 70]
+for score in scores:
+    if score == -1:
+        continue
+    print(score)
+```
+
+## 7. 嵌套循环里的 break
+`break` 只会跳出它所在的那一层循环。
+
+```python
+for i in range(3):
+    for j in range(3):
+        if j == 1:
+            break
+        print(i, j)
+```
+
+外层循环仍会继续。
+
+## 8. 易错点
+- `break` 是结束循环，不是结束整个程序
+- `continue` 是跳过本轮，不是跳出循环
+- 循环 `else` 只有未被 `break` 打断时才执行
+- 嵌套循环里要分清控制的是哪一层
+
+## 9. 小练习
+遍历 1 到 50：
+1. 遇到能被 3 整除的数跳过
+2. 遇到第一个大于 30 且能被 7 整除的数就停止
 """
 )
 
@@ -3490,6 +3734,33 @@ print(a + 1)   # 26
 - 会用 `def` 定义函数
 - 知道参数是输入，`return` 是输出
 - 分得清 `print` 和 `return`
+
+## 7. 函数执行顺序
+定义函数不会立刻执行函数体：
+
+```python
+def say_hi():
+    print("Hi")
+
+print("before")
+say_hi()
+print("after")
+```
+
+只有调用 `say_hi()` 时，函数体才会运行。
+
+## 8. return 会结束函数
+```python
+def check(score):
+    if score >= 60:
+        return "pass"
+    return "fail"
+```
+
+一旦执行到 `return`，函数就结束，后面的代码不会继续执行。
+
+## 9. 小练习
+写函数 `max2(a, b)`，返回两个数中较大的一个。不要只 `print`，要用 `return`。
 """
 )
 Quiz.objects.create(lesson=l3_1_1, question="如果不写 return 语句，函数默认返回什么？", option_a="0", option_b="False", option_c="None", option_d="Error", correct_answer="C", explanation="默认返回 None。")
@@ -3559,6 +3830,49 @@ Python 找变量时，一般按下面顺序查找：
 - 同名变量可能不是同一个变量
 - 局部变量通常不会影响全局变量
 - 真要改全局值时要格外小心
+
+## 8. 读取和修改不是一回事
+读取全局变量通常可以直接读：
+
+```python
+score = 100
+
+def show():
+    print(score)
+```
+
+但在函数内重新赋值，就会创建局部变量，或需要 `global`：
+
+```python
+score = 0
+
+def add():
+    global score
+    score += 1
+```
+
+## 9. 少用 global
+`global` 能用，但不应该滥用。更好的做法通常是通过参数和返回值传递数据。
+
+```python
+def add(score):
+    return score + 1
+
+score = add(score)
+```
+
+## 10. 小练习
+观察下面代码输出，并解释原因：
+
+```python
+x = 10
+def f():
+    x = 20
+    return x
+
+print(f())
+print(x)
+```
 """
 )
 Quiz.objects.create(lesson=l3_1_2, question="如何修改全局变量？", option_a="直接赋值", option_b="global 声明", option_c="extern", option_d="public", correct_answer="B", explanation="使用 global。")
@@ -3709,6 +4023,36 @@ print(data)   # ('Tom', 12)
 - 结构固定
 - 语义明确
 - 不容易被误修改
+
+## 8. 元组解包
+```python
+point = (3, 5)
+x, y = point
+print(x, y)
+```
+
+元组解包可以让代码更清楚。函数返回多个值时也常用它。
+
+```python
+def calc(a, b):
+    return a + b, a - b
+
+total, diff = calc(8, 3)
+```
+
+## 9. 元组里的可变对象
+元组本身不可变，但如果元组里装的是列表，列表内容仍然可以变。
+
+```python
+t = (1, [2, 3])
+t[1].append(4)
+print(t)
+```
+
+这点容易考。
+
+## 10. 小练习
+用元组表示一个学生记录 `(name, age, score)`，再用解包输出三项信息。
 """
 )
 Quiz.objects.create(lesson=l3_2_1, question="t = (1, 2, 3)，t[0] = 10 会发生什么？", option_a="t变成(10,2,3)", option_b="报错", option_c="t不变", option_d="t变成[10,2,3]", correct_answer="B", explanation="元组是不可变的，不能修改。")
@@ -3850,6 +4194,24 @@ math.sqrt(25)
 - `.py` 文件本身就可以是模块
 - 模块让代码更清晰
 - `import 模块名` 是最基础也最推荐先掌握的方式
+
+## 8. 常见标准库模块
+- `math`：数学函数
+- `random`：随机数
+- `datetime`：日期时间
+- `os`：操作系统相关
+- `sys`：解释器相关
+
+```python
+import random
+print(random.randint(1, 6))
+```
+
+## 9. 模块名冲突
+不要把自己的文件命名为 `random.py`、`math.py` 这类标准库名字。否则导入时可能导入到自己的文件，造成奇怪错误。
+
+## 10. 小练习
+导入 `random` 模块，模拟掷骰子，输出 1 到 6 的随机整数。
 """
 )
 Quiz.objects.create(lesson=l3_3_1, question="Python 中一个普通的 .py 文件通常可以看作什么？", option_a="变量", option_b="模块", option_c="异常", option_d="元组", correct_answer="B", explanation="一个 .py 文件通常就是一个模块。")
@@ -3918,6 +4280,30 @@ import pandas as pd
 - 想更清楚：`import 模块名`
 - 想更简洁：`from ... import ...`
 - 想更顺手：`as` 起别名
+
+## 8. 不同写法对比
+```python
+import math
+print(math.sqrt(16))
+```
+
+```python
+from math import sqrt
+print(sqrt(16))
+```
+
+两段代码结果一样，但第一种更清楚来源，第二种更简洁。
+
+## 9. 多个导入
+```python
+from math import sqrt, pi
+print(sqrt(16), pi)
+```
+
+可以从一个模块导入多个名字。
+
+## 10. 小练习
+用 `from random import randint` 写一个 1 到 100 的随机数生成器。
 """
 )
 Quiz.objects.create(lesson=l3_3_2, question="from math import sqrt 后，调用平方根函数应写作？", option_a="math.sqrt(9)", option_b="sqrt(9)", option_c="import.sqrt(9)", option_d="from.sqrt(9)", correct_answer="B", explanation="直接导入了 sqrt，因此可以直接写 sqrt(9)。")
@@ -3987,6 +4373,22 @@ print(say_hi("Tom"))
 - 结构清晰
 - 更好维护
 - 更易复用
+
+## 8. __name__ 简介
+自定义模块里常见这段代码：
+
+```python
+if __name__ == "__main__":
+    print("直接运行这个文件")
+```
+
+它的意思是：只有当这个文件被直接运行时，才执行下面代码；如果它是被别的文件导入，就不执行。
+
+## 9. 文件放在哪里
+初学阶段，先把 `main.py` 和 `helpers.py` 放在同一个文件夹中，这样最容易导入。
+
+## 10. 小练习
+创建 `score_tools.py`，写入 `avg(scores)`；再在 `main.py` 中导入并调用。
 """
 )
 Quiz.objects.create(lesson=l3_3_3, question="自己写的 helpers.py 能不能作为模块导入？", option_a="能", option_b="不能", option_c="只有系统模块才行", option_d="必须联网才行", correct_answer="A", explanation="自己的 .py 文件也可以作为模块。")
@@ -4072,6 +4474,27 @@ from score_tools import avg, is_pass
 - 重复逻辑应该抽出来
 - 抽出来的函数可以继续组织成模块
 - 主程序的职责应尽量简单明确
+
+## 8. 加一个等级函数
+```python
+def grade(score):
+    if score >= 90:
+        return "A"
+    elif score >= 80:
+        return "B"
+    elif score >= 60:
+        return "C"
+    return "D"
+```
+
+这个函数可以和 `avg`、`is_pass` 一起放进成绩工具箱。
+
+## 9. 工具箱升级方向
+可以继续加入：
+- `max_score(scores)`：最高分
+- `min_score(scores)`：最低分
+- `count_pass(scores)`：及格人数
+- `format_report(scores)`：生成文字报告
 """
 )
 Quiz.objects.create(lesson=l3_3_4, question="把成绩计算函数放入 score_tools.py，最主要体现了什么思想？", option_a="递归", option_b="模块化", option_c="切片", option_d="排序", correct_answer="B", explanation="把功能拆到独立文件中是模块化思想。")
@@ -5321,6 +5744,67 @@ arr = np.array([1, 2, 3, 4])
 - 图像像素处理
 - 科学计算
 - 算法数据预处理
+
+## 5. 创建数组的常见方式
+```python
+import numpy as np
+
+a = np.array([1, 2, 3])
+b = np.zeros(5)
+c = np.ones(3)
+d = np.arange(0, 10, 2)
+```
+
+常见含义：
+- `array()`：把列表转换成数组
+- `zeros()`：创建全 0 数组
+- `ones()`：创建全 1 数组
+- `arange()`：生成等差数字序列，类似 `range`
+
+## 6. dtype：数组元素类型
+NumPy 数组通常要求元素类型统一。
+
+```python
+arr = np.array([1, 2, 3])
+print(arr.dtype)
+```
+
+如果数组中混入浮点数，NumPy 可能自动提升类型：
+
+```python
+arr = np.array([1, 2, 3.5])
+print(arr.dtype)
+```
+
+这和普通列表不同。列表可以同时放字符串、数字、布尔值，但数值计算时，统一类型更高效。
+
+## 7. 向量化思维
+NumPy 最重要的思维是：对整组数据一起运算，而不是手写循环。
+
+```python
+scores = np.array([80, 90, 100])
+print(scores + 5)
+```
+
+输出：
+
+```text
+[ 85  95 105]
+```
+
+如果用列表，需要写循环；NumPy 可以直接表达“每个元素都加 5”。
+
+## 8. 易错点
+- `np.array([1, 2, 3])` 不是普通列表
+- `arr + 10` 是逐元素加法，不是拼接
+- NumPy 常用别名是 `np`
+- 真实运行 NumPy 代码前，需要先安装 `numpy`
+
+## 9. 小练习
+创建一个成绩数组 `[70, 85, 90, 100]`，输出：
+1. 每个成绩加 5 分后的结果
+2. 数组的平均分
+3. 数组的数据类型
 """
 )
 Quiz.objects.create(lesson=l4a_1_1, question="NumPy 中最核心的数据对象通常是？", option_a="dict", option_b="tuple", option_c="ndarray", option_d="set", correct_answer="C", explanation="NumPy 的核心对象是 ndarray。")
@@ -5357,6 +5841,80 @@ print(arr * 2)     # [2 4 6]
 
 ## 4. 为什么这很重要？
 因为数据处理中经常要对一整列数据一起加减乘除，而不是一个个写循环。
+
+## 5. 一维数组和二维数组
+一维数组像一排数据：
+
+```python
+arr = np.array([10, 20, 30])
+```
+
+二维数组像表格：
+
+```python
+table = np.array([
+    [80, 90],
+    [70, 85],
+    [95, 100]
+])
+```
+
+`shape` 能告诉我们结构：
+
+```python
+print(arr.shape)    # (3,)
+print(table.shape)  # (3, 2)
+```
+
+`(3, 2)` 表示 3 行 2 列。
+
+## 6. 切片
+NumPy 支持类似列表的切片：
+
+```python
+arr = np.array([10, 20, 30, 40])
+print(arr[1:3])
+```
+
+二维数组可以按行列切片：
+
+```python
+print(table[0])      # 第 1 行
+print(table[:, 0])   # 第 1 列
+```
+
+`:` 表示“这一维全选”。
+
+## 7. 常见统计
+```python
+scores = np.array([80, 90, 100])
+
+print(scores.mean())
+print(scores.max())
+print(scores.min())
+print(scores.sum())
+```
+
+这些方法常用于成绩、销量、温度等数值数据分析。
+
+## 8. 易错点
+- `arr[0, 1]` 用于二维数组，表示第 0 行第 1 列
+- Python 索引仍然从 0 开始
+- `shape` 是属性，不是方法，不写 `shape()`
+- 数组维度越高，越要先看 `shape`
+
+## 9. 小练习
+给定二维数组：
+
+```python
+arr = np.array([[1, 2, 3], [4, 5, 6]])
+```
+
+请输出：
+1. 数组形状
+2. 第一行
+3. 第二列
+4. 所有元素乘以 10 后的结果
 """
 )
 Quiz.objects.create(lesson=l4a_1_2, question="shape=(2, 3) 通常表示？", option_a="2 行 3 列", option_b="3 行 2 列", option_c="2 个元素", option_d="3 个维度", correct_answer="A", explanation="二维数组中通常表示 2 行 3 列。")
@@ -5394,6 +5952,58 @@ df = pd.DataFrame({
 - 销售表
 - 考勤表
 - 统计结果表
+
+## 4. Series 更像“一列”
+```python
+scores = pd.Series([90, 85, 100])
+print(scores)
+```
+
+`Series` 可以理解成带索引的一列数据。
+
+## 5. DataFrame 更像“一张表”
+```python
+df = pd.DataFrame({
+    "name": ["Tom", "Amy", "Jack"],
+    "score": [90, 95, 82],
+    "passed": [True, True, True]
+})
+```
+
+每一列可以有自己的含义。你可以把它理解成 Python 里的迷你 Excel。
+
+## 6. 查看数据
+```python
+print(df.head())
+print(df.shape)
+print(df.columns)
+```
+
+常见含义：
+- `head()`：查看前几行
+- `shape`：查看行数和列数
+- `columns`：查看列名
+
+## 7. 为什么不用普通字典就够了？
+字典能表达表格，但 Pandas 提供更多表格操作：
+- 选列
+- 筛选行
+- 分组统计
+- 读取 CSV
+- 处理缺失值
+- 画图前整理数据
+
+## 8. 易错点
+- DataFrame 的每列长度要一致
+- 选列用 `df["列名"]`
+- `shape` 是属性，不是函数
+- Pandas 常用别名是 `pd`
+
+## 9. 小练习
+创建一张包含 `name`、`age`、`score` 三列的 DataFrame，输出：
+1. 前 5 行
+2. 所有列名
+3. 表格形状
 """
 )
 Quiz.objects.create(lesson=l4a_2_1, question="Pandas 中最像“整张表”的对象是？", option_a="Series", option_b="DataFrame", option_c="tuple", option_d="set", correct_answer="B", explanation="DataFrame 就像一张表。")
@@ -5430,6 +6040,74 @@ df["score"].min()
 - 看某一列
 - 找满足条件的数据
 - 算平均值、最大值、最小值
+
+## 5. 选多列
+选择一列时使用一个列名：
+
+```python
+df["score"]
+```
+
+选择多列时，里面要再放一个列表：
+
+```python
+df[["name", "score"]]
+```
+
+注意这里是两层方括号。
+
+## 6. 条件筛选的过程
+```python
+df["score"] >= 60
+```
+
+这一步会得到一列布尔值：
+
+```text
+True
+False
+True
+```
+
+再把它放回 `df[...]`，就能筛选出满足条件的行：
+
+```python
+passed = df[df["score"] >= 60]
+```
+
+## 7. 多条件筛选
+Pandas 中多个条件要加括号：
+
+```python
+good = df[(df["score"] >= 80) & (df["age"] <= 15)]
+```
+
+常用符号：
+- `&` 表示并且
+- `|` 表示或者
+- 每个条件外面都要加括号
+
+## 8. 基础统计速查
+```python
+df["score"].mean()
+df["score"].max()
+df["score"].min()
+df["score"].sum()
+df["score"].count()
+```
+
+## 9. 易错点
+- Pandas 多条件筛选不能直接用 `and` / `or`
+- 多条件必须加括号
+- `df["score"]` 返回一列，不是单个数字
+- `mean()` 会忽略空值，但初学阶段先保证数据完整
+
+## 10. 小练习
+给定成绩表，完成：
+1. 输出 `name` 和 `score` 两列
+2. 筛选出及格学生
+3. 计算平均分
+4. 找出最高分
 """
 )
 Quiz.objects.create(lesson=l4a_2_2, question="df['score'] 通常表示？", option_a="选择 score 这一列", option_b="删除 score 列", option_c="给 score 赋值", option_d="创建新表", correct_answer="A", explanation="这是最常见的选列方式。")
@@ -5466,6 +6144,42 @@ plt.bar(["Tom", "Amy"], [90, 95])
 ## 4. 什么时候用哪种图？
 - 看趋势：折线图
 - 看比较：柱状图
+
+## 5. 折线图完整示例
+```python
+import matplotlib.pyplot as plt
+
+days = [1, 2, 3, 4, 5]
+temps = [20, 22, 21, 25, 24]
+
+plt.plot(days, temps)
+plt.show()
+```
+
+折线图重点表达“变化”，横轴通常是时间、次数、阶段。
+
+## 6. 柱状图完整示例
+```python
+names = ["Tom", "Amy", "Jack"]
+scores = [90, 95, 82]
+
+plt.bar(names, scores)
+plt.show()
+```
+
+柱状图重点表达“比较”，横轴通常是类别。
+
+## 7. plt.show() 的作用
+`plt.show()` 用来显示图表。很多环境中，如果不写它，图可能不会弹出来。
+
+## 8. 易错点
+- `plot(x, y)` 中 x 和 y 的长度要一致
+- `bar(names, scores)` 中类别和数值要一一对应
+- 画图前通常要先导入 `matplotlib.pyplot as plt`
+- 图表不是越复杂越好，能说明问题最重要
+
+## 9. 小练习
+用折线图展示 5 次考试成绩变化；再用柱状图比较 3 名同学的成绩。
 """
 )
 Quiz.objects.create(lesson=l4a_3_1, question="想观察成绩随时间的变化趋势，通常用哪种图？", option_a="折线图", option_b="柱状图", option_c="饼图", option_d="散点图", correct_answer="A", explanation="趋势最适合折线图。")
@@ -5498,6 +6212,46 @@ plt.legend()
 
 ## 4. 好图表的标准
 不仅要“能画”，更要“表达清楚”。
+
+## 5. 图例 legend 怎么用
+当一张图里有多条线时，需要给每条线设置 `label`：
+
+```python
+plt.plot([1, 2, 3], [80, 85, 90], label="Tom")
+plt.plot([1, 2, 3], [70, 88, 92], label="Amy")
+plt.legend()
+```
+
+`legend()` 会显示图例，让读者知道每条线代表谁。
+
+## 6. 设置颜色和标记
+```python
+plt.plot([1, 2, 3], [80, 85, 90], color="red", marker="o")
+```
+
+初学阶段不必追求花哨，但可以知道：
+- `color` 控制颜色
+- `marker` 控制点的样式
+
+## 7. 保存图片
+```python
+plt.savefig("score.png")
+```
+
+如果要把分析结果发给别人，保存图片很有用。
+
+## 8. 易错点
+- 标题和坐标轴不是装饰，是帮助读者理解
+- 图例必须配合 `label` 才有意义
+- 保存图片通常要在 `show()` 前调用
+- 中文显示可能需要额外字体设置，本课先关注图表结构
+
+## 9. 小练习
+画出两名同学三次考试成绩变化图，要求包含：
+1. 标题
+2. 横轴名称
+3. 纵轴名称
+4. 图例
 """
 )
 Quiz.objects.create(lesson=l4a_3_2, question="title() 主要用来？", option_a="设置图表标题", option_b="删除图像", option_c="保存文件", option_d="创建数组", correct_answer="A", explanation="title 用来设置图表标题。")
@@ -5539,6 +6293,58 @@ plt.bar(df["name"], df["score"])
 
 ## 4. 为什么放在算法前？
 因为你会先看到“Python 解决真实问题”的样子，再进入更抽象的算法学习，会更有动力。
+
+## 5. 从原始数据到结论
+真实数据分析不只是写代码，而是按步骤得到结论：
+1. 准备数据
+2. 检查数据
+3. 筛选或清洗
+4. 统计指标
+5. 用图表表达
+6. 写出结论
+
+例如：平均分是多少？谁最高？有多少人不及格？图表是否显示某种趋势？
+
+## 6. 完整示例
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.DataFrame({
+    "name": ["Tom", "Amy", "Lily", "Jack"],
+    "score": [90, 95, 58, 76]
+})
+
+passed = df[df["score"] >= 60]
+print("平均分:", df["score"].mean())
+print("及格人数:", len(passed))
+
+plt.bar(df["name"], df["score"])
+plt.title("Score Report")
+plt.xlabel("Name")
+plt.ylabel("Score")
+plt.show()
+```
+
+## 7. 可以继续升级什么？
+- 从 CSV 文件读取成绩表
+- 增加是否及格列
+- 按分数排序
+- 输出最高分学生
+- 保存图表到图片
+
+## 8. 易错点
+- 先处理数据，再画图
+- 图表必须对应真实数据列
+- 不要只输出数字，还要说明数字代表什么
+- 变量名要表达含义，例如 `passed` 比 `x` 更清楚
+
+## 9. 综合练习
+用 DataFrame 保存 5 名同学成绩，完成：
+1. 输出平均分
+2. 筛选不及格学生
+3. 按成绩画柱状图
+4. 给图表加标题和坐标轴
 """
 )
 Quiz.objects.create(lesson=l4a_4_1, question="完整的数据分析流程中，通常先做什么？", option_a="先画图", option_b="先读取或准备数据", option_c="先删除数据", option_d="先写递归", correct_answer="B", explanation="分析之前要先有数据。")
@@ -5607,6 +6413,37 @@ l5_1_1 = create_lesson(
 - 单层循环常常是 `O(n)`
 - 双层嵌套循环常常是 `O(n^2)`
 - 每次减半的问题常常会出现 `O(log n)`
+
+## 8. 如何快速估算
+看代码时先找最主要的重复结构：
+
+```python
+for i in range(n):
+    print(i)
+```
+
+一层循环，约执行 `n` 次，是 `O(n)`。
+
+```python
+for i in range(n):
+    for j in range(n):
+        print(i, j)
+```
+
+两层嵌套，各执行 `n` 次，总体约 `n * n`，是 `O(n^2)`。
+
+## 9. 小练习
+判断下面代码复杂度：
+
+```python
+for i in range(n):
+    print(i)
+
+for j in range(n):
+    print(j)
+```
+
+答案是 `O(n)`，不是 `O(2n)`，因为常数系数会被忽略。
 """
 )
 Quiz.objects.create(lesson=l5_1_1, question="访问列表索引 a[i] 的时间复杂度？", option_a="O(1)", option_b="O(n)", option_c="O(log n)", option_d="O(n^2)", correct_answer="A", explanation="数组索引访问是常数时间。")
@@ -5667,6 +6504,33 @@ copy_nums = nums[:]
 - 新建大容器，空间通常会增大
 - 只用少数变量，空间通常较小
 - 复杂度分析不只有时间，也有空间
+
+## 7. 原地算法
+如果算法直接在原列表上修改，不额外创建同规模列表，通常叫原地算法。
+
+```python
+arr = [3, 1, 2]
+arr[0], arr[1] = arr[1], arr[0]
+```
+
+这种操作只用了少量额外变量，空间复杂度通常看作 `O(1)`。
+
+## 8. 递归调用栈
+递归即使没有创建列表，也会占用调用栈空间。
+
+```python
+def f(n):
+    if n == 0:
+        return
+    f(n - 1)
+```
+
+调用深度是 `n`，所以空间复杂度可能是 `O(n)`。
+
+## 9. 小练习
+判断下面哪段代码额外空间更大：
+1. 只用变量 `total` 累加
+2. 新建列表保存每个中间结果
 """
 )
 Quiz.objects.create(lesson=l5_1_2, question="空间复杂度主要关注什么？", option_a="代码有多少行", option_b="程序运行时额外占用多少内存", option_c="电脑内存总大小", option_d="文件体积", correct_answer="B", explanation="空间复杂度看的是运行时额外空间。")
@@ -5726,6 +6590,43 @@ def bubble_sort(arr):
 冒泡排序最重要的学习价值不是“以后常用”，而是让你第一次真正理解：
 - 排序是怎么通过重复比较逐步完成的
 - 双重循环为什么常常对应 `O(n^2)`
+
+## 8. 手动跟踪一轮
+以 `[3, 1, 4, 2]` 为例：
+
+```text
+[3, 1, 4, 2]
+比较 3 和 1，交换 -> [1, 3, 4, 2]
+比较 3 和 4，不换 -> [1, 3, 4, 2]
+比较 4 和 2，交换 -> [1, 3, 2, 4]
+```
+
+第一轮结束后，最大值 `4` 已经到最后。
+
+## 9. 优化版本
+```python
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            break
+    return arr
+```
+
+`swapped` 用来记录这一轮有没有发生交换。如果完全没有交换，说明已经有序。
+
+## 10. 易错点
+- 内层循环上界是 `n - i - 1`，避免访问 `arr[j + 1]` 越界
+- 交换要同时完成：`arr[j], arr[j + 1] = arr[j + 1], arr[j]`
+- 冒泡排序默认是原地排序，会修改原列表
+
+## 11. 小练习
+给定 `[5, 1, 4, 2, 8]`，手写第一轮冒泡后的结果，再写代码验证。
 """
 )
 Quiz.objects.create(lesson=l5_2_1, question="冒泡排序的时间复杂度？", option_a="O(n)", option_b="O(n^2)", option_c="O(n log n)", option_d="O(1)", correct_answer="B", explanation="双重循环。")
@@ -5785,6 +6686,46 @@ def binary_search(arr, target):
 - 只能在有序数据上用
 - 每次排除一半范围
 - 速度快的原因来自“减半”
+
+## 7. 手动跟踪
+在 `[1, 3, 5, 7, 9]` 中查找 `7`：
+
+```text
+left=0, right=4, mid=2, arr[mid]=5
+5 < 7，所以去右边，left=3
+
+left=3, right=4, mid=3, arr[mid]=7
+找到，返回 3
+```
+
+## 8. 循环条件为什么是 left <= right
+当 `left == right` 时，搜索区间里还有一个元素，仍然需要检查。
+
+如果写成：
+
+```python
+while left < right:
+```
+
+可能漏掉最后一个元素。
+
+## 9. 找不到时发生什么
+当目标不存在，左右指针最终会交错：
+
+```text
+left > right
+```
+
+这说明搜索区间已经空了，因此返回 `-1`。
+
+## 10. 易错点
+- 忘记数组必须有序
+- `mid` 要用整除 `//`
+- 更新边界时要写 `mid + 1` 或 `mid - 1`
+- 如果只写 `left = mid`，可能陷入死循环
+
+## 11. 小练习
+改造二分查找：如果找到了目标，返回下标；如果没找到，返回 `"not found"`。
 """
 )
 Quiz.objects.create(lesson=l5_2_2, question="二分查找的前提条件？", option_a="数组无序", option_b="数组有序", option_c="数组必须全正数", option_d="数组长度为偶数", correct_answer="B", explanation="必须有序。")
@@ -5832,6 +6773,44 @@ def selection_sort(arr):
 选择排序的关键在于：
 - 当前轮要确定“当前位置应该放谁”
 - 找最小值是核心动作
+
+## 6. 手动跟踪
+以 `[64, 25, 12, 22, 11]` 为例：
+
+第一轮在整个数组中找最小值 `11`，放到第 0 位：
+
+```text
+[11, 25, 12, 22, 64]
+```
+
+第二轮只在剩余部分 `[25, 12, 22, 64]` 中找最小值 `12`，放到第 1 位：
+
+```text
+[11, 12, 25, 22, 64]
+```
+
+每轮结束，前面就多一个确定位置。
+
+## 7. 为什么交换次数少
+选择排序每一轮最多交换一次。冒泡排序可能一轮交换很多次。
+
+所以虽然二者时间复杂度常同为 `O(n^2)`，但在交换成本很高的场景，选择排序的思路仍有学习价值。
+
+## 8. 稳定性提示
+普通选择排序通常不是稳定排序。因为一次交换可能改变相等元素的相对顺序。
+
+初学阶段先记住：
+- 冒泡排序稳定
+- 插入排序稳定
+- 选择排序通常不稳定
+
+## 9. 易错点
+- `min_index` 每轮开始要设为 `i`
+- 内层循环从 `i + 1` 开始
+- 交换要在内层循环结束后做，不是每发现更小就立即交换
+
+## 10. 小练习
+给定 `[3, 1, 2]`，写出每一轮选择排序后的数组。
 """
 )
 Quiz.objects.create(lesson=l5_2_3, question="选择排序每一轮主要做什么？", option_a="把最大值冒到最后", option_b="从未排序部分选出最小值", option_c="随机交换", option_d="二分查找", correct_answer="B", explanation="选择排序每轮找出最小值放到当前位。")
@@ -5879,6 +6858,45 @@ def insertion_sort(arr):
 ## 6. 本节总结
 插入排序适合理解“局部有序逐步扩张”的思路。  
 在数据本来就接近有序时，它往往比冒泡、选择更自然。
+
+## 7. 手动跟踪
+以 `[5, 2, 4, 6]` 为例：
+
+先认为第一个元素 `[5]` 已经有序。
+
+处理 `2`：
+
+```text
+[5, 2, 4, 6] -> [2, 5, 4, 6]
+```
+
+处理 `4`：
+
+```text
+[2, 5, 4, 6] -> [2, 4, 5, 6]
+```
+
+处理 `6`：
+
+```text
+[2, 4, 5, 6]
+```
+
+## 8. 为什么接近有序时表现好
+如果数组本来就接近有序，`while arr[j] > key` 很快就会停止，需要移动的元素少。
+
+例如 `[1, 2, 3, 5, 4]` 只需要把 `4` 插入到正确位置。
+
+## 9. 稳定性
+插入排序通常是稳定的。只要判断条件使用 `arr[j] > key`，相等元素不会越过彼此。
+
+## 10. 易错点
+- `key` 要先保存当前元素，否则移动元素时会丢失
+- `while` 中要同时判断 `j >= 0`
+- 最后插入位置是 `j + 1`
+
+## 11. 小练习
+给定 `[4, 3, 2, 1]`，手动写出插入排序每轮结果。
 """
 )
 Quiz.objects.create(lesson=l5_2_4, question="插入排序的核心思路是？", option_a="每轮找最小值", option_b="把当前元素插入到前面有序部分", option_c="每次减半", option_d="随机交换", correct_answer="B", explanation="插入排序维护前缀有序。")
@@ -5920,6 +6938,94 @@ def fact(n):
     if n == 1: return 1  # 基准
     return n * fact(n-1) # 递归
 ```
+
+## 3. 调用过程展开
+计算 `fact(4)` 时：
+
+```text
+fact(4)
+= 4 * fact(3)
+= 4 * 3 * fact(2)
+= 4 * 3 * 2 * fact(1)
+= 4 * 3 * 2 * 1
+= 24
+```
+
+递归不是魔法，本质是函数一层一层调用，直到遇到基准情况，再一层一层返回结果。
+
+## 4. 递归必须向基准靠近
+下面代码有问题：
+
+```python
+def count_down(n):
+    print(n)
+    count_down(n)
+```
+
+它永远没有变小，也没有停止条件，会导致 `RecursionError`。
+
+正确写法：
+
+```python
+def count_down(n):
+    if n == 0:
+        return
+    print(n)
+    count_down(n - 1)
+```
+
+## 5. 递归和栈
+每一次函数调用都会压入调用栈。
+
+```text
+fact(4)
+  fact(3)
+    fact(2)
+      fact(1)
+```
+
+所以递归代码虽然短，但会占用额外栈空间。递归太深时，Python 会报递归深度错误。
+
+## 6. 什么时候适合递归？
+适合递归的问题通常有“自己包含自己”的结构：
+- 阶乘
+- 斐波那契
+- 汉诺塔
+- 树形结构遍历
+- 嵌套列表展开
+
+不适合递归的情况：
+- 只是普通重复次数，用循环更清楚
+- 数据量极大，递归层数可能太深
+
+## 7. 递归 vs 循环
+```python
+def sum_loop(n):
+    total = 0
+    for i in range(1, n + 1):
+        total += i
+    return total
+
+def sum_rec(n):
+    if n == 1:
+        return 1
+    return n + sum_rec(n - 1)
+```
+
+两者都能求和。循环更节省栈空间；递归更贴近某些问题的数学定义。
+
+## 8. 易错点
+- 忘记基准情况
+- 递归参数没有变化
+- 基准情况写错，例如 `n == 0` 和 `n == 1` 混淆
+- 以为递归一定比循环快
+
+## 9. 小练习
+写递归函数 `sum_to(n)`，返回 `1 + 2 + ... + n`。
+
+提示：
+- `sum_to(1)` 返回 1
+- `sum_to(n)` 返回 `n + sum_to(n - 1)`
 """
 )
 Quiz.objects.create(lesson=l6_1_1, question="递归函数必须包含？", option_a="循环", option_b="基准情况", option_c="全局变量", option_d="数组", correct_answer="B", explanation="否则会死循环（栈溢出）。")
@@ -5954,6 +7060,88 @@ stack.append("A")
 stack.append("B")
 print(stack.pop()) # "B"
 ```
+
+## 3. 栈顶是什么？
+栈顶就是最后进入、最先出去的位置。
+
+```python
+stack = []
+stack.append("A")
+stack.append("B")
+stack.append("C")
+
+print(stack[-1])   # 查看栈顶 C
+print(stack.pop()) # 弹出 C
+```
+
+## 4. 空栈不能 pop
+```python
+stack = []
+stack.pop()  # IndexError
+```
+
+更稳妥：
+
+```python
+if stack:
+    item = stack.pop()
+else:
+    print("栈为空")
+```
+
+## 5. 栈的常见应用
+- 浏览器后退
+- 撤销操作
+- 函数调用栈
+- 括号匹配
+- 深度优先搜索 DFS
+
+## 6. 括号匹配示例
+```python
+def is_valid(s):
+    stack = []
+    pairs = {")": "(", "]": "[", "}": "{"}
+
+    for ch in s:
+        if ch in "([{":
+            stack.append(ch)
+        elif ch in ")]}":
+            if not stack or stack.pop() != pairs[ch]:
+                return False
+
+    return len(stack) == 0
+```
+
+思路：
+1. 左括号入栈
+2. 右括号出现时，弹出栈顶检查是否匹配
+3. 最后栈为空才说明全部匹配
+
+## 7. 栈和递归的关系
+递归调用本质上依赖调用栈。每深入一层递归，就像把一个任务压入栈；每返回一次，就像弹出栈顶任务。
+
+## 8. 易错点
+- `pop()` 会删除并返回元素
+- 空栈 `pop()` 会报错
+- 栈只关心栈顶，不关心中间元素
+- 用列表模拟栈时，推荐在末尾 `append/pop`
+
+## 9. 小练习
+用栈反转字符串：
+
+```python
+text = "python"
+stack = []
+
+for ch in text:
+    stack.append(ch)
+
+result = ""
+while stack:
+    result += stack.pop()
+
+print(result)
+```
 """
 )
 Quiz.objects.create(lesson=l6_2_1, question="栈的特点是？", option_a="先进先出", option_b="后进先出", option_c="随机进出", option_d="先进后出", correct_answer="B", explanation="LIFO。")
@@ -5985,6 +7173,87 @@ q = deque()
 q.append("A") # 入队
 q.append("B")
 print(q.popleft()) # "A" - 出队
+```
+
+## 3. 为什么不用 list.pop(0)
+列表头部删除需要移动后面所有元素：
+
+```python
+lst = [1, 2, 3, 4]
+lst.pop(0)
+```
+
+当列表很长时，这会比较慢。`deque.popleft()` 更适合队列。
+
+## 4. 入队和出队
+```python
+from collections import deque
+
+q = deque()
+q.append("task1")
+q.append("task2")
+q.append("task3")
+
+print(q.popleft())  # task1
+print(q.popleft())  # task2
+```
+
+先进入的 `task1` 先出去，这就是 FIFO。
+
+## 5. 队列常见应用
+- 排队叫号
+- 打印任务
+- 消息处理
+- 广度优先搜索 BFS
+- 游戏事件队列
+
+## 6. BFS 直觉
+队列适合一层一层处理问题。
+
+```python
+from collections import deque
+
+q = deque(["A"])
+visited = set()
+
+while q:
+    node = q.popleft()
+    if node in visited:
+        continue
+    visited.add(node)
+    print(node)
+```
+
+先进入队列的节点会先被处理，因此 BFS 可以按距离从近到远探索。
+
+## 7. deque 是双端队列
+`deque` 不只可以当普通队列，也支持两端操作：
+
+```python
+q.append("right")
+q.appendleft("left")
+q.pop()
+q.popleft()
+```
+
+普通队列只强调一端进、一端出；双端队列更灵活。
+
+## 8. 易错点
+- 队列是 FIFO，栈是 LIFO
+- `popleft()` 来自 `deque`，普通 list 没有这个方法
+- `list.pop(0)` 能用但不适合大量数据
+- 空队列 `popleft()` 会报错
+
+## 9. 小练习
+模拟排队叫号：
+
+```python
+from collections import deque
+
+line = deque(["Alice", "Bob", "Cindy"])
+while line:
+    person = line.popleft()
+    print("请", person, "办理业务")
 ```
 """
 )
@@ -6031,6 +7300,70 @@ Python 自带了一个轻量级的 IDE 叫 IDLE。它有两个窗口：
 
 ## 3. 你的第一个挑战
 在 IDLE 中输入代码并运行。确保你安装了 Python 3。
+
+## 4. Shell 和文件运行的区别
+Shell 适合快速试验：
+
+```python
+>>> 2 + 3
+5
+```
+
+但完整程序应该写进 `.py` 文件：
+
+```python
+print("Hello Head First Python")
+```
+
+Shell 像草稿纸，文件像正式作业。
+
+## 5. 出错不可怕
+初学时最常见的是语法错误：
+
+```python
+print("Hello"
+```
+
+这会报 `SyntaxError`，意思是 Python 看不懂这行代码结构。
+
+读错误信息时先看：
+- 错误类型
+- 出错行号
+- 箭头指向哪里
+
+## 6. 内置函数 BIF
+BIF 是 Built-in Function，表示 Python 自带函数。例如：
+
+```python
+print("Hello")
+len("Python")
+type(123)
+```
+
+这些函数不需要导入模块，可以直接使用。
+
+## 7. 小练习
+在 Shell 中分别运行：
+1. `print("Python")`
+2. `len("Python")`
+3. `type(3.14)`
+
+观察每条输出。
+
+## 8. 从 Shell 走向脚本
+Shell 适合立即看到结果，但脚本文件更适合保存和复用。
+
+建议学习节奏：
+1. 在 Shell 里试一行
+2. 确认能运行
+3. 放进 `.py` 文件
+4. 保存并运行完整程序
+
+## 9. 学习习惯
+每次写完代码后问自己：
+- 这行代码输入是什么？
+- 输出是什么？
+- 如果写错一个符号，会报什么错？
 """
 )
 Quiz.objects.create(lesson=l7_1_1, question="IDLE 的 Python Shell 主要用于？", option_a="编写大型项目", option_b="测试代码片段 (REPL)", option_c="浏览网页", option_d="画图", correct_answer="B", explanation="Shell 是 Read-Eval-Print-Loop 环境。")
@@ -6080,6 +7413,54 @@ right_this_minute = datetime.today().minute
 if right_this_minute % 2 != 0:
     print("This minute is a little odd")
 ```
+
+## 4. 判断奇偶的两种方式
+书中常用列表保存奇数分钟：
+
+```python
+odds = [1, 3, 5, 7, 9]
+if right_this_minute in odds:
+    print("odd")
+```
+
+也可以用取模：
+
+```python
+if right_this_minute % 2 != 0:
+    print("odd")
+```
+
+取模 `%` 表示求余数。一个数除以 2 余数不为 0，就是奇数。
+
+## 5. import 的意义
+```python
+from datetime import datetime
+```
+
+意思是从 `datetime` 模块中导入 `datetime` 类。导入后才能调用：
+
+```python
+datetime.today()
+```
+
+## 6. 随机暂停
+如果配合 `time.sleep()` 和 `random.randint()`，程序可以隔一段随机时间检查一次分钟数。
+
+```python
+import time
+import random
+
+time.sleep(random.randint(1, 5))
+```
+
+## 7. 易错点
+- `=` 是赋值，`==` 是比较
+- `if` 后面要写冒号
+- `if` 代码块必须缩进
+- `datetime` 是标准库，不需要额外安装
+
+## 8. 小练习
+改写程序：如果当前分钟是偶数，输出 `"Even minute"`；如果是奇数，输出 `"Odd minute"`。
 """
 )
 Quiz.objects.create(lesson=l7_1_2, question="如何获取当前时间的分钟数？", option_a="datetime.minute()", option_b="datetime.today().minute", option_c="time.minute", option_d="clock.minute", correct_answer="B", explanation="使用 datetime.today() 获取当前时间对象。")
@@ -6119,6 +7500,64 @@ movies = ["The Holy Grail", "The Life of Brian", "The Meaning of Life"]
 ## 3. 访问列表
 使用索引（从 0 开始）来访问列表中的元素。
 `movies[1]` 会返回 "The Life of Brian"。
+
+## 4. 修改列表元素
+列表是可变的，可以直接修改某个位置：
+
+```python
+movies[0] = "New Movie"
+```
+
+字符串不可变，列表可变，这是 Python 中很重要的区别。
+
+## 5. 负数索引
+```python
+movies[-1]
+```
+
+表示最后一个元素。负数索引从右往左数：
+- `-1`：最后一个
+- `-2`：倒数第二个
+
+## 6. 混合类型列表
+```python
+movie = ["The Holy Grail", 1975, "Comedy"]
+```
+
+Python 列表可以放不同类型的数据。但如果数据有明确字段，后面会学习用字典表达得更清楚。
+
+## 7. 易错点
+- 索引从 0 开始
+- `len(movies)` 返回元素个数，不是最后一个索引
+- 最后一个索引是 `len(movies) - 1`
+- 访问不存在的索引会 `IndexError`
+
+## 8. 小练习
+创建一个电影列表，完成：
+1. 打印第一部电影
+2. 打印最后一部电影
+3. 修改第二部电影名
+4. 输出列表长度
+
+## 9. 列表和字符串的相似点
+列表和字符串都支持索引：
+
+```python
+name = "Python"
+movies = ["A", "B", "C"]
+
+print(name[0])
+print(movies[0])
+```
+
+不同点是：字符串不可变，列表可变。
+
+## 10. 小项目思维
+电影列表可以继续扩展：
+- 添加上映年份
+- 添加导演
+- 按顺序打印
+- 搜索某部电影是否存在
 """
 )
 Quiz.objects.create(lesson=l7_2_1, question="列表的索引是从几开始的？", option_a="1", option_b="0", option_c="-1", option_d="任意", correct_answer="B", explanation="Python 索引从 0 开始。")
@@ -6156,6 +7595,62 @@ print(movies)
 
 ## 2. 混合类型
 Python 的列表可以装任何东西！数字、字符串，甚至是另一个列表。
+
+## 3. append 和 extend 的区别
+```python
+movies = ["A", "B"]
+movies.append(["C", "D"])
+print(movies)
+```
+
+结果是把整个列表作为一个元素加入：
+
+```text
+['A', 'B', ['C', 'D']]
+```
+
+`extend()` 会把另一个列表里的元素逐个加入：
+
+```python
+movies = ["A", "B"]
+movies.extend(["C", "D"])
+print(movies)
+```
+
+结果：
+
+```text
+['A', 'B', 'C', 'D']
+```
+
+## 4. pop 和 remove 的区别
+```python
+movies.pop()
+movies.remove("A")
+```
+
+- `pop()` 按位置删除，默认删除最后一个，并返回被删元素
+- `remove(x)` 按值删除，删除第一个等于 `x` 的元素
+
+## 5. del 语句
+```python
+del movies[0]
+```
+
+`del` 可以按索引删除，也可以删除切片。
+
+## 6. 易错点
+- `append()` 会把参数当成一个整体
+- `remove()` 找不到元素会 `ValueError`
+- `insert(0, x)` 会移动后续元素
+- 很多列表方法会原地修改列表，返回值可能是 `None`
+
+## 7. 小练习
+用列表保存 3 个电影名，完成：
+1. 末尾添加 1 个电影
+2. 开头插入 1 个电影
+3. 删除最后一个电影
+4. 删除指定电影名
 """
 )
 Quiz.objects.create(lesson=l7_2_2, question="pop() 方法默认删除哪个元素？", option_a="第一个", option_b="最后一个", option_c="随机一个", option_d="指定的一个", correct_answer="B", explanation="默认删除末尾元素。")
@@ -6195,6 +7690,49 @@ movies = ["The Holy Grail", 1975, ["Terry Jones", 91]]
 
 ## 3. isinstance()
 `isinstance(item, list)` 用来检查一个变量是否是列表类型。
+
+## 4. 为什么需要类型判断
+嵌套列表中，普通元素和子列表需要不同处理：
+
+```python
+for item in movies:
+    if isinstance(item, list):
+        for nested_item in item:
+            print(nested_item)
+    else:
+        print(item)
+```
+
+如果不判断类型，程序只能把内部列表整体打印出来。
+
+## 5. 任意深度怎么办
+如果嵌套层级不固定，手写多层 `for` 会很难维护。更自然的方式是递归。
+
+```python
+def print_items(items):
+    for item in items:
+        if isinstance(item, list):
+            print_items(item)
+        else:
+            print(item)
+```
+
+这为后面的 `print_lol` 函数做铺垫。
+
+## 6. 易错点
+- `isinstance(item, list)` 返回布尔值
+- `for` 默认只遍历最外层
+- `len(["A", ["B", "C"]])` 是 2，不是 3
+- 多层索引用多个方括号：`data[0][1]`
+
+## 7. 小练习
+给定：
+
+```python
+items = ["A", ["B", "C"], ["D", ["E"]]]
+```
+
+尝试写代码打印每个字符串。先用嵌套循环，再思考为什么递归更合适。
 """
 )
 Quiz.objects.create(lesson=l7_2_3, question="isinstance(x, list) 的作用是？", option_a="将 x 转为列表", option_b="判断 x 是否为列表", option_c="创建新列表", option_d="删除列表", correct_answer="B", explanation="类型检查。")
@@ -6239,6 +7777,48 @@ movie = {
 
 ## 3. 键值对
 字典由 Key: Value 对组成。Key 必须是唯一的。
+
+## 4. 修改和新增
+```python
+movie["year"] = 1979
+movie["rating"] = 9.0
+```
+
+如果键已存在，就是修改；如果键不存在，就是新增。
+
+## 5. 遍历字典
+```python
+for key, value in movie.items():
+    print(key, value)
+```
+
+`items()` 会同时给出键和值。
+
+## 6. get 安全访问
+```python
+print(movie.get("director", "unknown"))
+```
+
+如果键不存在，返回默认值，不会报 `KeyError`。
+
+## 7. 嵌套结构
+```python
+movie = {
+    "title": "The Holy Grail",
+    "actors": ["Graham Chapman", "John Cleese"]
+}
+```
+
+字典的值可以是列表，这让它适合表达更真实的数据。
+
+## 8. 易错点
+- 空 `{}` 是字典，不是集合
+- 键必须不可变
+- `in` 默认判断键，不判断值
+- 重复键会被后面的值覆盖
+
+## 9. 小练习
+创建一个电影字典，包含 `title`、`year`、`actors`。输出电影名和演员数量。
 """
 )
 Quiz.objects.create(lesson=l7_3_1, question="字典使用什么符号定义？", option_a="[]", option_b="()", option_c="{}", option_d="<>", correct_answer="C", explanation="大括号 {}。")
@@ -6284,6 +7864,44 @@ def print_lol(the_list):
 ## 3. 递归 (Recursion)
 函数调用自身。这对于处理**任意深度**的嵌套列表非常有用。
 我们在 `print_lol` 中调用 `print_lol` 来处理子列表。
+
+## 4. print_lol 的完整版本
+```python
+def print_lol(the_list):
+    for item in the_list:
+        if isinstance(item, list):
+            print_lol(item)
+        else:
+            print(item)
+```
+
+函数名来自 “print list of lists”，也就是打印列表里的列表。
+
+## 5. 为什么函数让代码更好
+函数的价值：
+- 给一段逻辑起名字
+- 避免重复代码
+- 让主程序更清楚
+- 方便测试和复用
+
+## 6. 参数和调用
+```python
+print_lol(movies)
+```
+
+`movies` 是实参，传入函数；`the_list` 是形参，在函数内部接收它。
+
+## 7. 基准情况在哪里
+`print_lol` 的基准情况不是单独写的 `if n == 1`，而是遇到普通元素时直接打印，不再递归。
+
+## 8. 易错点
+- 函数定义后不会自动运行，必须调用
+- 递归必须让问题越来越小或越来越接近普通元素
+- 忘记缩进会改变函数体范围
+- 没写 `return` 的函数默认返回 `None`
+
+## 9. 小练习
+改造 `print_lol`：增加一个参数 `level`，打印嵌套层级缩进。
 """
 )
 Quiz.objects.create(lesson=l7_4_1, question="DRY 原则的意思是？", option_a="Do Repeat Yourself", option_b="Don't Repeat Yourself", option_c="Do Right Yesterday", option_d="Data Ready Yet", correct_answer="B", explanation="不要重复造轮子。")
@@ -6313,6 +7931,49 @@ l7_4_2 = create_lesson(
 ## 3. 导入模块
 使用 `import nester`。
 调用函数时需要加上命名空间：`nester.print_lol(movies)`。
+
+## 4. 模块的好处
+如果所有代码都写在一个文件里，很快会变乱。
+
+模块可以帮助我们：
+- 按功能拆分代码
+- 在多个程序中复用函数
+- 降低主程序复杂度
+- 更容易维护和测试
+
+## 5. import 的几种写法
+```python
+import nester
+nester.print_lol(movies)
+```
+
+```python
+from nester import print_lol
+print_lol(movies)
+```
+
+```python
+import nester as ns
+ns.print_lol(movies)
+```
+
+## 6. 命名空间
+`nester.print_lol` 中的 `nester` 就是命名空间。它能避免不同模块里同名函数互相冲突。
+
+## 7. 不推荐 import *
+```python
+from nester import *
+```
+
+这种写法会把模块里的名字都导入当前文件，容易造成变量名冲突。学习阶段可以见过，但实战中少用。
+
+## 8. 易错点
+- 模块文件名不要和标准库同名，例如不要叫 `random.py`
+- 导入自己写的模块时，文件通常要在同一目录或 Python 能找到的路径中
+- 修改模块后，有些交互环境需要重启才能重新加载
+
+## 9. 小练习
+把 `print_lol` 保存到 `nester.py`，再写一个 `main.py` 导入并调用它。
 """
 )
 Quiz.objects.create(lesson=l7_4_2, question="导入模块的关键字是？", option_a="load", option_b="include", option_c="import", option_d="use", correct_answer="C", explanation="import。")
@@ -6375,6 +8036,53 @@ print(content)
 - `read()`：一次读完整个文件
 - `readline()`：读一行
 - `readlines()`：读成多行列表
+
+## 5. 逐行遍历文件
+大文件不适合一次性读入内存，可以逐行处理：
+
+```python
+with open("notes.txt", "r", encoding="utf-8") as f:
+    for line in f:
+        print(line.strip())
+```
+
+`strip()` 可以去掉行尾换行符和多余空白。
+
+## 6. 文件路径
+```python
+open("notes.txt")
+```
+
+表示在当前工作目录下找文件。若文件不在当前目录，需要写相对路径或绝对路径。
+
+## 7. 异常处理
+读取不存在的文件会报错：
+
+```python
+FileNotFoundError
+```
+
+可以用 `try-except` 处理：
+
+```python
+try:
+    with open("notes.txt", "r", encoding="utf-8") as f:
+        print(f.read())
+except FileNotFoundError:
+    print("文件不存在")
+```
+
+## 8. 易错点
+- 读取文件前要确认路径正确
+- 中文文本建议指定 `encoding="utf-8"`
+- `read()` 读完整文件，文件很大时要谨慎
+- `with open` 比手动 `close()` 更安全
+
+## 9. 小练习
+读取一个文本文件，统计：
+1. 一共有多少行
+2. 一共有多少个字符
+3. 哪些行包含关键词 `"Python"`
 """
 )
 Quiz.objects.create(lesson=l7_5_1, question="open('a.txt', 'r') 中 'r' 表示？", option_a="写入", option_b="读取", option_c="追加", option_d="删除", correct_answer="B", explanation="'r' 是 read，表示读取模式。")
@@ -6422,6 +8130,46 @@ with open("log.txt", "a", encoding="utf-8") as f:
 写文件时要想清楚：
 - 是要覆盖旧内容？
 - 还是保留旧内容继续追加？
+
+## 6. write 不会自动换行
+```python
+with open("log.txt", "a", encoding="utf-8") as f:
+    f.write("第一行")
+    f.write("第二行")
+```
+
+结果可能会连在一起：
+
+```text
+第一行第二行
+```
+
+如果需要换行，要自己加 `\n`：
+
+```python
+f.write("第一行\n")
+```
+
+## 7. writelines
+```python
+lines = ["A\n", "B\n", "C\n"]
+with open("out.txt", "w", encoding="utf-8") as f:
+    f.writelines(lines)
+```
+
+`writelines()` 不会自动给每个元素加换行符。
+
+## 8. 覆盖风险
+`"w"` 模式会清空旧文件内容。写日志、历史记录、打卡记录时，一般用 `"a"` 更安全。
+
+## 9. 易错点
+- `write()` 只能写字符串，写数字前要 `str()`
+- `"w"` 会覆盖，`"a"` 会追加
+- 换行要自己写 `\n`
+- 文件夹不存在时，写文件也会报错
+
+## 10. 小练习
+写一个程序，把三条学习记录逐行追加到 `study_log.txt`。
 """
 )
 Quiz.objects.create(lesson=l7_5_2, question="open('a.txt', 'w') 中 'w' 模式表示？", option_a="读取", option_b="写入并可能覆盖原内容", option_c="追加", option_d="只读", correct_answer="B", explanation="'w' 会写入文件，旧内容可能被覆盖。")
@@ -6473,6 +8221,49 @@ with open("study_log.txt", "r", encoding="utf-8") as f:
 
 ## 5. 为什么它适合初学者？
 因为这是非常真实的编程任务：把程序结果保存下来，而不是只打印在屏幕上。
+
+## 6. 加上时间戳
+日志最好记录时间：
+
+```python
+from datetime import datetime
+
+task = "完成文件操作练习"
+now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+with open("study_log.txt", "a", encoding="utf-8") as f:
+    f.write(f"{now} - {task}\n")
+```
+
+## 7. 读取并编号显示
+```python
+with open("study_log.txt", "r", encoding="utf-8") as f:
+    for index, line in enumerate(f, start=1):
+        print(index, line.strip())
+```
+
+`enumerate()` 可以在遍历时同时得到编号。
+
+## 8. 统计日志数量
+```python
+with open("study_log.txt", "r", encoding="utf-8") as f:
+    lines = f.readlines()
+
+print("记录条数:", len(lines))
+```
+
+## 9. 易错点
+- 追加日志用 `"a"`，不要误用 `"w"`
+- 写入时记得加换行
+- 读取前确认文件已经存在
+- 日志内容如果来自用户输入，要先检查是否为空
+
+## 10. 综合升级
+把学习日志程序升级成菜单：
+1. 输入 `1` 添加日志
+2. 输入 `2` 查看日志
+3. 输入 `3` 统计日志条数
+4. 输入 `0` 退出程序
 """
 )
 Quiz.objects.create(lesson=l7_5_3, question="学习日志项目中，先把任务保存下来更适合用哪种操作？", option_a="读取", option_b="追加写入", option_c="删除", option_d="排序", correct_answer="B", explanation="日志通常使用追加写入。")
