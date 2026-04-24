@@ -158,3 +158,34 @@ class CourseSeedContentTests(APITestCase):
         self.assertIn('## 4. 为什么必须有序', lesson_522.content)
         self.assertIn('## 4. 和冒泡排序有什么区别', lesson_523.content)
         self.assertIn('## 4. 为什么叫“插入”', lesson_524.content)
+
+        course6 = Course.objects.get(title='GESP 6级：进阶数据结构与递归')
+        lesson_611 = Lesson.objects.get(chapter__course=course6, title='1.1 递归基础 Recursion')
+        lesson_621 = Lesson.objects.get(chapter__course=course6, title='2.1 栈 Stack')
+        lesson_622 = Lesson.objects.get(chapter__course=course6, title='2.2 队列 Queue')
+        self.assertIn('递归是函数调用自己', lesson_611.content)
+        self.assertIn('括号匹配、撤销和递归模拟', lesson_621.content)
+        self.assertIn('排队、任务调度和层序遍历', lesson_622.content)
+
+        data_course = Course.objects.get(title='Python 应用进阶：数据分析与可视化')
+        data_lesson = Lesson.objects.get(chapter__course=data_course, title='2.1 Series 与 DataFrame')
+        hf_file_project = Lesson.objects.get(chapter__course=head_first, title='5.3 综合实战：学习日志文件')
+        self.assertIn('DataFrame 是多列组成的表格', data_lesson.content)
+        self.assertIn('添加日志、查看日志、统计条数', hf_file_project.content)
+
+        supplemented_lessons = Lesson.objects.exclude(chapter__course=course4)
+        self.assertGreaterEqual(supplemented_lessons.count(), 50)
+        for lesson in supplemented_lessons:
+            self.assertEqual(
+                lesson.content.count('## 补充：本节知识点扩展'),
+                1,
+                lesson.title,
+            )
+            self.assertGreaterEqual(len(lesson.content), 1800, lesson.title)
+
+        for lesson in Lesson.objects.filter(chapter__course=course4):
+            self.assertEqual(lesson.content.count('## 补充：本节知识点扩展'), 0, lesson.title)
+
+        runpy.run_path(str(seed_path), run_name='__main__')
+        lesson_611.refresh_from_db()
+        self.assertEqual(lesson_611.content.count('## 补充：本节知识点扩展'), 1)
