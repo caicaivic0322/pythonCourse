@@ -4105,46 +4105,325 @@ l4_1_1 = create_lesson(
     content="""# 1.1 字典 Dictionary
 
 ## 1. 什么是字典？
-键值对（Key-Value）的集合。键必须唯一且不可变。
+字典（dict）是一种用**键值对**保存数据的容器。
 
 ```python
-d = {"name": "Alice", "age": 12}
+student = {
+    "name": "Alice",
+    "age": 12,
+    "score": 95
+}
 ```
 
-## 2. 常用操作
-- `d[key]`: 获取值。
-- `d[key] = value`: 修改或新增。
-- `del d[key]`: 删除。
-- `d.get(key, default)`: 安全获取。
+每一项都由两部分组成：
+- Key（键）：用来查找数据，例如 `"name"`
+- Value（值）：真正保存的数据，例如 `"Alice"`
 
-## 3. 遍历
-- `d.keys()`, `d.values()`, `d.items()`
+可以把字典理解成“带标签的数据柜”。列表靠位置找数据，字典靠名字找数据。
+
+```python
+scores = [95, 88, 76]
+print(scores[0])
+
+student = {"score": 95}
+print(student["score"])
+```
+
+## 2. 键和值的规则
+字典的键必须满足两个条件：
+- 唯一：同一个字典里不能有两个相同的键
+- 不可变：字符串、数字、元组可以做键；列表、字典不能做键
+
+```python
+d = {
+    "name": "Tom",
+    "name": "Jerry"
+}
+print(d)
+```
+
+输出：
+
+```text
+{'name': 'Jerry'}
+```
+
+后面的同名键会覆盖前面的值，所以写字典时要避免重复键。
+
+值几乎可以是任意类型：
+
+```python
+student = {
+    "name": "Alice",
+    "scores": [90, 95, 88],
+    "passed": True
+}
+```
+
+## 3. 创建、访问、修改、删除
+### 创建字典
+```python
+empty = {}
+student = {"name": "Alice", "age": 12}
+```
+
+### 访问值
+```python
+print(student["name"])
+```
+
+### 修改已有键
+```python
+student["age"] = 13
+```
+
+### 新增键值对
+```python
+student["score"] = 95
+```
+
+### 删除键值对
+```python
+del student["age"]
+```
+
+也可以用 `pop()` 删除并拿到被删除的值：
+
+```python
+score = student.pop("score")
+print(score)
+```
 
 ## 4. 键是否存在时的处理
-直接访问不存在的键，可能会报错：
+直接访问不存在的键会报错：
 
 ```python
 d = {"name": "Tom"}
-# print(d["age"])   # KeyError
+print(d["age"])  # KeyError
 ```
 
-更稳妥的方式是：
+更稳妥的方式是使用 `get()`：
 
 ```python
-print(d.get("age"))
-print(d.get("age", 0))
+print(d.get("age"))      # None
+print(d.get("age", 0))   # 0
 ```
 
-## 5. 字典为什么比列表更适合“记录型数据”
-如果一名学生有姓名、年龄、班级、成绩等信息，用字典会比列表清楚很多。
+还可以先判断键是否存在：
 
-因为：
-- 读取时按字段名
-- 不用死记第几个位置是什么
-- 更适合做真实业务数据
+```python
+if "age" in d:
+    print(d["age"])
+else:
+    print("没有 age")
+```
 
-## 6. 本节总结
-GESP 4级学字典，不只是复习“键值对”，而是开始把字典看成一种“组织复杂数据”的核心工具。
+GESP 常考点：
+- `d["x"]`：键不存在会 `KeyError`
+- `d.get("x")`：键不存在返回 `None`
+- `d.get("x", 0)`：键不存在返回默认值 `0`
+- `"x" in d`：判断键是否存在，不是判断值是否存在
+
+## 5. 遍历字典
+字典常见遍历有三种。
+
+### 遍历所有键
+```python
+student = {"name": "Alice", "age": 12, "score": 95}
+
+for key in student:
+    print(key)
+```
+
+等价于：
+
+```python
+for key in student.keys():
+    print(key)
+```
+
+### 遍历所有值
+```python
+for value in student.values():
+    print(value)
+```
+
+### 同时遍历键和值
+```python
+for key, value in student.items():
+    print(key, value)
+```
+
+`items()` 很重要，因为实际编程中经常需要同时知道字段名和字段值。
+
+## 6. 字典为什么比列表更适合“记录型数据”
+如果一名学生有姓名、年龄、班级、成绩等信息，用列表也能写：
+
+```python
+student = ["Alice", 12, "4班", 95]
+```
+
+但这样有问题：
+- `student[0]` 到底是什么，需要记忆
+- 顺序一改，代码容易错
+- 字段多了以后很难维护
+
+字典更清楚：
+
+```python
+student = {
+    "name": "Alice",
+    "age": 12,
+    "class": "4班",
+    "score": 95
+}
+```
+
+读代码的人一眼知道每个数据的含义。
+
+## 7. 嵌套字典和列表
+字典经常和列表组合，用来表达更复杂的数据。
+
+### 列表里放字典
+```python
+students = [
+    {"name": "Alice", "score": 95},
+    {"name": "Bob", "score": 80},
+    {"name": "Cindy", "score": 58}
+]
+
+for student in students:
+    if student["score"] >= 60:
+        print(student["name"], "及格")
+```
+
+### 字典里放列表
+```python
+course = {
+    "title": "Python",
+    "students": ["Alice", "Bob", "Cindy"]
+}
+
+print(course["students"][0])
+```
+
+这类结构是后续 Web API、JSON 数据、真实业务系统的基础。
+
+## 8. 计数问题：字典高频应用
+字典最常见的算法用途之一是“统计次数”。
+
+统计每个字符出现次数：
+
+```python
+text = "banana"
+count = {}
+
+for ch in text:
+    count[ch] = count.get(ch, 0) + 1
+
+print(count)
+```
+
+输出：
+
+```text
+{'b': 1, 'a': 3, 'n': 2}
+```
+
+核心思路：
+1. 用字符当键
+2. 用出现次数当值
+3. 每遇到一次，就把对应值加 1
+
+## 9. 合并与更新
+`update()` 可以把一个字典的内容合并到另一个字典：
+
+```python
+info = {"name": "Alice", "age": 12}
+score = {"score": 95, "rank": 1}
+
+info.update(score)
+print(info)
+```
+
+如果两个字典有相同的键，后面的值会覆盖前面的值。
+
+```python
+d = {"score": 80}
+d.update({"score": 95})
+print(d["score"])  # 95
+```
+
+## 10. 常见方法速查
+| 方法 | 作用 |
+| :--- | :--- |
+| `keys()` | 获取所有键 |
+| `values()` | 获取所有值 |
+| `items()` | 获取所有键值对 |
+| `get(key, default)` | 安全获取 |
+| `pop(key)` | 删除并返回值 |
+| `update(other)` | 合并/更新 |
+| `clear()` | 清空字典 |
+
+## 11. 易错点
+### 错误 1：把列表当字典键
+```python
+d = {[1, 2]: "value"}  # TypeError
+```
+
+列表可变，不能做键。
+
+### 错误 2：误以为 in 判断值
+```python
+d = {"name": "Alice"}
+print("Alice" in d)  # False
+```
+
+`in` 默认判断键，不判断值。
+
+### 错误 3：遍历时改字典大小
+```python
+for key in d:
+    del d[key]  # 可能报错
+```
+
+更安全方式是先复制键列表：
+
+```python
+for key in list(d.keys()):
+    del d[key]
+```
+
+## 12. 综合练习：成绩统计
+给定多个学生成绩，统计每个分数段人数：
+
+```python
+scores = [95, 82, 59, 76, 88, 100, 45]
+result = {"优秀": 0, "及格": 0, "不及格": 0}
+
+for score in scores:
+    if score >= 90:
+        result["优秀"] += 1
+    elif score >= 60:
+        result["及格"] += 1
+    else:
+        result["不及格"] += 1
+
+print(result)
+```
+
+再进一步：把每个学生姓名也保存进去，尝试输出所有不及格学生名单。
+
+## 13. 本节总结
+GESP 4级学字典，不只是记住 `{}` 和键值对，而是掌握一种组织复杂数据的方法。
+
+必须掌握：
+- 字典靠键访问值
+- 键唯一且必须不可变
+- `get()` 可避免 `KeyError`
+- `items()` 常用于同时遍历键和值
+- 字典适合记录型数据和计数问题
+- 列表 + 字典可以表达真实项目中的复杂数据
 """
 )
 Quiz.objects.create(lesson=l4_1_1, question="d = {'a': 1}，d['b'] = 2 后 d 是？", option_a="{'a':1}", option_b="{'a':1, 'b':2}", option_c="报错", option_d="{'b':2}", correct_answer="B", explanation="新增键值对。")
@@ -4165,26 +4444,108 @@ l4_1_2 = create_lesson(
     content="""# 1.2 集合 Set
 
 ## 1. 什么是集合？
-无序、不重复的元素集合。就像没有值的字典。
-用 `{}` 定义，但空集合必须用 `set()`。
+集合（set）是一种保存**不重复元素**的容器。
 
 ```python
 s = {1, 2, 3}
 ```
 
-## 2. 核心特性：去重
+集合有三个核心特点：
+- 无重复：相同元素只保留一份
+- 无序：不能靠下标访问
+- 元素必须不可变：数字、字符串、元组可以；列表、字典不可以
+
+注意：空集合不能写 `{}`，因为 `{}` 表示空字典。
+
 ```python
-lst = [1, 2, 2, 3]
-print(list(set(lst))) # [1, 2, 3]
+a = {}
+b = set()
+
+print(type(a))  # <class 'dict'>
+print(type(b))  # <class 'set'>
+```
+
+## 2. 核心特性：去重
+集合最直观的用途是去重。
+
+```python
+nums = [1, 2, 2, 3, 3, 3]
+s = set(nums)
+print(s)
+```
+
+输出可能是：
+
+```text
+{1, 2, 3}
+```
+
+如果需要重新变成列表：
+
+```python
+unique_nums = list(set(nums))
+print(unique_nums)
+```
+
+重要提醒：集合无序，去重后元素顺序不一定和原列表一样。如果题目要求保持原顺序，需要用其他方法。
+
+保持顺序去重：
+
+```python
+nums = [1, 2, 2, 3, 1]
+seen = set()
+result = []
+
+for num in nums:
+    if num not in seen:
+        seen.add(num)
+        result.append(num)
+
+print(result)
 ```
 
 ## 3. 集合运算
-- `&` 交集
-- `|` 并集
-- `-` 差集
+集合很适合表达“共同拥有、全部拥有、只属于某一边”的问题。
+
+```python
+a = {"Alice", "Bob", "Cindy"}
+b = {"Bob", "David", "Eric"}
+```
+
+### 交集：两边都有
+```python
+print(a & b)
+```
+
+结果：
+
+```text
+{'Bob'}
+```
+
+### 并集：合在一起
+```python
+print(a | b)
+```
+
+### 差集：只在 a，不在 b
+```python
+print(a - b)
+```
+
+### 对称差集：只在其中一边
+```python
+print(a ^ b)
+```
+
+记忆方法：
+- `&`：共同部分
+- `|`：全部合并
+- `-`：减掉另一边
+- `^`：两边不同部分
 
 ## 4. add、discard 与 remove
-集合除了去重，还经常会动态变化。
+集合除了去重，还经常动态变化。
 
 ```python
 s = {1, 2, 3}
@@ -4192,20 +4553,176 @@ s.add(4)
 s.discard(2)
 ```
 
-需要特别注意：
-- `remove(x)`：如果元素不存在会报错
-- `discard(x)`：如果元素不存在不会报错
+`add(x)` 添加元素：
 
-## 5. 集合的典型业务场景
-- 去重后的用户名单
-- 已访问节点集合
-- 两个班级共同报名的学生
+```python
+s.add(5)
+```
 
-## 6. 本节总结
+如果元素已经存在，集合不会重复添加：
+
+```python
+s.add(5)
+s.add(5)
+print(s)
+```
+
+删除元素有两个常用方法：
+
+```python
+s.remove(3)
+s.discard(10)
+```
+
+区别：
+- `remove(x)`：如果元素不存在，会报 `KeyError`
+- `discard(x)`：如果元素不存在，什么都不做
+
+考试和实战中，如果不确定元素是否存在，优先用 `discard()`。
+
+## 5. 成员判断：in
+集合判断某个元素是否存在非常常用。
+
+```python
+visited = {"A", "B", "C"}
+
+if "A" in visited:
+    print("已经访问过")
+```
+
+集合的成员判断通常比列表更适合大量数据场景。直觉上：
+- 列表：可能要从头找到尾
+- 集合：更像直接查表
+
+所以算法中常用集合保存：
+- 已访问节点
+- 已出现数字
+- 已经处理过的用户名
+
+## 6. 集合的典型业务场景
+### 场景 1：报名名单去重
+```python
+names = ["Alice", "Bob", "Alice", "Cindy"]
+unique_names = set(names)
+print(unique_names)
+```
+
+### 场景 2：找两个班都报名的学生
+```python
+class_a = {"Alice", "Bob", "Cindy"}
+class_b = {"Bob", "David"}
+
+print(class_a & class_b)
+```
+
+### 场景 3：找还没完成任务的人
+```python
+all_students = {"Alice", "Bob", "Cindy"}
+finished = {"Alice"}
+
+not_finished = all_students - finished
+print(not_finished)
+```
+
+## 7. 集合推导式
+集合也支持推导式，写法类似列表推导式。
+
+```python
+nums = [1, 2, 2, 3, 4]
+even_set = {x for x in nums if x % 2 == 0}
+print(even_set)
+```
+
+结果：
+
+```text
+{2, 4}
+```
+
+集合推导式会自动去重。
+
+## 8. frozenset 简介
+普通集合是可变的，所以不能作为字典的键，也不能作为另一个集合的元素。
+
+```python
+s = {1, 2}
+# d = {s: "value"}  # TypeError
+```
+
+`frozenset` 是不可变集合：
+
+```python
+fs = frozenset([1, 2, 3])
+```
+
+初学阶段只需知道：如果题目强调“不可变集合”，对应的是 `frozenset`。
+
+## 9. 易错点
+### 错误 1：用 `{}` 创建空集合
+```python
+s = {}
+print(type(s))  # dict
+```
+
+正确：
+
+```python
+s = set()
+```
+
+### 错误 2：用索引访问集合
+```python
+s = {1, 2, 3}
+print(s[0])  # TypeError
+```
+
+集合无序，不支持下标。
+
+### 错误 3：集合里放列表
+```python
+s = {[1, 2], [3, 4]}  # TypeError
+```
+
+列表可变，不能作为集合元素。
+
+### 错误 4：以为 set 去重一定保序
+```python
+nums = [3, 1, 2, 1]
+print(list(set(nums)))
+```
+
+输出顺序不保证和原列表一致。
+
+## 10. 综合练习：班级选课分析
+有两个课程报名名单：
+
+```python
+python = {"Alice", "Bob", "Cindy", "David"}
+robot = {"Bob", "David", "Eric"}
+```
+
+请输出：
+1. 两门课都报名的人
+2. 至少报名一门课的人
+3. 只报名 Python 的人
+4. 只报名一门课的人
+
+参考：
+
+```python
+print(python & robot)
+print(python | robot)
+print(python - robot)
+print(python ^ robot)
+```
+
+## 11. 本节总结
 集合最强的地方不是“长得像大括号”，而是：
 - 自动去重
-- 快速判断存在
-- 做交并差分析
+- 快速判断元素是否存在
+- 用交并差解决名单、标签、访问记录问题
+- 不支持索引，元素必须不可变
+- 空集合必须用 `set()`
 """
 )
 Quiz.objects.create(lesson=l4_1_2, question="创建空集合使用？", option_a="{}", option_b="[]", option_c="set()", option_d="()", correct_answer="C", explanation="{} 是空字典。")
@@ -4227,43 +4744,236 @@ l4_2_1 = create_lesson(
     code_challenge_prompt="# 定义一个 Dog 类，有一个 bark 方法\nclass Dog:\n    def bark(self):\n        print('Wang!')\n\nd = Dog()\nd.bark()",
     content="""# 2.1 类与对象基础
 
-## 1. 什么是类 (Class)？
-类是创建对象的**蓝图**或**模板**。对象是类的**实例**。
-比如：“狗”是一个类，“你家那只叫旺财的狗”是一个对象。
+## 1. 为什么需要类？
+前面学习列表、字典时，我们已经能保存一组数据。例如用字典表示一名学生：
 
-## 2. 定义类
+```python
+student = {
+    "name": "Alice",
+    "age": 12,
+    "score": 95
+}
+```
+
+如果只保存数据，字典很合适。但真实程序里，一个“学生”通常不只是数据，还会有行为：
+- 查询是否及格
+- 修改分数
+- 打印自我介绍
+- 统计等级
+
+这时就会出现一个问题：**数据和函数分散在不同地方，程序越写越乱。**
+
+面向对象编程（OOP）的核心思想是：把相关的数据和行为放在一起，组成一个“对象”。
+
+## 2. 类与对象是什么？
+类（Class）是创建对象的**蓝图**或**模板**。
+对象（Object）是根据类创建出来的**具体实例**。
+
+生活类比：
+
+| 类 | 对象 |
+| :--- | :--- |
+| 狗 | 你家那只叫旺财的狗 |
+| 学生 | 小明这名学生 |
+| 游戏角色 | 当前屏幕上的某个角色 |
+| 课程 | “GESP 4级：数据结构进阶”这门课 |
+
+类描述“这一类东西有什么、能做什么”；对象是程序运行时真正存在的个体。
+
+## 3. 定义一个最小的类
+定义类使用 `class` 关键字，类名通常使用大驼峰命名法（每个单词首字母大写）。
+
 ```python
 class Dog:
     def bark(self):
         print("Wang!")
 ```
 
-## 3. 创建对象
+这段代码定义了一个 `Dog` 类。类里面的函数叫**方法**。
+
+注意缩进：
+- `class Dog:` 后面的代码要缩进
+- `def bark(self):` 在类里面
+- `print("Wang!")` 在方法里面，所以还要再缩进
+
+## 4. 创建对象：实例化
+根据类创建对象的过程叫**实例化**。
+
 ```python
 my_dog = Dog()
-my_dog.bark() # 调用方法
+my_dog.bark()
 ```
 
-## 4. self 是什么？
-`self` 代表对象自己。在类的方法中，第一个参数必须是 `self`。
+执行过程可以这样理解：
+1. `Dog` 是类
+2. `Dog()` 创建一个新的 Dog 对象
+3. `my_dog` 保存这个对象
+4. `my_dog.bark()` 让这个对象执行 `bark` 方法
 
-## 5. 属性和方法的区别
-在面向对象里，对象通常同时包含两类东西：
-- **属性**：描述对象“有什么”
-- **方法**：描述对象“能做什么”
+## 5. self 到底是什么？
+`self` 代表“当前这个对象自己”。
 
-比如狗对象：
-- 属性：名字、年龄
-- 方法：叫、奔跑
+```python
+class Dog:
+    def bark(self):
+        print("Wang!")
 
-## 6. 为什么要学类？
-因为当数据和行为需要绑定在一起时，类会比单纯的变量和函数更自然。
+d = Dog()
+d.bark()
+```
 
-## 7. 本节总结
-这一节最关键的是建立直觉：
-- 类像模板
-- 对象像具体实例
-- `self` 让对象可以访问自己的属性和方法
+当你写：
+
+```python
+d.bark()
+```
+
+Python 会在背后理解成：
+
+```python
+Dog.bark(d)
+```
+
+也就是说，对象 `d` 会自动传给方法的第一个参数 `self`。
+
+所以：
+- 定义方法时，第一个参数通常写 `self`
+- 调用方法时，不需要手动传 `self`
+- `self` 不是关键字，但这是 Python 程序员共同遵守的命名习惯
+
+## 6. 属性和方法
+对象通常包含两类内容：
+- **属性**：对象有什么，用变量表示
+- **方法**：对象能做什么，用函数表示
+
+例如一只狗：
+- 属性：名字、年龄、品种
+- 方法：叫、跑、吃东西
+
+先看一个简单版本：
+
+```python
+class Dog:
+    def set_name(self, name):
+        self.name = name
+
+    def bark(self):
+        print(self.name, "says Wang!")
+
+d = Dog()
+d.set_name("Lucky")
+d.bark()
+```
+
+`self.name` 是对象自己的属性。以后这个对象的其他方法也能访问它。
+
+## 7. 多个对象互不干扰
+同一个类可以创建很多个对象，每个对象都有自己的状态。
+
+```python
+class Dog:
+    def set_name(self, name):
+        self.name = name
+
+    def bark(self):
+        print(self.name, "says Wang!")
+
+d1 = Dog()
+d2 = Dog()
+
+d1.set_name("Lucky")
+d2.set_name("Coco")
+
+d1.bark()
+d2.bark()
+```
+
+输出：
+
+```text
+Lucky says Wang!
+Coco says Wang!
+```
+
+`d1.name` 和 `d2.name` 是两个对象各自的属性，不会互相覆盖。
+
+## 8. 类 vs 对象：考点辨析
+下面这些写法意义不同：
+
+```python
+Dog       # 类本身
+Dog()     # 创建一个 Dog 对象
+d = Dog() # 变量 d 指向这个对象
+d.bark()  # 对象调用方法
+```
+
+常见判断：
+- `Dog` 是类
+- `Dog()` 的结果是对象
+- `type(d)` 可以查看对象属于哪个类
+- 一个类可以创建多个对象
+
+## 9. 易错点
+### 错误 1：方法忘记写 self
+```python
+class Dog:
+    def bark():
+        print("Wang!")
+
+d = Dog()
+d.bark()  # TypeError
+```
+
+对象调用方法时，Python 会自动传入对象本身。如果方法没有 `self` 参数，就接不住这个对象。
+
+### 错误 2：调用方法忘记括号
+```python
+d.bark    # 只是拿到方法本身，没有执行
+d.bark()  # 执行方法
+```
+
+### 错误 3：先用属性，后设置属性
+```python
+class Dog:
+    def bark(self):
+        print(self.name)
+
+d = Dog()
+d.bark()  # AttributeError
+```
+
+对象还没有 `name` 属性，就不能直接访问。下一节会学习用 `__init__` 初始化属性。
+
+## 10. 小练习：设计一个游戏角色
+尝试补全下面的类：
+
+```python
+class Player:
+    def set_info(self, name, hp):
+        self.name = name
+        self.hp = hp
+
+    def show(self):
+        print(self.name, "HP:", self.hp)
+
+p = Player()
+p.set_info("Hero", 100)
+p.show()
+```
+
+思考：
+- `Player` 是类还是对象？
+- `p` 是类还是对象？
+- `self.name` 保存在哪里？
+- 如果再创建一个 `p2`，会不会影响 `p`？
+
+## 11. 本节总结
+这一节最关键的是建立面向对象直觉：
+- 类是模板，对象是实例
+- 方法是写在类里的函数
+- 对象调用方法时会自动把自己传给 `self`
+- 属性表示对象的数据，方法表示对象的行为
+- 多个对象可以来自同一个类，但各自保存自己的状态
 """
 )
 Quiz.objects.create(lesson=l4_2_1, question="定义类使用哪个关键字？", option_a="def", option_b="class", option_c="object", option_d="struct", correct_answer="B", explanation="class。")
@@ -4283,46 +4993,281 @@ l4_2_2 = create_lesson(
     code_challenge_prompt="# 定义 Student 类，初始化 name 和 age\nclass Student:\n    def __init__(self, name, age):\n        self.name = name\n        self.age = age\n\ns = Student('Tom', 12)\nprint(s.name)",
     content="""# 2.2 构造函数 __init__
 
-## 1. 初始化对象
-`__init__` 是一个特殊方法，在创建对象时**自动调用**。通常用来初始化属性。
+## 1. 上一节留下的问题
+上一节我们用 `set_name()` 给对象设置属性：
 
 ```python
-class Student:
-    def __init__(self, name, age):
-        self.name = name  # 属性
-        self.age = age
+class Dog:
+    def set_name(self, name):
+        self.name = name
 
-s1 = Student("Alice", 12)
-print(s1.name)
+d = Dog()
+d.set_name("Lucky")
 ```
 
-## 2. 属性
-`self.name` 是对象的属性，每个对象都有自己独立的一份。
+这能运行，但有一个隐患：如果忘记调用 `set_name()`，对象就没有 `name` 属性。
 
-## 3. 为什么要在 __init__ 里初始化
-如果对象一创建就应该具备某些信息，那么把这些信息写进 `__init__` 最自然。
+更好的做法是：**对象一创建，就把必要属性准备好。**
 
-例如学生对象创建时，就应该马上拥有：
-- 姓名
-- 年龄
-- 班级
+## 2. __init__ 是什么？
+`__init__` 是 Python 类里的特殊方法，会在创建对象时自动调用。
+它通常用来初始化对象属性。
 
-## 4. 一个完整一点的例子
 ```python
 class Student:
     def __init__(self, name, age):
         self.name = name
         self.age = age
 
-    def introduce(self):
-        return f"我是 {self.name}，今年 {self.age} 岁"
+s1 = Student("Alice", 12)
+print(s1.name)
+print(s1.age)
 ```
 
-## 5. 本节总结
-`__init__` 的核心意义不是“语法特殊”，而是：
-- 对象一创建就进入可用状态
-- 属性初始化集中在一个地方
-- 类的结构更清晰
+执行 `Student("Alice", 12)` 时，Python 会自动调用：
+
+```python
+Student.__init__(s1, "Alice", 12)
+```
+
+其中：
+- `s1` 自动传给 `self`
+- `"Alice"` 传给 `name`
+- `12` 传给 `age`
+
+## 3. 参数和属性不要混淆
+看这两行：
+
+```python
+self.name = name
+self.age = age
+```
+
+左边：
+- `self.name`
+- `self.age`
+
+是对象属性，会长期保存在对象里。
+
+右边：
+- `name`
+- `age`
+
+是 `__init__` 的参数，只在方法执行时临时存在。
+
+可以理解为：把外面传进来的值，存到对象自己身上。
+
+## 4. 每个对象有独立属性
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+s1 = Student("Alice", 95)
+s2 = Student("Bob", 80)
+
+print(s1.name, s1.score)
+print(s2.name, s2.score)
+```
+
+`s1` 和 `s2` 都来自 `Student` 类，但它们保存的数据不同。
+
+修改一个对象，不影响另一个对象：
+
+```python
+s1.score = 100
+print(s1.score)  # 100
+print(s2.score)  # 80
+```
+
+这就是实例属性的独立性。
+
+## 5. 给类添加行为
+类不只是保存数据，还应该提供和数据相关的方法。
+
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def is_passed(self):
+        return self.score >= 60
+
+    def introduce(self):
+        return f"{self.name} 的成绩是 {self.score}"
+
+s = Student("Alice", 95)
+print(s.introduce())
+print(s.is_passed())
+```
+
+这里：
+- `name`、`score` 是属性
+- `is_passed()`、`introduce()` 是方法
+- 方法通过 `self.score` 读取对象自己的成绩
+
+## 6. __init__ 不是“构造函数返回对象”
+严格来说，`__init__` 负责初始化对象，不负责创建对象。
+对象创建由 Python 自动完成，`__init__` 只是在对象创建后补充初始数据。
+
+所以 `__init__` 不能返回其他值：
+
+```python
+class Student:
+    def __init__(self, name):
+        self.name = name
+        return name  # 错误
+```
+
+`__init__` 应该返回 `None`。平时不要写 `return`。
+
+## 7. __str__：让对象打印得更友好
+如果直接打印对象，结果通常不够直观：
+
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+s = Student("Alice", 95)
+print(s)
+```
+
+可能输出类似：
+
+```text
+<__main__.Student object at 0x...>
+```
+
+可以定义 `__str__`：
+
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def __str__(self):
+        return f"Student(name={self.name}, score={self.score})"
+
+s = Student("Alice", 95)
+print(s)
+```
+
+输出：
+
+```text
+Student(name=Alice, score=95)
+```
+
+`__str__` 适合给对象提供人类可读的文本表示。
+
+## 8. 类属性 vs 实例属性
+初学阶段最重要的是实例属性，也就是写在 `self` 上的属性：
+
+```python
+self.name = name
+```
+
+它属于某一个具体对象。
+
+还有一种写在类里面、方法外面的变量，叫类属性：
+
+```python
+class Student:
+    school = "PyMaster"
+
+    def __init__(self, name):
+        self.name = name
+```
+
+`school` 属于类，通常表示所有对象共享的信息。
+`name` 属于对象，每个对象可以不同。
+
+本阶段先记住：
+- 会变化、每个对象不同的数据，放到 `self.xxx`
+- 所有对象共用的数据，才考虑类属性
+
+## 9. 常见错误
+### 错误 1：创建对象时参数数量不匹配
+```python
+class Student:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+s = Student("Tom")  # 少传 age，TypeError
+```
+
+`__init__` 除了 `self` 之外需要几个参数，创建对象时就要传几个参数。
+
+### 错误 2：把属性写成局部变量
+```python
+class Student:
+    def __init__(self, name):
+        name = name  # 错误：没有保存到对象上
+```
+
+应写成：
+
+```python
+self.name = name
+```
+
+### 错误 3：在类外访问属性时忘记对象名
+```python
+s = Student("Tom", 12)
+print(name)    # 错误
+print(s.name)  # 正确
+```
+
+属性属于对象，要通过 `对象.属性` 访问。
+
+## 10. 综合练习：BankAccount
+写一个银行账户类：
+
+```python
+class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner
+        self.balance = balance
+
+    def deposit(self, amount):
+        self.balance += amount
+
+    def withdraw(self, amount):
+        if amount <= self.balance:
+            self.balance -= amount
+        else:
+            print("余额不足")
+
+    def show(self):
+        print(self.owner, "余额:", self.balance)
+
+account = BankAccount("Alice", 100)
+account.deposit(50)
+account.withdraw(30)
+account.show()
+```
+
+思考：
+- 哪些是属性？
+- 哪些是方法？
+- `deposit` 为什么要修改 `self.balance`？
+- 如果再创建一个账户，对当前账户余额有没有影响？
+
+## 11. 本节总结
+`__init__` 的核心不是背语法，而是让对象一创建就处于可用状态。
+
+必须掌握：
+- `__init__` 创建对象时自动调用
+- `self.xxx` 是实例属性
+- 不同对象的实例属性互不干扰
+- 方法通过 `self` 访问和修改对象自己的数据
+- `__str__` 可以控制对象被打印时的显示内容
 """
 )
 Quiz.objects.create(lesson=l4_2_2, question="构造函数的名字是？", option_a="init", option_b="__init__", option_c="start", option_d="create", correct_answer="B", explanation="__init__。")

@@ -121,8 +121,10 @@ class CourseSeedContentTests(APITestCase):
         lesson_422 = Lesson.objects.get(chapter__course=course4, title='2.2 构造函数 __init__')
         self.assertIn('## 4. 键是否存在时的处理', lesson_411.content)
         self.assertIn('## 4. add、discard 与 remove', lesson_412.content)
-        self.assertIn('## 5. 属性和方法的区别', lesson_421.content)
-        self.assertIn('## 3. 为什么要在 __init__ 里初始化', lesson_422.content)
+        self.assertIn('## 5. self 到底是什么？', lesson_421.content)
+        self.assertIn('## 9. 易错点', lesson_421.content)
+        self.assertIn('## 3. 参数和属性不要混淆', lesson_422.content)
+        self.assertIn('## 10. 综合练习：BankAccount', lesson_422.content)
 
         course5 = Course.objects.get(title='GESP 5级：算法基础')
         chapter51 = Chapter.objects.get(course=course5, title='第1章：算法复杂度')
