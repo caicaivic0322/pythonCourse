@@ -146,15 +146,48 @@ export async function submitLessonQuiz(_userId, lessonId, quizAnswers) {
 }
 
 export async function getPublishedExams() {
-  return [];
+  try {
+    const { data } = await api.get('exams/');
+    return data;
+  } catch (error) {
+    throw buildServiceError(error, '获取考试列表失败');
+  }
 }
 
-export async function getExamDetail() {
-  return null;
+export async function getExamDetail(examId) {
+  try {
+    const { data } = await api.get(`exams/${examId}/`);
+    return data;
+  } catch (error) {
+    throw buildServiceError(error, '获取考试详情失败');
+  }
 }
 
-export async function submitExamAttempt() {
-  throw new Error('考试中心暂未接入当前 Django 后端');
+export async function startExam(examId) {
+  try {
+    const { data } = await api.post(`exams/${examId}/start/`);
+    return data;
+  } catch (error) {
+    throw buildServiceError(error, '开始考试失败');
+  }
+}
+
+export async function submitExamAttempt(examId, answers) {
+  try {
+    const { data } = await api.post(`exams/${examId}/submit/`, { answers });
+    return data;
+  } catch (error) {
+    throw buildServiceError(error, '提交考试失败');
+  }
+}
+
+export async function getExamHistory() {
+  try {
+    const { data } = await api.get('exams/history/');
+    return data;
+  } catch (error) {
+    throw buildServiceError(error, '获取考试历史失败');
+  }
 }
 
 export function getStoredUser() {

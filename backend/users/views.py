@@ -2,6 +2,7 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.throttling import ScopedRateThrottle
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from .serializers import UserSerializer, RegisterSerializer
@@ -15,6 +16,8 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
 class CustomAuthToken(ObtainAuthToken):
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'login'
     def post(self, request, *args, **kwargs):
         auth_data = request.data.copy()
         identifier = auth_data.get('username', '')
