@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock3, FileText, Trophy } from 'lucide-react';
+import { Clock3, FileText, Trophy, CheckCircle2 } from 'lucide-react';
 import { getPublishedExams } from '../lib/dataService';
 import styles from './ExamList.module.css';
 
@@ -28,25 +28,33 @@ const ExamList = () => {
         <div>
           <span className="eyebrow">Exam Center</span>
           <h1 className="hero-title">考试中心</h1>
-          <p className="hero-subtitle">考试模块正在迁回当前 Django 后端，课程学习主链路已经恢复，考试功能会在后续版本补齐。</p>
+          <p className="hero-subtitle">选择一场考试来检验你的 Python 学习成果，每场考试限时完成，提交后即时出分。</p>
         </div>
       </section>
 
       <section className={styles.grid}>
         {exams.map((exam) => (
           <Link key={exam.id} to={`/exams/${exam.id}`} className={`${styles.card} surface-card`}>
-            <h2>{exam.title}</h2>
+            <div className={styles.cardHeader}>
+              <h2>{exam.title}</h2>
+              {exam.has_attempted && <span className={styles.badge}><CheckCircle2 size={12} /> 已完成</span>}
+            </div>
             <div className={styles.metaRow}>
-              <span><Clock3 size={14} /> {exam.duration_minutes || exam.parsed_json?.duration_minutes || 60} 分钟</span>
-              <span><Trophy size={14} /> {exam.total_score || exam.parsed_json?.total_score || 100} 分</span>
+              <span><Clock3 size={14} /> {exam.duration_minutes} 分钟</span>
+              <span><Trophy size={14} /> {exam.total_score} 分</span>
               <span><FileText size={14} /> {exam.question_count} 题</span>
             </div>
-            <p>{exam.subject || '综合测试'}</p>
+            {exam.description && <p>{exam.description}</p>}
+            {exam.best_score !== null && (
+              <p className={styles.bestScore}>历史最佳：{exam.best_score} 分</p>
+            )}
           </Link>
         ))}
       </section>
 
-      {exams.length === 0 && <div className="empty-panel">暂时没有可用试卷。当前版本已切回 Django 后端，考试功能正在补齐中。</div>}
+      {exams.length === 0 && (
+        <div className="empty-panel">暂无可用考试，请稍后再来。</div>
+      )}
     </div>
   );
 };

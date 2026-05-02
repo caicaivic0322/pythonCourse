@@ -6,26 +6,131 @@ django.setup()
 
 from courses.models import Course, Chapter, Lesson, Quiz
 
+def create_chapter(course, title, order, previous_titles=None):
+    previous_titles = previous_titles or []
+    chapter = Chapter.objects.filter(course=course, title=title).order_by('id').first()
+    if chapter is None and previous_titles:
+        chapter = Chapter.objects.filter(course=course, title__in=previous_titles).order_by('order', 'id').first()
+
+    if chapter is None:
+        chapter = Chapter.objects.create(course=course, title=title, order=order)
+    else:
+        chapter.title = title
+        chapter.order = order
+        chapter.save()
+    return chapter
+
 def create_lesson(**kwargs):
     """
     Helper function to update or create a lesson.
     This prevents duplicate lessons and ensures content is updated.
     It also clears existing quizzes for the lesson to avoid duplicates.
+    previous_titles can be used to safely rename a lesson without losing
+    existing user progress that points at the old lesson row.
     """
     chapter = kwargs.get('chapter')
     title = kwargs.get('title')
-    defaults = {k: v for k, v in kwargs.items() if k not in ['chapter', 'title']}
+    previous_titles = kwargs.get('previous_titles') or []
+    defaults = {k: v for k, v in kwargs.items() if k not in ['chapter', 'title', 'previous_titles']}
     
-    lesson, created = Lesson.objects.update_or_create(
-        chapter=chapter,
-        title=title,
-        defaults=defaults
-    )
+    lesson = Lesson.objects.filter(chapter=chapter, title=title).order_by('id').first()
+    if lesson is None and previous_titles:
+        lesson = Lesson.objects.filter(chapter=chapter, title__in=previous_titles).order_by('order', 'id').first()
+
+    if lesson is None:
+        lesson = Lesson.objects.create(chapter=chapter, title=title, **defaults)
+    else:
+        lesson.title = title
+        for field, value in defaults.items():
+            setattr(lesson, field, value)
+        lesson.save()
     
     # Clear existing quizzes to prevent duplication when re-seeding
     # This ensures we always have the latest set of quizzes defined in this script
     lesson.quizzes.all().delete()
     return lesson
+
+SUPPLEMENT_MARKER = "<!-- lesson-supplement:v1 -->"
+SUPPLEMENT_END_MARKER = "<!-- /lesson-supplement:v1 -->"
+
+def remove_existing_supplement(content):
+    start = content.find(SUPPLEMENT_MARKER)
+    if start == -1:
+        return content.rstrip()
+
+    end = content.find(SUPPLEMENT_END_MARKER, start)
+    if end == -1:
+        return content[:start].rstrip()
+
+    end += len(SUPPLEMENT_END_MARKER)
+    return (content[:start] + content[end:]).rstrip()
+
+def build_lesson_supplement(focus, points, mistakes, practice, upgrade):
+    point_lines = "\n".join(f"- {point}" for point in points)
+    mistake_lines = "\n".join(f"- {mistake}" for mistake in mistakes)
+
+    return f"""{SUPPLEMENT_MARKER}
+
+## 补充：本节知识点扩展
+
+### 1. 学习目标
+{focus}
+
+### 2. 必会知识点
+{point_lines}
+
+### 3. 从“会用”到“会解释”
+- 说清楚本节概念解决什么问题，而不是只背术语。
+- 能画出数据或流程在每一步如何变化。
+- 能比较本节方法与前面学过方法的区别。
+- 能用自己的例子重写一遍，不依赖原题变量名。
+
+### 4. 推荐学习步骤
+1. 先照着示例完整运行一次，确认程序能得到预期输出。
+2. 修改一个变量、一个条件或一个数据项，观察输出如何变化。
+3. 把关键语句用自己的话解释出来，尤其说明“输入是什么、处理是什么、输出是什么”。
+4. 不看示例重写一遍，如果卡住，只回看最小的一段代码。
+5. 最后把代码放进一个小场景中，例如成绩、报名、课程、日志或游戏数据。
+
+### 5. 错题复盘方法
+- 如果是语法错误，先检查冒号、括号、引号、缩进和中英文符号。
+- 如果是结果错误，打印中间变量，观察每一步的数据是否符合预期。
+- 如果是思路错误，先用 2 到 3 个小数据手算，再写代码验证。
+- 如果同类错误出现两次，把它记成一条“避坑规则”，下次写代码前先检查。
+
+### 6. 与前后知识连接
+本节不要孤立学习。先回看前一节已经掌握的输入、变量、条件、循环、容器或函数概念，再思考本节新增了什么能力。学完后还要问自己：如果数据更多、条件更复杂、代码要重复使用，下一节知识会怎样让程序更清晰。这样能把单个语法点连成完整编程能力。
+
+### 7. 常见误区
+{mistake_lines}
+
+### 8. 课堂练习
+{practice}
+
+### 9. 升级任务
+{upgrade}
+
+### 10. 自测标准
+- 能独立写出本节核心代码。
+- 能读懂含有本节知识点的 8 到 15 行程序。
+- 能解释一处常见错误为什么发生、如何修改。
+- 能把本节知识放进一个小场景中使用。
+{SUPPLEMENT_END_MARKER}"""
+
+def apply_lesson_supplements(guides):
+    for course_title, lesson_title, focus, points, mistakes, practice, upgrade in guides:
+        lesson = Lesson.objects.filter(
+            chapter__course__title=course_title,
+            title=lesson_title,
+        ).order_by('id').first()
+        if lesson is None:
+            print(f"未找到补充目标：{course_title} / {lesson_title}")
+            continue
+
+        base_content = remove_existing_supplement(lesson.content or "")
+        supplement = build_lesson_supplement(focus, points, mistakes, practice, upgrade)
+        lesson.content = f"{base_content}\n\n{supplement}\n"
+        lesson.save(update_fields=['content'])
 
 print("正在更新课程数据...")
 # Course.objects.all().delete()  <-- Commented out to preserve user progress
@@ -740,6 +845,44 @@ print(a) # 15
 ## 4. 易错点
 - 除法 `/` 永远返回 `float`。
 - 负数整除 `//` 是向小取整（往负无穷方向），不是简单的去掉小数。
+
+## 5. 取模的常见应用
+取模 `%` 不只是求余数，它经常用于判断规律。
+
+### 判断奇偶
+```python
+if x % 2 == 0:
+    print("偶数")
+else:
+    print("奇数")
+```
+
+### 取个位数
+```python
+n = 123
+print(n % 10)  # 3
+```
+
+### 判断能否整除
+```python
+if n % 3 == 0:
+    print("能被 3 整除")
+```
+
+## 6. 运算结果类型
+```python
+print(type(10 + 3))  # int
+print(type(10 / 2))  # float
+print(type(10 // 3)) # int
+```
+
+只要使用 `/`，结果就是浮点数，即使看起来刚好整除。
+
+## 7. 小练习
+给定一个三位数 `n = 456`：
+1. 输出个位数
+2. 输出十位数
+3. 判断它是否能被 3 整除
 """
 )
 
@@ -1052,6 +1195,43 @@ result = 2 + 3 * 4 > 10 and 5 < 2
 ## 3. 建议
 虽然有优先级规则，但写代码时**建议多用括号**，让代码更易读，也不容易出错。
 例如：`(2 + 3) * 4` 显然比 `2 + 3 * 4` 意图更明确（如果你的本意是先加）。
+
+## 4. 同级运算顺序
+大多数同级运算从左到右：
+
+```python
+print(10 - 3 - 2)  # 5
+```
+
+先算 `10 - 3 = 7`，再算 `7 - 2 = 5`。
+
+但幂运算 `**` 比较特殊，通常从右往左结合：
+
+```python
+print(2 ** 3 ** 2)  # 512
+```
+
+先算 `3 ** 2 = 9`，再算 `2 ** 9 = 512`。
+
+## 5. 布尔表达式里更要加括号
+```python
+is_valid = (age >= 12 and score >= 60) or is_vip
+```
+
+括号能让读代码的人马上看懂你的判断意图。
+
+## 6. 易错点
+- `and` 优先级高于 `or`
+- `not` 优先级高于 `and`
+- 比较运算会先于逻辑运算完成
+- 不确定时就加括号
+
+## 7. 小练习
+手算并用 Python 验证：
+1. `2 + 3 * 4`
+2. `(2 + 3) * 4`
+3. `True or False and False`
+4. `not (3 > 2)`
 """
 )
 
@@ -1203,6 +1383,51 @@ else:
 - 忘记冒号 `:`。
 - 缩进不一致（Python 对缩进要求非常严格，通常使用 4 个空格）。
 - `elif` 拼写错误（不是 `elseif`）。
+
+## 5. 条件顺序很重要
+多分支会从上到下检查，先满足谁就执行谁。
+
+错误示例：
+
+```python
+score = 95
+if score >= 60:
+    print("及格")
+elif score >= 90:
+    print("优秀")
+```
+
+这会输出“及格”，不会输出“优秀”。因为 `score >= 60` 已经先成立。
+
+正确写法：
+
+```python
+if score >= 90:
+    print("优秀")
+elif score >= 60:
+    print("及格")
+```
+
+## 6. 嵌套 if
+```python
+age = 13
+score = 90
+
+if age >= 12:
+    if score >= 80:
+        print("可以参加进阶班")
+```
+
+嵌套 if 可以表达更复杂条件，但不要嵌套太深，太深会难读。
+
+## 7. 小练习
+根据分数输出等级：
+- `>= 90`：优秀
+- `>= 80`：良好
+- `>= 60`：及格
+- `< 60`：不及格
+
+注意条件顺序。
 """
 )
 
@@ -1346,6 +1571,43 @@ print(total)        # 5050
 ## 5. 易错点
 - `range(5)` 是从 0 开始，到 4 结束，不包含 5。
 - 循环结束后，循环变量 `i` 会保留最后一次的值。
+
+## 6. 遍历字符串和列表
+`for` 不只能配合 `range`，还能遍历可迭代对象。
+
+```python
+for ch in "Python":
+    print(ch)
+```
+
+```python
+names = ["Tom", "Amy", "Jack"]
+for name in names:
+    print(name)
+```
+
+## 7. 倒序循环
+```python
+for i in range(5, 0, -1):
+    print(i)
+```
+
+输出 `5, 4, 3, 2, 1`。
+
+## 8. 嵌套循环
+```python
+for i in range(3):
+    for j in range(2):
+        print(i, j)
+```
+
+嵌套循环常用于表格、坐标、二维列表。它也常意味着更高的时间复杂度。
+
+## 9. 小练习
+1. 打印 1 到 10
+2. 打印 10 到 1
+3. 输出字符串 `"GESP"` 的每个字符
+4. 求 1 到 100 中所有偶数的和
 """
 )
 
@@ -1485,6 +1747,44 @@ while True:
 ## 5. 什么时候用 while？
 - 不知道具体要循环多少次。
 - 比如：一直输入密码，直到输对为止。
+
+## 6. 输入直到正确
+```python
+password = ""
+while password != "123456":
+    password = input("请输入密码：")
+print("登录成功")
+```
+
+这种场景不知道用户会输错几次，所以 `while` 更自然。
+
+## 7. while 和 for 怎么选
+- 已知循环次数：优先 `for`
+- 不知道次数，只知道停止条件：优先 `while`
+
+例如：
+- 打印 10 次：`for`
+- 一直猜数字直到猜对：`while`
+
+## 8. while + else
+Python 的 `while` 也可以配合 `else`：
+
+```python
+n = 3
+while n > 0:
+    print(n)
+    n -= 1
+else:
+    print("循环正常结束")
+```
+
+如果循环不是被 `break` 打断，`else` 会执行。
+
+## 9. 小练习
+写一个猜数字程序：
+1. 答案固定为 `7`
+2. 用户反复输入数字
+3. 猜对后输出“猜对了”
 """
 )
 
@@ -1633,6 +1933,55 @@ for i in range(2, n):
 else:
     print("是素数") # 只有循环完整走完没发现因子，才执行这里
 ```
+
+## 5. break 常见场景
+- 找到目标后停止搜索
+- 用户输入 `q` 后退出
+- 检测到错误条件后提前结束
+
+```python
+while True:
+    cmd = input("请输入命令：")
+    if cmd == "q":
+        break
+```
+
+## 6. continue 常见场景
+- 跳过不合格数据
+- 跳过空字符串
+- 跳过某些特殊值
+
+```python
+scores = [90, -1, 80, -1, 70]
+for score in scores:
+    if score == -1:
+        continue
+    print(score)
+```
+
+## 7. 嵌套循环里的 break
+`break` 只会跳出它所在的那一层循环。
+
+```python
+for i in range(3):
+    for j in range(3):
+        if j == 1:
+            break
+        print(i, j)
+```
+
+外层循环仍会继续。
+
+## 8. 易错点
+- `break` 是结束循环，不是结束整个程序
+- `continue` 是跳过本轮，不是跳出循环
+- 循环 `else` 只有未被 `break` 打断时才执行
+- 嵌套循环里要分清控制的是哪一层
+
+## 9. 小练习
+遍历 1 到 50：
+1. 遇到能被 3 整除的数跳过
+2. 遇到第一个大于 30 且能被 7 整除的数就停止
 """
 )
 
@@ -3490,6 +3839,33 @@ print(a + 1)   # 26
 - 会用 `def` 定义函数
 - 知道参数是输入，`return` 是输出
 - 分得清 `print` 和 `return`
+
+## 7. 函数执行顺序
+定义函数不会立刻执行函数体：
+
+```python
+def say_hi():
+    print("Hi")
+
+print("before")
+say_hi()
+print("after")
+```
+
+只有调用 `say_hi()` 时，函数体才会运行。
+
+## 8. return 会结束函数
+```python
+def check(score):
+    if score >= 60:
+        return "pass"
+    return "fail"
+```
+
+一旦执行到 `return`，函数就结束，后面的代码不会继续执行。
+
+## 9. 小练习
+写函数 `max2(a, b)`，返回两个数中较大的一个。不要只 `print`，要用 `return`。
 """
 )
 Quiz.objects.create(lesson=l3_1_1, question="如果不写 return 语句，函数默认返回什么？", option_a="0", option_b="False", option_c="None", option_d="Error", correct_answer="C", explanation="默认返回 None。")
@@ -3559,6 +3935,49 @@ Python 找变量时，一般按下面顺序查找：
 - 同名变量可能不是同一个变量
 - 局部变量通常不会影响全局变量
 - 真要改全局值时要格外小心
+
+## 8. 读取和修改不是一回事
+读取全局变量通常可以直接读：
+
+```python
+score = 100
+
+def show():
+    print(score)
+```
+
+但在函数内重新赋值，就会创建局部变量，或需要 `global`：
+
+```python
+score = 0
+
+def add():
+    global score
+    score += 1
+```
+
+## 9. 少用 global
+`global` 能用，但不应该滥用。更好的做法通常是通过参数和返回值传递数据。
+
+```python
+def add(score):
+    return score + 1
+
+score = add(score)
+```
+
+## 10. 小练习
+观察下面代码输出，并解释原因：
+
+```python
+x = 10
+def f():
+    x = 20
+    return x
+
+print(f())
+print(x)
+```
 """
 )
 Quiz.objects.create(lesson=l3_1_2, question="如何修改全局变量？", option_a="直接赋值", option_b="global 声明", option_c="extern", option_d="public", correct_answer="B", explanation="使用 global。")
@@ -3659,9 +4078,19 @@ ch3_2, _ = Chapter.objects.get_or_create(course=c3, title="第2章：元组与�
 
 # 2.1 元组 Tuple
 l3_2_1 = create_lesson(
-    chapter=ch3_2, title="2.1 元组 Tuple", order=1, lesson_type='text',
+    chapter=ch3_2, title="2.1 元组进阶：解包、返回值与不可变数据", previous_titles=["2.1 元组 Tuple"], order=1, lesson_type='text',
     code_challenge_prompt="# 创建一个元组并尝试修改（会报错，请观察）\nt = (1, 2, 3)\nprint(t[0])\n# t[0] = 10",
-    content="""# 2.1 元组 Tuple
+    content="""# 2.1 元组进阶：解包、返回值与不可变数据
+
+## 0. 和 GESP 2级有什么不同？
+GESP 2级已经把元组作为“不可变序列”讲过。
+
+本节不重复基础语法，重点放在元组的进阶用途：
+- 函数返回多个值
+- 元组解包
+- 固定结构数据
+- 元组作为字典键
+- 元组中包含可变对象时的易错点
 
 ## 1. 什么是元组？
 元组就像是**不可变的列表**。一旦创建，就不能修改（不能增加、删除、修改元素）。
@@ -3709,6 +4138,36 @@ print(data)   # ('Tom', 12)
 - 结构固定
 - 语义明确
 - 不容易被误修改
+
+## 8. 元组解包
+```python
+point = (3, 5)
+x, y = point
+print(x, y)
+```
+
+元组解包可以让代码更清楚。函数返回多个值时也常用它。
+
+```python
+def calc(a, b):
+    return a + b, a - b
+
+total, diff = calc(8, 3)
+```
+
+## 9. 元组里的可变对象
+元组本身不可变，但如果元组里装的是列表，列表内容仍然可以变。
+
+```python
+t = (1, [2, 3])
+t[1].append(4)
+print(t)
+```
+
+这点容易考。
+
+## 10. 小练习
+用元组表示一个学生记录 `(name, age, score)`，再用解包输出三项信息。
 """
 )
 Quiz.objects.create(lesson=l3_2_1, question="t = (1, 2, 3)，t[0] = 10 会发生什么？", option_a="t变成(10,2,3)", option_b="报错", option_c="t不变", option_d="t变成[10,2,3]", correct_answer="B", explanation="元组是不可变的，不能修改。")
@@ -3850,6 +4309,24 @@ math.sqrt(25)
 - `.py` 文件本身就可以是模块
 - 模块让代码更清晰
 - `import 模块名` 是最基础也最推荐先掌握的方式
+
+## 8. 常见标准库模块
+- `math`：数学函数
+- `random`：随机数
+- `datetime`：日期时间
+- `os`：操作系统相关
+- `sys`：解释器相关
+
+```python
+import random
+print(random.randint(1, 6))
+```
+
+## 9. 模块名冲突
+不要把自己的文件命名为 `random.py`、`math.py` 这类标准库名字。否则导入时可能导入到自己的文件，造成奇怪错误。
+
+## 10. 小练习
+导入 `random` 模块，模拟掷骰子，输出 1 到 6 的随机整数。
 """
 )
 Quiz.objects.create(lesson=l3_3_1, question="Python 中一个普通的 .py 文件通常可以看作什么？", option_a="变量", option_b="模块", option_c="异常", option_d="元组", correct_answer="B", explanation="一个 .py 文件通常就是一个模块。")
@@ -3918,6 +4395,30 @@ import pandas as pd
 - 想更清楚：`import 模块名`
 - 想更简洁：`from ... import ...`
 - 想更顺手：`as` 起别名
+
+## 8. 不同写法对比
+```python
+import math
+print(math.sqrt(16))
+```
+
+```python
+from math import sqrt
+print(sqrt(16))
+```
+
+两段代码结果一样，但第一种更清楚来源，第二种更简洁。
+
+## 9. 多个导入
+```python
+from math import sqrt, pi
+print(sqrt(16), pi)
+```
+
+可以从一个模块导入多个名字。
+
+## 10. 小练习
+用 `from random import randint` 写一个 1 到 100 的随机数生成器。
 """
 )
 Quiz.objects.create(lesson=l3_3_2, question="from math import sqrt 后，调用平方根函数应写作？", option_a="math.sqrt(9)", option_b="sqrt(9)", option_c="import.sqrt(9)", option_d="from.sqrt(9)", correct_answer="B", explanation="直接导入了 sqrt，因此可以直接写 sqrt(9)。")
@@ -3987,6 +4488,22 @@ print(say_hi("Tom"))
 - 结构清晰
 - 更好维护
 - 更易复用
+
+## 8. __name__ 简介
+自定义模块里常见这段代码：
+
+```python
+if __name__ == "__main__":
+    print("直接运行这个文件")
+```
+
+它的意思是：只有当这个文件被直接运行时，才执行下面代码；如果它是被别的文件导入，就不执行。
+
+## 9. 文件放在哪里
+初学阶段，先把 `main.py` 和 `helpers.py` 放在同一个文件夹中，这样最容易导入。
+
+## 10. 小练习
+创建 `score_tools.py`，写入 `avg(scores)`；再在 `main.py` 中导入并调用。
 """
 )
 Quiz.objects.create(lesson=l3_3_3, question="自己写的 helpers.py 能不能作为模块导入？", option_a="能", option_b="不能", option_c="只有系统模块才行", option_d="必须联网才行", correct_answer="A", explanation="自己的 .py 文件也可以作为模块。")
@@ -4072,6 +4589,27 @@ from score_tools import avg, is_pass
 - 重复逻辑应该抽出来
 - 抽出来的函数可以继续组织成模块
 - 主程序的职责应尽量简单明确
+
+## 8. 加一个等级函数
+```python
+def grade(score):
+    if score >= 90:
+        return "A"
+    elif score >= 80:
+        return "B"
+    elif score >= 60:
+        return "C"
+    return "D"
+```
+
+这个函数可以和 `avg`、`is_pass` 一起放进成绩工具箱。
+
+## 9. 工具箱升级方向
+可以继续加入：
+- `max_score(scores)`：最高分
+- `min_score(scores)`：最低分
+- `count_pass(scores)`：及格人数
+- `format_report(scores)`：生成文字报告
 """
 )
 Quiz.objects.create(lesson=l3_3_4, question="把成绩计算函数放入 score_tools.py，最主要体现了什么思想？", option_a="递归", option_b="模块化", option_c="切片", option_d="排序", correct_answer="B", explanation="把功能拆到独立文件中是模块化思想。")
@@ -4096,95 +4634,476 @@ c4, _ = Course.objects.get_or_create(
     defaults={'order': 4}
 )
 
-ch4_1, _ = Chapter.objects.get_or_create(course=c4, title="第1章：字典与集合", defaults={'order': 1})
+ch4_1 = create_chapter(c4, title="第1章：字典与集合进阶应用", order=1, previous_titles=["第1章：字典与集合"])
 
-# 1.1 字典
+# 1.1 字典进阶
 l4_1_1 = create_lesson(
-    chapter=ch4_1, title="1.1 字典 Dictionary", order=1, lesson_type='text',
-    code_challenge_prompt="# 创建字典并访问\nd = {'name': 'Tom', 'age': 18}\nprint(d['name'])",
-    content="""# 1.1 字典 Dictionary
+    chapter=ch4_1, title="1.1 字典进阶：嵌套、计数与数据建模", previous_titles=["1.1 字典 Dictionary"], order=1, lesson_type='text',
+    code_challenge_prompt="# 用字典统计每门课的报名人数\nrecords = [\n    {'name': 'Tom', 'course': 'Python'},\n    {'name': 'Amy', 'course': 'C++'},\n    {'name': 'Lily', 'course': 'Python'},\n]\ncounts = {}\nfor record in records:\n    course = record['course']\n    counts[course] = counts.get(course, 0) + 1\nprint(counts)",
+    content="""# 1.1 字典进阶：嵌套、计数与数据建模
+
+## 0. 和 GESP 2级有什么不同？
+GESP 2级已经学过字典基础：键值对、按键访问、`items()` 遍历。
+
+本节不再把重点放在“字典是什么”，而是把字典当成真实程序里的**数据建模工具**：
+- 用列表 + 字典表达多条记录
+- 用嵌套结构表达复杂数据
+- 用字典做统计计数
+- 处理缺失字段和默认值
+- 把字典思维迁移到 JSON / API 数据
 
 ## 1. 什么是字典？
-键值对（Key-Value）的集合。键必须唯一且不可变。
+字典（dict）是一种用**键值对**保存数据的容器。
 
 ```python
-d = {"name": "Alice", "age": 12}
+student = {
+    "name": "Alice",
+    "age": 12,
+    "score": 95
+}
 ```
 
-## 2. 常用操作
-- `d[key]`: 获取值。
-- `d[key] = value`: 修改或新增。
-- `del d[key]`: 删除。
-- `d.get(key, default)`: 安全获取。
+每一项都由两部分组成：
+- Key（键）：用来查找数据，例如 `"name"`
+- Value（值）：真正保存的数据，例如 `"Alice"`
 
-## 3. 遍历
-- `d.keys()`, `d.values()`, `d.items()`
+可以把字典理解成“带标签的数据柜”。列表靠位置找数据，字典靠名字找数据。
+
+```python
+scores = [95, 88, 76]
+print(scores[0])
+
+student = {"score": 95}
+print(student["score"])
+```
+
+## 2. 键和值的规则
+字典的键必须满足两个条件：
+- 唯一：同一个字典里不能有两个相同的键
+- 不可变：字符串、数字、元组可以做键；列表、字典不能做键
+
+```python
+d = {
+    "name": "Tom",
+    "name": "Jerry"
+}
+print(d)
+```
+
+输出：
+
+```text
+{'name': 'Jerry'}
+```
+
+后面的同名键会覆盖前面的值，所以写字典时要避免重复键。
+
+值几乎可以是任意类型：
+
+```python
+student = {
+    "name": "Alice",
+    "scores": [90, 95, 88],
+    "passed": True
+}
+```
+
+## 3. 创建、访问、修改、删除
+### 创建字典
+```python
+empty = {}
+student = {"name": "Alice", "age": 12}
+```
+
+### 访问值
+```python
+print(student["name"])
+```
+
+### 修改已有键
+```python
+student["age"] = 13
+```
+
+### 新增键值对
+```python
+student["score"] = 95
+```
+
+### 删除键值对
+```python
+del student["age"]
+```
+
+也可以用 `pop()` 删除并拿到被删除的值：
+
+```python
+score = student.pop("score")
+print(score)
+```
 
 ## 4. 键是否存在时的处理
-直接访问不存在的键，可能会报错：
+直接访问不存在的键会报错：
 
 ```python
 d = {"name": "Tom"}
-# print(d["age"])   # KeyError
+print(d["age"])  # KeyError
 ```
 
-更稳妥的方式是：
+更稳妥的方式是使用 `get()`：
 
 ```python
-print(d.get("age"))
-print(d.get("age", 0))
+print(d.get("age"))      # None
+print(d.get("age", 0))   # 0
 ```
 
-## 5. 字典为什么比列表更适合“记录型数据”
-如果一名学生有姓名、年龄、班级、成绩等信息，用字典会比列表清楚很多。
+还可以先判断键是否存在：
 
-因为：
-- 读取时按字段名
-- 不用死记第几个位置是什么
-- 更适合做真实业务数据
+```python
+if "age" in d:
+    print(d["age"])
+else:
+    print("没有 age")
+```
 
-## 6. 本节总结
-GESP 4级学字典，不只是复习“键值对”，而是开始把字典看成一种“组织复杂数据”的核心工具。
+GESP 常考点：
+- `d["x"]`：键不存在会 `KeyError`
+- `d.get("x")`：键不存在返回 `None`
+- `d.get("x", 0)`：键不存在返回默认值 `0`
+- `"x" in d`：判断键是否存在，不是判断值是否存在
+
+## 5. 遍历字典
+字典常见遍历有三种。
+
+### 遍历所有键
+```python
+student = {"name": "Alice", "age": 12, "score": 95}
+
+for key in student:
+    print(key)
+```
+
+等价于：
+
+```python
+for key in student.keys():
+    print(key)
+```
+
+### 遍历所有值
+```python
+for value in student.values():
+    print(value)
+```
+
+### 同时遍历键和值
+```python
+for key, value in student.items():
+    print(key, value)
+```
+
+`items()` 很重要，因为实际编程中经常需要同时知道字段名和字段值。
+
+## 6. 字典为什么比列表更适合“记录型数据”
+如果一名学生有姓名、年龄、班级、成绩等信息，用列表也能写：
+
+```python
+student = ["Alice", 12, "4班", 95]
+```
+
+但这样有问题：
+- `student[0]` 到底是什么，需要记忆
+- 顺序一改，代码容易错
+- 字段多了以后很难维护
+
+字典更清楚：
+
+```python
+student = {
+    "name": "Alice",
+    "age": 12,
+    "class": "4班",
+    "score": 95
+}
+```
+
+读代码的人一眼知道每个数据的含义。
+
+## 7. 嵌套字典和列表
+字典经常和列表组合，用来表达更复杂的数据。
+
+### 列表里放字典
+```python
+students = [
+    {"name": "Alice", "score": 95},
+    {"name": "Bob", "score": 80},
+    {"name": "Cindy", "score": 58}
+]
+
+for student in students:
+    if student["score"] >= 60:
+        print(student["name"], "及格")
+```
+
+### 字典里放列表
+```python
+course = {
+    "title": "Python",
+    "students": ["Alice", "Bob", "Cindy"]
+}
+
+print(course["students"][0])
+```
+
+这类结构是后续 Web API、JSON 数据、真实业务系统的基础。
+
+## 8. 计数问题：字典高频应用
+字典最常见的算法用途之一是“统计次数”。
+
+统计每个字符出现次数：
+
+```python
+text = "banana"
+count = {}
+
+for ch in text:
+    count[ch] = count.get(ch, 0) + 1
+
+print(count)
+```
+
+输出：
+
+```text
+{'b': 1, 'a': 3, 'n': 2}
+```
+
+核心思路：
+1. 用字符当键
+2. 用出现次数当值
+3. 每遇到一次，就把对应值加 1
+
+## 9. 合并与更新
+`update()` 可以把一个字典的内容合并到另一个字典：
+
+```python
+info = {"name": "Alice", "age": 12}
+score = {"score": 95, "rank": 1}
+
+info.update(score)
+print(info)
+```
+
+如果两个字典有相同的键，后面的值会覆盖前面的值。
+
+```python
+d = {"score": 80}
+d.update({"score": 95})
+print(d["score"])  # 95
+```
+
+## 10. 常见方法速查
+| 方法 | 作用 |
+| :--- | :--- |
+| `keys()` | 获取所有键 |
+| `values()` | 获取所有值 |
+| `items()` | 获取所有键值对 |
+| `get(key, default)` | 安全获取 |
+| `pop(key)` | 删除并返回值 |
+| `update(other)` | 合并/更新 |
+| `clear()` | 清空字典 |
+
+## 11. 易错点
+### 错误 1：把列表当字典键
+```python
+d = {[1, 2]: "value"}  # TypeError
+```
+
+列表可变，不能做键。
+
+### 错误 2：误以为 in 判断值
+```python
+d = {"name": "Alice"}
+print("Alice" in d)  # False
+```
+
+`in` 默认判断键，不判断值。
+
+### 错误 3：遍历时改字典大小
+```python
+for key in d:
+    del d[key]  # 可能报错
+```
+
+更安全方式是先复制键列表：
+
+```python
+for key in list(d.keys()):
+    del d[key]
+```
+
+## 12. 综合练习：成绩统计
+给定多个学生成绩，统计每个分数段人数：
+
+```python
+scores = [95, 82, 59, 76, 88, 100, 45]
+result = {"优秀": 0, "及格": 0, "不及格": 0}
+
+for score in scores:
+    if score >= 90:
+        result["优秀"] += 1
+    elif score >= 60:
+        result["及格"] += 1
+    else:
+        result["不及格"] += 1
+
+print(result)
+```
+
+再进一步：把每个学生姓名也保存进去，尝试输出所有不及格学生名单。
+
+## 13. 本节总结
+GESP 4级学字典，不是重复“键值对”，而是掌握一种组织复杂数据和完成基础统计的方法。
+
+必须掌握：
+- 字典靠键访问值
+- 键唯一且必须不可变
+- `get()` 可避免 `KeyError`
+- `items()` 常用于同时遍历键和值
+- 字典适合记录型数据和计数问题
+- 列表 + 字典可以表达真实项目中的复杂数据
 """
 )
-Quiz.objects.create(lesson=l4_1_1, question="d = {'a': 1}，d['b'] = 2 后 d 是？", option_a="{'a':1}", option_b="{'a':1, 'b':2}", option_c="报错", option_d="{'b':2}", correct_answer="B", explanation="新增键值对。")
-Quiz.objects.create(lesson=l4_1_1, question="字典的键必须是？", option_a="可变的", option_b="不可变的", option_c="字符串", option_d="整数", correct_answer="B", explanation="不可变类型（Hashable）。")
-Quiz.objects.create(lesson=l4_1_1, question="d.get('x', 0) 如果 x 不存在返回？", option_a="None", option_b="0", option_c="报错", option_d="False", correct_answer="B", explanation="返回默认值 0。")
-Quiz.objects.create(lesson=l4_1_1, question="d.items() 返回什么？", option_a="键列表", option_b="值列表", option_c="键值对元组列表", option_d="字符串", correct_answer="C", explanation="键值对。")
-Quiz.objects.create(lesson=l4_1_1, question="清空字典用什么方法？", option_a="delete()", option_b="clean()", option_c="clear()", option_d="empty()", correct_answer="C", explanation="clear()。")
-Quiz.objects.create(lesson=l4_1_1, question="判断题：字典是有序的（Python 3.7+）。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
-Quiz.objects.create(lesson=l4_1_1, question="判断题：字典可以有重复的键。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，键唯一。")
-Quiz.objects.create(lesson=l4_1_1, question="d = {'a': 1, 'b': 2}; len(d) 是？", option_a="1", option_b="2", option_c="3", option_d="0", correct_answer="B", explanation="两个键值对。")
-Quiz.objects.create(lesson=l4_1_1, question="d.pop('a') 的作用是？", option_a="获取 'a' 的值", option_b="删除 'a' 并返回其值", option_c="删除 'a' 但不返回值", option_d="报错", correct_answer="B", explanation="删除并返回。")
-Quiz.objects.create(lesson=l4_1_1, question="如何合并两个字典 d1 和 d2？", option_a="d1 + d2", option_b="d1.update(d2)", option_c="d1.append(d2)", option_d="d1.add(d2)", correct_answer="B", explanation="update 方法。")
+Quiz.objects.create(lesson=l4_1_1, question="records = [{'course':'Python'}, {'course':'C++'}, {'course':'Python'}]，统计课程人数最适合用？", option_a="字符串拼接", option_b="字典计数", option_c="只用元组", option_d="只用 bool", correct_answer="B", explanation="课程名可以作为键，人数作为值。")
+Quiz.objects.create(lesson=l4_1_1, question="count[ch] = count.get(ch, 0) + 1 的核心作用是？", option_a="删除字符", option_b="统计出现次数", option_c="排序字符", option_d="转换大小写", correct_answer="B", explanation="get 提供默认值，再加 1 完成计数。")
+Quiz.objects.create(lesson=l4_1_1, question="列表里放多个学生字典，最适合表达什么？", option_a="多条结构相同的记录", option_b="一个固定坐标", option_c="单个数字", option_d="无限循环", correct_answer="A", explanation="列表表示多条记录，字典表示每条记录的字段。")
+Quiz.objects.create(lesson=l4_1_1, question="student.get('score', 0) 的进阶价值是？", option_a="无条件报错", option_b="处理缺失字段时给默认值", option_c="删除字段", option_d="排序字段", correct_answer="B", explanation="真实数据里字段可能缺失，get 可提供默认值。")
+Quiz.objects.create(lesson=l4_1_1, question="update() 遇到已有键时会怎样？", option_a="保留旧值", option_b="用新值覆盖旧值", option_c="自动变列表", option_d="报错", correct_answer="B", explanation="update 合并时相同键会被新值覆盖。")
+Quiz.objects.create(lesson=l4_1_1, question="判断题：GESP 4级这里的字典重点是复杂数据组织和统计，不只是基础访问。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这和 GESP 2级入门定位不同。")
+Quiz.objects.create(lesson=l4_1_1, question="判断题：列表 + 字典常用于表达 JSON / API 里的多条记录。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这是实际项目中的常见结构。")
+Quiz.objects.create(lesson=l4_1_1, question="遍历列表中的学生字典时，student['score'] 访问的是？", option_a="当前这条学生记录的 score 字段", option_b="所有学生总分", option_c="列表长度", option_d="课程标题", correct_answer="A", explanation="每次循环中的 student 是一条字典记录。")
+Quiz.objects.create(lesson=l4_1_1, question="下面哪项最像“数据建模”？", option_a="用 {'name':'Amy','score':95} 表达学生记录", option_b="只写 print(1)", option_c="无限 while", option_d="删除所有变量", correct_answer="A", explanation="用字段组织一条记录，就是基础数据建模。")
+Quiz.objects.create(lesson=l4_1_1, question="字典计数题中，键通常表示什么？", option_a="被统计对象", option_b="固定缩进", option_c="代码行号", option_d="异常类型", correct_answer="A", explanation="例如字符、课程名、用户名都可以作为被统计对象。")
 
-# 1.2 集合 Set
+# 1.2 集合进阶
 l4_1_2 = create_lesson(
-    chapter=ch4_1, title="1.2 集合 Set", order=2, lesson_type='code',
-    code_challenge_prompt="# 集合去重\nlst = [1, 2, 2, 3, 3, 3]\ns = set(lst)\nprint(s)",
-    content="""# 1.2 集合 Set
+    chapter=ch4_1, title="1.2 集合进阶：关系运算与去重策略", previous_titles=["1.2 集合 Set"], order=2, lesson_type='code',
+    code_challenge_prompt="# 用集合分析两个班的报名关系\npython = {'Tom', 'Amy', 'Lily'}\nrobot = {'Amy', 'Jack', 'Lily'}\nprint('都报名:', python & robot)\nprint('至少报名一门:', python | robot)\nprint('只报 Python:', python - robot)",
+    content="""# 1.2 集合进阶：关系运算与去重策略
+
+## 0. 和 GESP 2级有什么不同？
+GESP 2级已经学过集合基础：自动去重、不能索引、简单交并差。
+
+本节重点放在进阶应用：
+- 保序去重
+- 名单关系分析
+- 已访问集合
+- `remove` / `discard` 的安全差异
+- `frozenset` 和“可哈希”直觉
 
 ## 1. 什么是集合？
-无序、不重复的元素集合。就像没有值的字典。
-用 `{}` 定义，但空集合必须用 `set()`。
+集合（set）是一种保存**不重复元素**的容器。
 
 ```python
 s = {1, 2, 3}
 ```
 
-## 2. 核心特性：去重
+集合有三个核心特点：
+- 无重复：相同元素只保留一份
+- 无序：不能靠下标访问
+- 元素必须不可变：数字、字符串、元组可以；列表、字典不可以
+
+注意：空集合不能写 `{}`，因为 `{}` 表示空字典。
+
 ```python
-lst = [1, 2, 2, 3]
-print(list(set(lst))) # [1, 2, 3]
+a = {}
+b = set()
+
+print(type(a))  # <class 'dict'>
+print(type(b))  # <class 'set'>
+```
+
+## 2. 核心特性：去重
+集合最直观的用途是去重。
+
+```python
+nums = [1, 2, 2, 3, 3, 3]
+s = set(nums)
+print(s)
+```
+
+输出可能是：
+
+```text
+{1, 2, 3}
+```
+
+如果需要重新变成列表：
+
+```python
+unique_nums = list(set(nums))
+print(unique_nums)
+```
+
+重要提醒：集合无序，去重后元素顺序不一定和原列表一样。如果题目要求保持原顺序，需要用其他方法。
+
+保持顺序去重：
+
+```python
+nums = [1, 2, 2, 3, 1]
+seen = set()
+result = []
+
+for num in nums:
+    if num not in seen:
+        seen.add(num)
+        result.append(num)
+
+print(result)
 ```
 
 ## 3. 集合运算
-- `&` 交集
-- `|` 并集
-- `-` 差集
+集合很适合表达“共同拥有、全部拥有、只属于某一边”的问题。
+
+```python
+a = {"Alice", "Bob", "Cindy"}
+b = {"Bob", "David", "Eric"}
+```
+
+### 交集：两边都有
+```python
+print(a & b)
+```
+
+结果：
+
+```text
+{'Bob'}
+```
+
+### 并集：合在一起
+```python
+print(a | b)
+```
+
+### 差集：只在 a，不在 b
+```python
+print(a - b)
+```
+
+### 对称差集：只在其中一边
+```python
+print(a ^ b)
+```
+
+记忆方法：
+- `&`：共同部分
+- `|`：全部合并
+- `-`：减掉另一边
+- `^`：两边不同部分
 
 ## 4. add、discard 与 remove
-集合除了去重，还经常会动态变化。
+集合除了去重，还经常动态变化。
 
 ```python
 s = {1, 2, 3}
@@ -4192,32 +5111,188 @@ s.add(4)
 s.discard(2)
 ```
 
-需要特别注意：
-- `remove(x)`：如果元素不存在会报错
-- `discard(x)`：如果元素不存在不会报错
+`add(x)` 添加元素：
 
-## 5. 集合的典型业务场景
-- 去重后的用户名单
-- 已访问节点集合
-- 两个班级共同报名的学生
+```python
+s.add(5)
+```
 
-## 6. 本节总结
-集合最强的地方不是“长得像大括号”，而是：
+如果元素已经存在，集合不会重复添加：
+
+```python
+s.add(5)
+s.add(5)
+print(s)
+```
+
+删除元素有两个常用方法：
+
+```python
+s.remove(3)
+s.discard(10)
+```
+
+区别：
+- `remove(x)`：如果元素不存在，会报 `KeyError`
+- `discard(x)`：如果元素不存在，什么都不做
+
+考试和实战中，如果不确定元素是否存在，优先用 `discard()`。
+
+## 5. 成员判断：in
+集合判断某个元素是否存在非常常用。
+
+```python
+visited = {"A", "B", "C"}
+
+if "A" in visited:
+    print("已经访问过")
+```
+
+集合的成员判断通常比列表更适合大量数据场景。直觉上：
+- 列表：可能要从头找到尾
+- 集合：更像直接查表
+
+所以算法中常用集合保存：
+- 已访问节点
+- 已出现数字
+- 已经处理过的用户名
+
+## 6. 集合的典型业务场景
+### 场景 1：报名名单去重
+```python
+names = ["Alice", "Bob", "Alice", "Cindy"]
+unique_names = set(names)
+print(unique_names)
+```
+
+### 场景 2：找两个班都报名的学生
+```python
+class_a = {"Alice", "Bob", "Cindy"}
+class_b = {"Bob", "David"}
+
+print(class_a & class_b)
+```
+
+### 场景 3：找还没完成任务的人
+```python
+all_students = {"Alice", "Bob", "Cindy"}
+finished = {"Alice"}
+
+not_finished = all_students - finished
+print(not_finished)
+```
+
+## 7. 集合推导式
+集合也支持推导式，写法类似列表推导式。
+
+```python
+nums = [1, 2, 2, 3, 4]
+even_set = {x for x in nums if x % 2 == 0}
+print(even_set)
+```
+
+结果：
+
+```text
+{2, 4}
+```
+
+集合推导式会自动去重。
+
+## 8. frozenset 简介
+普通集合是可变的，所以不能作为字典的键，也不能作为另一个集合的元素。
+
+```python
+s = {1, 2}
+# d = {s: "value"}  # TypeError
+```
+
+`frozenset` 是不可变集合：
+
+```python
+fs = frozenset([1, 2, 3])
+```
+
+初学阶段只需知道：如果题目强调“不可变集合”，对应的是 `frozenset`。
+
+## 9. 易错点
+### 错误 1：用 `{}` 创建空集合
+```python
+s = {}
+print(type(s))  # dict
+```
+
+正确：
+
+```python
+s = set()
+```
+
+### 错误 2：用索引访问集合
+```python
+s = {1, 2, 3}
+print(s[0])  # TypeError
+```
+
+集合无序，不支持下标。
+
+### 错误 3：集合里放列表
+```python
+s = {[1, 2], [3, 4]}  # TypeError
+```
+
+列表可变，不能作为集合元素。
+
+### 错误 4：以为 set 去重一定保序
+```python
+nums = [3, 1, 2, 1]
+print(list(set(nums)))
+```
+
+输出顺序不保证和原列表一致。
+
+## 10. 综合练习：班级选课分析
+有两个课程报名名单：
+
+```python
+python = {"Alice", "Bob", "Cindy", "David"}
+robot = {"Bob", "David", "Eric"}
+```
+
+请输出：
+1. 两门课都报名的人
+2. 至少报名一门课的人
+3. 只报名 Python 的人
+4. 只报名一门课的人
+
+参考：
+
+```python
+print(python & robot)
+print(python | robot)
+print(python - robot)
+print(python ^ robot)
+```
+
+## 11. 本节总结
+GESP 4级学集合，不是重复“自动去重”，而是把集合作为关系分析和状态记录工具：
 - 自动去重
-- 快速判断存在
-- 做交并差分析
+- 快速判断元素是否存在
+- 用交并差解决名单、标签、访问记录问题
+- 不支持索引，元素必须不可变
+- 空集合必须用 `set()`
 """
 )
-Quiz.objects.create(lesson=l4_1_2, question="创建空集合使用？", option_a="{}", option_b="[]", option_c="set()", option_d="()", correct_answer="C", explanation="{} 是空字典。")
-Quiz.objects.create(lesson=l4_1_2, question="set([1, 2, 2]) 的结果？", option_a="{1, 2, 2}", option_b="{1, 2}", option_c="[1, 2]", option_d="报错", correct_answer="B", explanation="自动去重。")
-Quiz.objects.create(lesson=l4_1_2, question="{1, 2} & {2, 3} 的结果？", option_a="{1, 2, 3}", option_b="{2}", option_c="{1, 3}", option_d="{}", correct_answer="B", explanation="交集。")
-Quiz.objects.create(lesson=l4_1_2, question="集合中的元素必须是？", option_a="可变的", option_b="不可变的", option_c="有序的", option_d="无限制", correct_answer="B", explanation="不可变（Hashable）。")
-Quiz.objects.create(lesson=l4_1_2, question="s.add(1) 的作用？", option_a="添加元素", option_b="删除元素", option_c="排序", option_d="求和", correct_answer="A", explanation="添加。")
-Quiz.objects.create(lesson=l4_1_2, question="判断题：集合是有序的，可以通过索引访问。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，无序。")
-Quiz.objects.create(lesson=l4_1_2, question="判断题：集合不能包含重复元素。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
-Quiz.objects.create(lesson=l4_1_2, question="s = {1, 2}; s.remove(3) 会？", option_a="什么都不做", option_b="报错 KeyError", option_c="自动添加 3", option_d="清空集合", correct_answer="B", explanation="remove 不存在的元素会报错，discard 不会。")
-Quiz.objects.create(lesson=l4_1_2, question="集合支持索引吗？", option_a="支持", option_b="不支持", option_c="支持正数索引", option_d="支持负数索引", correct_answer="B", explanation="集合是无序的。")
-Quiz.objects.create(lesson=l4_1_2, question="len({1, 1, 2}) 的结果是？", option_a="3", option_b="2", option_c="1", option_d="0", correct_answer="B", explanation="自动去重后只有 {1, 2}。")
+Quiz.objects.create(lesson=l4_1_2, question="想保留原顺序去重，常见做法是？", option_a="直接 list(set(nums))", option_b="用 seen 集合配合 result 列表", option_c="只用字符串", option_d="只用元组", correct_answer="B", explanation="set 去重不保序，seen + result 可以保留首次出现顺序。")
+Quiz.objects.create(lesson=l4_1_2, question="python & robot 适合表示什么？", option_a="两边共同拥有的成员", option_b="所有成员", option_c="只在 python 的成员", option_d="随机成员", correct_answer="A", explanation="& 是交集。")
+Quiz.objects.create(lesson=l4_1_2, question="visited = set() 在搜索类问题中常用来做什么？", option_a="记录已访问对象", option_b="保存最终作文", option_c="创建函数", option_d="表示缩进", correct_answer="A", explanation="已访问集合能避免重复处理。")
+Quiz.objects.create(lesson=l4_1_2, question="remove 和 discard 的关键区别是？", option_a="discard 不存在时不报错", option_b="remove 不会删除", option_c="discard 只能删数字", option_d="二者完全一样", correct_answer="A", explanation="discard 更适合不确定元素是否存在的场景。")
+Quiz.objects.create(lesson=l4_1_2, question="frozenset 的特点是？", option_a="不可变集合", option_b="有序集合", option_c="重复集合", option_d="列表别名", correct_answer="A", explanation="frozenset 是不可变集合。")
+Quiz.objects.create(lesson=l4_1_2, question="判断题：GESP 4级集合重点是关系分析，不只是 set(list) 去重。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，交并差和状态记录才是进阶重点。")
+Quiz.objects.create(lesson=l4_1_2, question="判断题：集合推导式会自动去重。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，集合本身不保留重复元素。")
+Quiz.objects.create(lesson=l4_1_2, question="python - robot 表示什么？", option_a="只在 python 中、不在 robot 中的成员", option_b="两边都有", option_c="全部成员", option_d="清空集合", correct_answer="A", explanation="- 是差集。")
+Quiz.objects.create(lesson=l4_1_2, question="只报名一门课的人可以用什么运算？", option_a="^", option_b="&", option_c="len", option_d="append", correct_answer="A", explanation="^ 是对称差集，表示只在其中一边的元素。")
+Quiz.objects.create(lesson=l4_1_2, question="集合不能放列表作为元素，原因是列表？", option_a="可变，不可哈希", option_b="太长", option_c="只能排序", option_d="必须是中文", correct_answer="A", explanation="集合元素必须可哈希，列表可变所以不行。")
 
 ch4_2, _ = Chapter.objects.get_or_create(course=c4, title="第2章：面向对象编程 OOP", defaults={'order': 2})
 
@@ -4227,43 +5302,236 @@ l4_2_1 = create_lesson(
     code_challenge_prompt="# 定义一个 Dog 类，有一个 bark 方法\nclass Dog:\n    def bark(self):\n        print('Wang!')\n\nd = Dog()\nd.bark()",
     content="""# 2.1 类与对象基础
 
-## 1. 什么是类 (Class)？
-类是创建对象的**蓝图**或**模板**。对象是类的**实例**。
-比如：“狗”是一个类，“你家那只叫旺财的狗”是一个对象。
+## 1. 为什么需要类？
+前面学习列表、字典时，我们已经能保存一组数据。例如用字典表示一名学生：
 
-## 2. 定义类
+```python
+student = {
+    "name": "Alice",
+    "age": 12,
+    "score": 95
+}
+```
+
+如果只保存数据，字典很合适。但真实程序里，一个“学生”通常不只是数据，还会有行为：
+- 查询是否及格
+- 修改分数
+- 打印自我介绍
+- 统计等级
+
+这时就会出现一个问题：**数据和函数分散在不同地方，程序越写越乱。**
+
+面向对象编程（OOP）的核心思想是：把相关的数据和行为放在一起，组成一个“对象”。
+
+## 2. 类与对象是什么？
+类（Class）是创建对象的**蓝图**或**模板**。
+对象（Object）是根据类创建出来的**具体实例**。
+
+生活类比：
+
+| 类 | 对象 |
+| :--- | :--- |
+| 狗 | 你家那只叫旺财的狗 |
+| 学生 | 小明这名学生 |
+| 游戏角色 | 当前屏幕上的某个角色 |
+| 课程 | “GESP 4级：数据结构进阶”这门课 |
+
+类描述“这一类东西有什么、能做什么”；对象是程序运行时真正存在的个体。
+
+## 3. 定义一个最小的类
+定义类使用 `class` 关键字，类名通常使用大驼峰命名法（每个单词首字母大写）。
+
 ```python
 class Dog:
     def bark(self):
         print("Wang!")
 ```
 
-## 3. 创建对象
+这段代码定义了一个 `Dog` 类。类里面的函数叫**方法**。
+
+注意缩进：
+- `class Dog:` 后面的代码要缩进
+- `def bark(self):` 在类里面
+- `print("Wang!")` 在方法里面，所以还要再缩进
+
+## 4. 创建对象：实例化
+根据类创建对象的过程叫**实例化**。
+
 ```python
 my_dog = Dog()
-my_dog.bark() # 调用方法
+my_dog.bark()
 ```
 
-## 4. self 是什么？
-`self` 代表对象自己。在类的方法中，第一个参数必须是 `self`。
+执行过程可以这样理解：
+1. `Dog` 是类
+2. `Dog()` 创建一个新的 Dog 对象
+3. `my_dog` 保存这个对象
+4. `my_dog.bark()` 让这个对象执行 `bark` 方法
 
-## 5. 属性和方法的区别
-在面向对象里，对象通常同时包含两类东西：
-- **属性**：描述对象“有什么”
-- **方法**：描述对象“能做什么”
+## 5. self 到底是什么？
+`self` 代表“当前这个对象自己”。
 
-比如狗对象：
-- 属性：名字、年龄
-- 方法：叫、奔跑
+```python
+class Dog:
+    def bark(self):
+        print("Wang!")
 
-## 6. 为什么要学类？
-因为当数据和行为需要绑定在一起时，类会比单纯的变量和函数更自然。
+d = Dog()
+d.bark()
+```
 
-## 7. 本节总结
-这一节最关键的是建立直觉：
-- 类像模板
-- 对象像具体实例
-- `self` 让对象可以访问自己的属性和方法
+当你写：
+
+```python
+d.bark()
+```
+
+Python 会在背后理解成：
+
+```python
+Dog.bark(d)
+```
+
+也就是说，对象 `d` 会自动传给方法的第一个参数 `self`。
+
+所以：
+- 定义方法时，第一个参数通常写 `self`
+- 调用方法时，不需要手动传 `self`
+- `self` 不是关键字，但这是 Python 程序员共同遵守的命名习惯
+
+## 6. 属性和方法
+对象通常包含两类内容：
+- **属性**：对象有什么，用变量表示
+- **方法**：对象能做什么，用函数表示
+
+例如一只狗：
+- 属性：名字、年龄、品种
+- 方法：叫、跑、吃东西
+
+先看一个简单版本：
+
+```python
+class Dog:
+    def set_name(self, name):
+        self.name = name
+
+    def bark(self):
+        print(self.name, "says Wang!")
+
+d = Dog()
+d.set_name("Lucky")
+d.bark()
+```
+
+`self.name` 是对象自己的属性。以后这个对象的其他方法也能访问它。
+
+## 7. 多个对象互不干扰
+同一个类可以创建很多个对象，每个对象都有自己的状态。
+
+```python
+class Dog:
+    def set_name(self, name):
+        self.name = name
+
+    def bark(self):
+        print(self.name, "says Wang!")
+
+d1 = Dog()
+d2 = Dog()
+
+d1.set_name("Lucky")
+d2.set_name("Coco")
+
+d1.bark()
+d2.bark()
+```
+
+输出：
+
+```text
+Lucky says Wang!
+Coco says Wang!
+```
+
+`d1.name` 和 `d2.name` 是两个对象各自的属性，不会互相覆盖。
+
+## 8. 类 vs 对象：考点辨析
+下面这些写法意义不同：
+
+```python
+Dog       # 类本身
+Dog()     # 创建一个 Dog 对象
+d = Dog() # 变量 d 指向这个对象
+d.bark()  # 对象调用方法
+```
+
+常见判断：
+- `Dog` 是类
+- `Dog()` 的结果是对象
+- `type(d)` 可以查看对象属于哪个类
+- 一个类可以创建多个对象
+
+## 9. 易错点
+### 错误 1：方法忘记写 self
+```python
+class Dog:
+    def bark():
+        print("Wang!")
+
+d = Dog()
+d.bark()  # TypeError
+```
+
+对象调用方法时，Python 会自动传入对象本身。如果方法没有 `self` 参数，就接不住这个对象。
+
+### 错误 2：调用方法忘记括号
+```python
+d.bark    # 只是拿到方法本身，没有执行
+d.bark()  # 执行方法
+```
+
+### 错误 3：先用属性，后设置属性
+```python
+class Dog:
+    def bark(self):
+        print(self.name)
+
+d = Dog()
+d.bark()  # AttributeError
+```
+
+对象还没有 `name` 属性，就不能直接访问。下一节会学习用 `__init__` 初始化属性。
+
+## 10. 小练习：设计一个游戏角色
+尝试补全下面的类：
+
+```python
+class Player:
+    def set_info(self, name, hp):
+        self.name = name
+        self.hp = hp
+
+    def show(self):
+        print(self.name, "HP:", self.hp)
+
+p = Player()
+p.set_info("Hero", 100)
+p.show()
+```
+
+思考：
+- `Player` 是类还是对象？
+- `p` 是类还是对象？
+- `self.name` 保存在哪里？
+- 如果再创建一个 `p2`，会不会影响 `p`？
+
+## 11. 本节总结
+这一节最关键的是建立面向对象直觉：
+- 类是模板，对象是实例
+- 方法是写在类里的函数
+- 对象调用方法时会自动把自己传给 `self`
+- 属性表示对象的数据，方法表示对象的行为
+- 多个对象可以来自同一个类，但各自保存自己的状态
 """
 )
 Quiz.objects.create(lesson=l4_2_1, question="定义类使用哪个关键字？", option_a="def", option_b="class", option_c="object", option_d="struct", correct_answer="B", explanation="class。")
@@ -4283,46 +5551,281 @@ l4_2_2 = create_lesson(
     code_challenge_prompt="# 定义 Student 类，初始化 name 和 age\nclass Student:\n    def __init__(self, name, age):\n        self.name = name\n        self.age = age\n\ns = Student('Tom', 12)\nprint(s.name)",
     content="""# 2.2 构造函数 __init__
 
-## 1. 初始化对象
-`__init__` 是一个特殊方法，在创建对象时**自动调用**。通常用来初始化属性。
+## 1. 上一节留下的问题
+上一节我们用 `set_name()` 给对象设置属性：
 
 ```python
-class Student:
-    def __init__(self, name, age):
-        self.name = name  # 属性
-        self.age = age
+class Dog:
+    def set_name(self, name):
+        self.name = name
 
-s1 = Student("Alice", 12)
-print(s1.name)
+d = Dog()
+d.set_name("Lucky")
 ```
 
-## 2. 属性
-`self.name` 是对象的属性，每个对象都有自己独立的一份。
+这能运行，但有一个隐患：如果忘记调用 `set_name()`，对象就没有 `name` 属性。
 
-## 3. 为什么要在 __init__ 里初始化
-如果对象一创建就应该具备某些信息，那么把这些信息写进 `__init__` 最自然。
+更好的做法是：**对象一创建，就把必要属性准备好。**
 
-例如学生对象创建时，就应该马上拥有：
-- 姓名
-- 年龄
-- 班级
+## 2. __init__ 是什么？
+`__init__` 是 Python 类里的特殊方法，会在创建对象时自动调用。
+它通常用来初始化对象属性。
 
-## 4. 一个完整一点的例子
 ```python
 class Student:
     def __init__(self, name, age):
         self.name = name
         self.age = age
 
-    def introduce(self):
-        return f"我是 {self.name}，今年 {self.age} 岁"
+s1 = Student("Alice", 12)
+print(s1.name)
+print(s1.age)
 ```
 
-## 5. 本节总结
-`__init__` 的核心意义不是“语法特殊”，而是：
-- 对象一创建就进入可用状态
-- 属性初始化集中在一个地方
-- 类的结构更清晰
+执行 `Student("Alice", 12)` 时，Python 会自动调用：
+
+```python
+Student.__init__(s1, "Alice", 12)
+```
+
+其中：
+- `s1` 自动传给 `self`
+- `"Alice"` 传给 `name`
+- `12` 传给 `age`
+
+## 3. 参数和属性不要混淆
+看这两行：
+
+```python
+self.name = name
+self.age = age
+```
+
+左边：
+- `self.name`
+- `self.age`
+
+是对象属性，会长期保存在对象里。
+
+右边：
+- `name`
+- `age`
+
+是 `__init__` 的参数，只在方法执行时临时存在。
+
+可以理解为：把外面传进来的值，存到对象自己身上。
+
+## 4. 每个对象有独立属性
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+s1 = Student("Alice", 95)
+s2 = Student("Bob", 80)
+
+print(s1.name, s1.score)
+print(s2.name, s2.score)
+```
+
+`s1` 和 `s2` 都来自 `Student` 类，但它们保存的数据不同。
+
+修改一个对象，不影响另一个对象：
+
+```python
+s1.score = 100
+print(s1.score)  # 100
+print(s2.score)  # 80
+```
+
+这就是实例属性的独立性。
+
+## 5. 给类添加行为
+类不只是保存数据，还应该提供和数据相关的方法。
+
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def is_passed(self):
+        return self.score >= 60
+
+    def introduce(self):
+        return f"{self.name} 的成绩是 {self.score}"
+
+s = Student("Alice", 95)
+print(s.introduce())
+print(s.is_passed())
+```
+
+这里：
+- `name`、`score` 是属性
+- `is_passed()`、`introduce()` 是方法
+- 方法通过 `self.score` 读取对象自己的成绩
+
+## 6. __init__ 不是“构造函数返回对象”
+严格来说，`__init__` 负责初始化对象，不负责创建对象。
+对象创建由 Python 自动完成，`__init__` 只是在对象创建后补充初始数据。
+
+所以 `__init__` 不能返回其他值：
+
+```python
+class Student:
+    def __init__(self, name):
+        self.name = name
+        return name  # 错误
+```
+
+`__init__` 应该返回 `None`。平时不要写 `return`。
+
+## 7. __str__：让对象打印得更友好
+如果直接打印对象，结果通常不够直观：
+
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+s = Student("Alice", 95)
+print(s)
+```
+
+可能输出类似：
+
+```text
+<__main__.Student object at 0x...>
+```
+
+可以定义 `__str__`：
+
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def __str__(self):
+        return f"Student(name={self.name}, score={self.score})"
+
+s = Student("Alice", 95)
+print(s)
+```
+
+输出：
+
+```text
+Student(name=Alice, score=95)
+```
+
+`__str__` 适合给对象提供人类可读的文本表示。
+
+## 8. 类属性 vs 实例属性
+初学阶段最重要的是实例属性，也就是写在 `self` 上的属性：
+
+```python
+self.name = name
+```
+
+它属于某一个具体对象。
+
+还有一种写在类里面、方法外面的变量，叫类属性：
+
+```python
+class Student:
+    school = "PyMaster"
+
+    def __init__(self, name):
+        self.name = name
+```
+
+`school` 属于类，通常表示所有对象共享的信息。
+`name` 属于对象，每个对象可以不同。
+
+本阶段先记住：
+- 会变化、每个对象不同的数据，放到 `self.xxx`
+- 所有对象共用的数据，才考虑类属性
+
+## 9. 常见错误
+### 错误 1：创建对象时参数数量不匹配
+```python
+class Student:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+s = Student("Tom")  # 少传 age，TypeError
+```
+
+`__init__` 除了 `self` 之外需要几个参数，创建对象时就要传几个参数。
+
+### 错误 2：把属性写成局部变量
+```python
+class Student:
+    def __init__(self, name):
+        name = name  # 错误：没有保存到对象上
+```
+
+应写成：
+
+```python
+self.name = name
+```
+
+### 错误 3：在类外访问属性时忘记对象名
+```python
+s = Student("Tom", 12)
+print(name)    # 错误
+print(s.name)  # 正确
+```
+
+属性属于对象，要通过 `对象.属性` 访问。
+
+## 10. 综合练习：BankAccount
+写一个银行账户类：
+
+```python
+class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner
+        self.balance = balance
+
+    def deposit(self, amount):
+        self.balance += amount
+
+    def withdraw(self, amount):
+        if amount <= self.balance:
+            self.balance -= amount
+        else:
+            print("余额不足")
+
+    def show(self):
+        print(self.owner, "余额:", self.balance)
+
+account = BankAccount("Alice", 100)
+account.deposit(50)
+account.withdraw(30)
+account.show()
+```
+
+思考：
+- 哪些是属性？
+- 哪些是方法？
+- `deposit` 为什么要修改 `self.balance`？
+- 如果再创建一个账户，对当前账户余额有没有影响？
+
+## 11. 本节总结
+`__init__` 的核心不是背语法，而是让对象一创建就处于可用状态。
+
+必须掌握：
+- `__init__` 创建对象时自动调用
+- `self.xxx` 是实例属性
+- 不同对象的实例属性互不干扰
+- 方法通过 `self` 访问和修改对象自己的数据
+- `__str__` 可以控制对象被打印时的显示内容
 """
 )
 Quiz.objects.create(lesson=l4_2_2, question="构造函数的名字是？", option_a="init", option_b="__init__", option_c="start", option_d="create", correct_answer="B", explanation="__init__。")
@@ -4336,6 +5839,854 @@ Quiz.objects.create(lesson=l4_2_2, question="析构函数的名字是？", optio
 Quiz.objects.create(lesson=l4_2_2, question="s.age = 13 是修改谁的属性？", option_a="类", option_b="对象 s", option_c="所有对象", option_d="全局变量", correct_answer="B", explanation="实例属性。")
 Quiz.objects.create(lesson=l4_2_2, question="__str__ 方法的作用是？", option_a="字符串转对象", option_b="对象转字符串（打印时显示）", option_c="构造函数", option_d="析构函数", correct_answer="B", explanation="定义对象的字符串表示。")
 
+# 2.3 Encapsulation
+l4_2_3 = create_lesson(
+    chapter=ch4_2, title="2.3 封装：把数据和规则放进类里", order=3, lesson_type='code',
+    code_challenge_prompt="# 用封装保护账户余额\nclass BankAccount:\n    def __init__(self, owner, balance):\n        self.owner = owner\n        self._balance = balance\n\n    def deposit(self, amount):\n        if amount > 0:\n            self._balance += amount\n\n    def withdraw(self, amount):\n        if 0 < amount <= self._balance:\n            self._balance -= amount\n            return True\n        return False\n\n    def get_balance(self):\n        return self._balance\n\naccount = BankAccount('Tom', 100)\naccount.deposit(50)\nprint(account.get_balance())",
+    content="""# 2.3 封装：把数据和规则放进类里
+
+## 1. 什么是封装？
+封装（Encapsulation）指把对象的数据和操作这些数据的方法放在同一个类里。
+
+前面写过银行账户：
+
+```python
+class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner
+        self.balance = balance
+```
+
+如果外部代码可以随意改余额：
+
+```python
+account.balance = -999
+```
+
+程序就会出现不合理状态。封装要解决的问题就是：**数据不能被随便改，修改必须经过规则。**
+
+## 2. 用方法保护修改规则
+更合理的写法是让外部通过方法存钱和取钱：
+
+```python
+class BankAccount:
+    def __init__(self, owner, balance):
+        self.owner = owner
+        self._balance = balance
+
+    def deposit(self, amount):
+        if amount > 0:
+            self._balance += amount
+
+    def withdraw(self, amount):
+        if 0 < amount <= self._balance:
+            self._balance -= amount
+            return True
+        return False
+
+    def get_balance(self):
+        return self._balance
+```
+
+这里的关键不是下划线本身，而是设计思路：
+- 余额是对象内部状态
+- 外部想改余额，必须调用方法
+- 方法里负责检查金额是否合法
+- 对象始终保持合理状态
+
+## 3. 单下划线属性
+`_balance` 前面的单下划线是一种约定：这个属性属于类的内部实现，不建议外部直接访问。
+
+```python
+print(account._balance)  # 能访问，但不推荐
+```
+
+Python 不会强制禁止访问单下划线属性。它更像一个提醒：这个属性以后可能变化，外部代码不要依赖它。
+
+## 4. 双下划线属性
+双下划线会触发名称改写：
+
+```python
+class BankAccount:
+    def __init__(self, balance):
+        self.__balance = balance
+```
+
+这时外部直接写 `account.__balance` 通常访问不到原属性。
+
+初学阶段不要把双下划线理解成绝对安全。它更适合避免子类或外部代码无意中改到内部属性。
+
+## 5. 为什么不要直接暴露全部属性？
+直接暴露属性会让规则分散在外部：
+
+```python
+if amount > 0:
+    account.balance += amount
+```
+
+如果项目里有很多地方都这样写，规则一改就要到处找。封装后规则集中在类里：
+
+```python
+account.deposit(amount)
+```
+
+这样代码更容易维护，也更符合“对象自己管理自己状态”的思想。
+
+## 6. getter 和 setter
+读取内部数据可以用 getter：
+
+```python
+def get_balance(self):
+    return self._balance
+```
+
+修改内部数据可以用 setter，但 setter 里要检查规则：
+
+```python
+def set_balance(self, balance):
+    if balance >= 0:
+        self._balance = balance
+```
+
+不是所有属性都需要 getter/setter。只有当你需要保护规则、隐藏内部细节或统一接口时，才值得这样设计。
+
+## 7. property 简介
+Python 可以用 `@property` 让方法像属性一样读取：
+
+```python
+class BankAccount:
+    def __init__(self, balance):
+        self._balance = balance
+
+    @property
+    def balance(self):
+        return self._balance
+```
+
+使用时：
+
+```python
+account = BankAccount(100)
+print(account.balance)
+```
+
+`@property` 适合让外部读起来简单，同时内部仍然保留控制权。
+
+## 8. 封装和字典的区别
+用字典也能保存账户：
+
+```python
+account = {"owner": "Tom", "balance": 100}
+```
+
+但字典不能天然约束修改规则。任何地方都能写：
+
+```python
+account["balance"] = -999
+```
+
+类可以把数据和规则绑在一起：
+- 属性保存数据
+- 方法负责规则
+- 对象负责维护自己的状态
+
+这就是从“数据结构”升级到“对象模型”的关键。
+
+## 9. 常见错误
+### 错误 1：把封装理解成“不让别人看”
+封装的重点不是神秘，而是把规则集中起来。
+
+### 错误 2：所有属性都加双下划线
+过度隐藏会让代码难调试。多数情况下，单下划线约定就够了。
+
+### 错误 3：方法里不做检查
+如果 `deposit()` 不检查金额，封装就失去意义：
+
+```python
+def deposit(self, amount):
+    self._balance += amount
+```
+
+如果传入 `-100`，余额反而减少。
+
+## 10. 综合练习：安全账户
+实现一个 `BankAccount`：
+1. `owner` 表示账户主人
+2. `_balance` 表示余额
+3. `deposit(amount)` 只允许正数
+4. `withdraw(amount)` 不能超过余额
+5. `get_balance()` 返回当前余额
+6. `__str__()` 打印账户摘要
+
+## 11. 本节总结
+封装是 OOP 的核心能力之一。
+
+必须掌握：
+- 对象不只是保存数据，还要维护数据规则
+- 外部代码应通过方法修改内部状态
+- 单下划线表示内部属性约定
+- getter/setter/property 都是控制访问方式的工具
+- 封装能让代码更稳定、更容易维护
+"""
+)
+Quiz.objects.create(lesson=l4_2_3, question="封装最主要解决什么问题？", option_a="把数据和规则集中在类里", option_b="让代码不能运行", option_c="删除所有属性", option_d="替代循环", correct_answer="A", explanation="封装让对象自己管理自己的数据和规则。")
+Quiz.objects.create(lesson=l4_2_3, question="_balance 前面的单下划线通常表示？", option_a="内部属性约定", option_b="语法错误", option_c="全局变量", option_d="必须删除", correct_answer="A", explanation="单下划线表示不建议外部直接访问。")
+Quiz.objects.create(lesson=l4_2_3, question="deposit(amount) 中检查 amount > 0 的目的是什么？", option_a="保护余额规则", option_b="让方法更慢", option_c="创建对象", option_d="继承父类", correct_answer="A", explanation="存款金额必须为正数，这是业务规则。")
+Quiz.objects.create(lesson=l4_2_3, question="@property 的作用之一是？", option_a="让方法像属性一样读取", option_b="删除对象", option_c="创建列表", option_d="停止程序", correct_answer="A", explanation="@property 可以保留内部控制，又让外部访问简洁。")
+Quiz.objects.create(lesson=l4_2_3, question="直接 account.balance = -999 的风险是？", option_a="让对象进入不合理状态", option_b="自动修复余额", option_c="变成字符串", option_d="没有任何风险", correct_answer="A", explanation="外部随意修改可能破坏对象规则。")
+Quiz.objects.create(lesson=l4_2_3, question="判断题：封装不是为了神秘，而是为了集中规则。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4_2_3, question="判断题：Python 单下划线属性绝对不能被外部访问。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，单下划线是约定，不是强制禁止。")
+Quiz.objects.create(lesson=l4_2_3, question="下面哪个更符合封装？", option_a="account.withdraw(30)", option_b="account._balance = -30", option_c="balance = -30", option_d="del account", correct_answer="A", explanation="通过方法执行规则更符合封装。")
+
+# 2.4 Inheritance
+l4_2_4 = create_lesson(
+    chapter=ch4_2, title="2.4 继承与方法重写", order=4, lesson_type='code',
+    code_challenge_prompt="# 定义父类 Animal 和子类 Dog\nclass Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return '...'\n\nclass Dog(Animal):\n    def speak(self):\n        return self.name + ' says Wang!'\n\npet = Dog('Lucky')\nprint(pet.speak())",
+    content="""# 2.4 继承与方法重写
+
+## 1. 为什么需要继承？
+如果很多类有共同属性和方法，重复写会很麻烦。
+
+例如：
+
+```python
+class Dog:
+    def __init__(self, name):
+        self.name = name
+
+class Cat:
+    def __init__(self, name):
+        self.name = name
+```
+
+`Dog` 和 `Cat` 都有 `name`，都可以发出声音。继承可以把共同部分放到父类里。
+
+## 2. 定义父类和子类
+```python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def speak(self):
+        return "..."
+
+class Dog(Animal):
+    pass
+```
+
+`Animal` 是父类，`Dog` 是子类。`Dog(Animal)` 表示 `Dog` 继承 `Animal`。
+
+```python
+d = Dog("Lucky")
+print(d.name)
+print(d.speak())
+```
+
+子类对象可以使用父类中定义的属性和方法。
+
+## 3. 方法重写
+不同动物叫声不同，所以子类可以重写父类方法：
+
+```python
+class Dog(Animal):
+    def speak(self):
+        return self.name + " says Wang!"
+
+class Cat(Animal):
+    def speak(self):
+        return self.name + " says Miao!"
+```
+
+调用时：
+
+```python
+animals = [Dog("Lucky"), Cat("Coco")]
+
+for animal in animals:
+    print(animal.speak())
+```
+
+同样调用 `speak()`，不同对象给出不同结果。
+
+## 4. super() 调用父类
+如果子类既想使用父类初始化逻辑，又想增加自己的属性，可以用 `super()`：
+
+```python
+class Student:
+    def __init__(self, name):
+        self.name = name
+
+class PrimaryStudent(Student):
+    def __init__(self, name, grade):
+        super().__init__(name)
+        self.grade = grade
+```
+
+`super().__init__(name)` 表示调用父类的初始化方法，避免重复写 `self.name = name`。
+
+## 5. is-a 关系
+继承适合表达“子类是一种父类”。
+
+合理：
+- Dog 是一种 Animal
+- Cat 是一种 Animal
+- PrimaryStudent 是一种 Student
+
+不合理：
+- School 继承 Student
+- Course 继承 Teacher
+
+如果不是“是一种”的关系，就不要为了少写代码强行继承。
+
+## 6. 继承 vs 组合
+有些关系不是继承，而是组合。
+
+```python
+class Course:
+    def __init__(self, title, teacher):
+        self.title = title
+        self.teacher = teacher
+```
+
+课程不是老师，但课程“有一个”老师。这叫组合关系。
+
+判断方法：
+- A 是一种 B：可以考虑继承
+- A 有一个 B：更适合组合
+
+## 7. 多态直觉
+当多个子类都有同名方法时，主程序可以用统一方式调用：
+
+```python
+def make_sound(animal):
+    print(animal.speak())
+
+make_sound(Dog("Lucky"))
+make_sound(Cat("Coco"))
+```
+
+这就是多态的直觉：同一个接口，不同对象有不同表现。
+
+## 8. 常见错误
+### 错误 1：忘记调用父类 __init__
+```python
+class Dog(Animal):
+    def __init__(self, name, age):
+        self.age = age
+```
+
+这样 `name` 没有初始化。应写：
+
+```python
+super().__init__(name)
+self.age = age
+```
+
+### 错误 2：把继承当作复制粘贴工具
+继承表达的是类型关系，不是“我想少写几行代码”。
+
+### 错误 3：父类太具体
+父类应该放共同、稳定的内容。太具体的内容放到父类，会让子类很难复用。
+
+## 9. 综合练习：角色系统
+设计一个游戏角色系统：
+
+```python
+class Character:
+    def __init__(self, name, hp):
+        self.name = name
+        self.hp = hp
+
+    def attack(self):
+        return 10
+
+class Warrior(Character):
+    def attack(self):
+        return 20
+
+class Mage(Character):
+    def attack(self):
+        return 15
+```
+
+创建多个角色，遍历它们并输出攻击力。
+
+## 10. 本节总结
+继承让我们把共同能力放到父类，把差异放到子类。
+
+必须掌握：
+- `class Child(Parent)` 表示继承
+- 子类可以使用父类方法
+- 子类可以重写父类方法
+- `super()` 用于调用父类逻辑
+- 继承适合 is-a 关系
+- 组合适合 has-a 关系
+"""
+)
+Quiz.objects.create(lesson=l4_2_4, question="class Dog(Animal) 表示？", option_a="Dog 继承 Animal", option_b="Animal 继承 Dog", option_c="Dog 是函数", option_d="删除 Animal", correct_answer="A", explanation="括号里的类是父类。")
+Quiz.objects.create(lesson=l4_2_4, question="子类重新定义父类同名方法叫？", option_a="方法重写", option_b="切片", option_c="取余", option_d="排序", correct_answer="A", explanation="子类覆盖父类方法称为重写。")
+Quiz.objects.create(lesson=l4_2_4, question="super().__init__(name) 的常见作用是？", option_a="调用父类初始化逻辑", option_b="结束程序", option_c="创建集合", option_d="删除属性", correct_answer="A", explanation="super() 常用于复用父类初始化。")
+Quiz.objects.create(lesson=l4_2_4, question="继承最适合表达哪种关系？", option_a="is-a", option_b="has-a", option_c="随机关系", option_d="字符串关系", correct_answer="A", explanation="子类是一种父类。")
+Quiz.objects.create(lesson=l4_2_4, question="Course 有一个 Teacher 更适合？", option_a="组合", option_b="继承", option_c="递归", option_d="异常", correct_answer="A", explanation="有一个是 has-a，适合组合。")
+Quiz.objects.create(lesson=l4_2_4, question="判断题：子类对象可以使用父类中定义的方法。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确。")
+Quiz.objects.create(lesson=l4_2_4, question="判断题：继承只是为了少写代码，类型关系不重要。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，继承应表达合理类型关系。")
+Quiz.objects.create(lesson=l4_2_4, question="同样调用 speak()，Dog 和 Cat 返回不同结果，这体现了？", option_a="多态直觉", option_b="文件写入", option_c="ASCII 编码", option_d="集合去重", correct_answer="A", explanation="同一接口，不同对象不同表现。")
+
+# 2.5 Class Attributes
+l4_2_5 = create_lesson(
+    chapter=ch4_2, title="2.5 类属性、实例属性与对象列表", order=5, lesson_type='code',
+    code_challenge_prompt="# 统计创建了多少个学生对象\nclass Student:\n    school = 'PyMaster'\n    count = 0\n\n    def __init__(self, name, score):\n        self.name = name\n        self.score = score\n        Student.count += 1\n\nstudents = [Student('Amy', 95), Student('Bob', 80)]\nprint(Student.school)\nprint(Student.count)",
+    content="""# 2.5 类属性、实例属性与对象列表
+
+## 1. 实例属性回顾
+实例属性写在 `self` 上，属于某一个对象：
+
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+```
+
+每个学生对象都有自己的 `name` 和 `score`。
+
+## 2. 类属性是什么？
+类属性写在类里面、方法外面，属于类本身：
+
+```python
+class Student:
+    school = "PyMaster"
+
+    def __init__(self, name):
+        self.name = name
+```
+
+`school` 对所有学生都一样，因此适合做类属性。
+
+访问方式：
+
+```python
+print(Student.school)
+s = Student("Amy")
+print(s.school)
+```
+
+推荐用 `Student.school` 表达它属于类。
+
+## 3. 类属性和实例属性怎么选？
+判断标准：
+
+| 数据特点 | 放哪里 |
+| :--- | :--- |
+| 每个对象不同 | 实例属性 |
+| 所有对象共享 | 类属性 |
+| 会随对象行为变化 | 通常是实例属性 |
+| 表示整体统计或统一配置 | 可以是类属性 |
+
+例子：
+- 学生姓名：实例属性
+- 学校名称：类属性
+- 学生成绩：实例属性
+- 已创建学生数量：类属性
+
+## 4. 用类属性统计对象数量
+```python
+class Student:
+    count = 0
+
+    def __init__(self, name):
+        self.name = name
+        Student.count += 1
+
+s1 = Student("Amy")
+s2 = Student("Bob")
+print(Student.count)
+```
+
+每创建一个对象，`__init__` 就执行一次，`Student.count` 就加 1。
+
+## 5. 小心同名覆盖
+如果实例属性和类属性同名，访问时容易混淆：
+
+```python
+class Student:
+    school = "PyMaster"
+
+s = Student()
+s.school = "Other"
+
+print(s.school)
+print(Student.school)
+```
+
+`s.school` 创建了一个实例属性，不是修改类属性。
+
+初学阶段建议：不要让实例属性和类属性同名。
+
+## 6. 对象列表
+真实程序很少只创建一个对象，常常是一组对象：
+
+```python
+students = [
+    Student("Amy", 95),
+    Student("Bob", 80),
+    Student("Cindy", 58)
+]
+```
+
+对象列表可以像普通列表一样遍历：
+
+```python
+for student in students:
+    print(student.name, student.score)
+```
+
+这时列表负责“保存多个对象”，对象负责“保存自己的数据和行为”。
+
+## 7. 用对象列表完成统计
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def is_passed(self):
+        return self.score >= 60
+
+students = [
+    Student("Amy", 95),
+    Student("Bob", 80),
+    Student("Cindy", 58)
+]
+
+passed = 0
+for student in students:
+    if student.is_passed():
+        passed += 1
+
+print("及格人数:", passed)
+```
+
+这里已经把列表、循环、函数、类整合在一起。
+
+## 8. 对象列表 vs 字典列表
+字典列表：
+
+```python
+students = [{"name": "Amy", "score": 95}]
+```
+
+对象列表：
+
+```python
+students = [Student("Amy", 95)]
+```
+
+字典适合轻量数据；对象适合数据和行为绑定在一起的场景。
+
+如果只是保存数据，字典足够。如果还要频繁调用 `is_passed()`、`level()`、`update_score()` 这样的行为，对象更清晰。
+
+## 9. 常见错误
+### 错误 1：用对象访问类属性并修改
+```python
+s.school = "Other"
+```
+
+这通常创建实例属性，不是修改所有学生的学校。
+
+### 错误 2：把共享列表做成类属性
+```python
+class Team:
+    members = []
+```
+
+如果所有对象共享同一个 `members`，很容易互相污染。可变数据一般应放进 `__init__`。
+
+### 错误 3：对象列表里混入字典
+```python
+students = [Student("Amy", 95), {"name": "Bob"}]
+```
+
+遍历时一会儿用 `student.name`，一会儿用 `student["name"]`，代码会混乱。
+
+## 10. 综合练习：班级对象列表
+实现 `Student` 类：
+1. 类属性 `school = "PyMaster"`
+2. 实例属性 `name`、`score`
+3. 方法 `is_passed()`
+4. 方法 `level()`
+5. 创建 5 个学生对象放入列表
+6. 输出平均分、及格人数、优秀学生名单
+
+## 11. 本节总结
+类属性和实例属性的核心区别是“共享”与“独立”。
+
+必须掌握：
+- 实例属性属于对象
+- 类属性属于类
+- 用类名访问类属性更清楚
+- 对象列表是 OOP 和数据结构结合的常见写法
+- 可变共享数据不要随便做类属性
+"""
+)
+Quiz.objects.create(lesson=l4_2_5, question="写在类里面、方法外面的变量通常叫？", option_a="类属性", option_b="局部变量", option_c="异常", option_d="切片", correct_answer="A", explanation="类属性属于类本身。")
+Quiz.objects.create(lesson=l4_2_5, question="self.name 通常表示？", option_a="实例属性", option_b="类属性", option_c="模块名", option_d="文件名", correct_answer="A", explanation="写在 self 上的是对象自己的属性。")
+Quiz.objects.create(lesson=l4_2_5, question="所有学生共享的 school 更适合放哪里？", option_a="类属性", option_b="每次输入", option_c="局部变量", option_d="异常对象", correct_answer="A", explanation="共享信息适合作为类属性。")
+Quiz.objects.create(lesson=l4_2_5, question="每个学生不同的 score 更适合放哪里？", option_a="实例属性", option_b="类属性", option_c="模块属性", option_d="常量", correct_answer="A", explanation="每个对象不同的数据应放实例属性。")
+Quiz.objects.create(lesson=l4_2_5, question="对象列表适合保存什么？", option_a="多个对象", option_b="单个字符串", option_c="语法错误", option_d="导入语句", correct_answer="A", explanation="列表可以保存多个 Student 对象。")
+Quiz.objects.create(lesson=l4_2_5, question="判断题：可变列表成员通常不适合随便作为类属性共享。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，容易导致不同对象互相影响。")
+Quiz.objects.create(lesson=l4_2_5, question="判断题：s.school = 'Other' 一定会修改 Student.school。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，这通常创建或修改实例属性。")
+Quiz.objects.create(lesson=l4_2_5, question="对象列表中调用 student.is_passed() 体现了什么？", option_a="数据和行为绑定", option_b="字符串切片", option_c="集合交集", option_d="文件追加", correct_answer="A", explanation="对象既有数据，也有方法。")
+
+# 2.6 OOP Project
+l4_2_6 = create_lesson(
+    chapter=ch4_2, title="2.6 综合项目：学生成绩管理系统", order=6, lesson_type='code',
+    code_challenge_prompt="# 用类组织学生成绩管理\nclass Student:\n    def __init__(self, name, score):\n        self.name = name\n        self.score = score\n\n    def is_passed(self):\n        return self.score >= 60\n\nclass GradeBook:\n    def __init__(self):\n        self.students = []\n\n    def add_student(self, student):\n        self.students.append(student)\n\n    def average_score(self):\n        total = 0\n        for student in self.students:\n            total += student.score\n        return total / len(self.students)\n\nbook = GradeBook()\nbook.add_student(Student('Amy', 95))\nbook.add_student(Student('Bob', 80))\nprint(book.average_score())",
+    content="""# 2.6 综合项目：学生成绩管理系统
+
+## 1. 项目目标
+这一节把 GESP 4级的字典、集合和 OOP 串起来，做一个小型学生成绩管理系统。
+
+目标功能：
+- 用 `Student` 表示一名学生
+- 用 `GradeBook` 管理多名学生
+- 添加学生
+- 计算平均分
+- 找出及格学生
+- 统计等级人数
+- 防止重复添加同名学生
+
+## 2. 先设计 Student 类
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def is_passed(self):
+        return self.score >= 60
+
+    def level(self):
+        if self.score >= 90:
+            return "优秀"
+        elif self.score >= 60:
+            return "及格"
+        return "不及格"
+
+    def __str__(self):
+        return f"{self.name}: {self.score}"
+```
+
+`Student` 负责单个学生自己的数据和规则。
+
+## 3. 再设计 GradeBook 类
+`GradeBook` 负责管理一组学生：
+
+```python
+class GradeBook:
+    def __init__(self):
+        self.students = []
+```
+
+这里 `students` 是实例属性。每个成绩册有自己的学生列表，不应该做成类属性。
+
+## 4. 添加学生
+```python
+def add_student(self, student):
+    self.students.append(student)
+```
+
+调用：
+
+```python
+book = GradeBook()
+book.add_student(Student("Amy", 95))
+```
+
+这个写法体现了组合关系：`GradeBook` 有多个 `Student`，但 `GradeBook` 不是一种 `Student`。
+
+## 5. 计算平均分
+```python
+def average_score(self):
+    if len(self.students) == 0:
+        return 0
+
+    total = 0
+    for student in self.students:
+        total += student.score
+    return total / len(self.students)
+```
+
+注意先处理空列表，否则会出现除以 0 的错误。
+
+## 6. 筛选及格学生
+```python
+def passed_students(self):
+    result = []
+    for student in self.students:
+        if student.is_passed():
+            result.append(student)
+    return result
+```
+
+这里不是直接判断 `student.score >= 60`，而是调用 `student.is_passed()`。这样及格规则集中在 `Student` 类里。
+
+## 7. 用字典统计等级人数
+```python
+def level_counts(self):
+    counts = {}
+    for student in self.students:
+        level = student.level()
+        counts[level] = counts.get(level, 0) + 1
+    return counts
+```
+
+这一步把 OOP 和字典计数结合起来：
+- 对象提供等级
+- 字典负责统计次数
+
+## 8. 用集合防止重复姓名
+可以在 `GradeBook` 里维护一个姓名集合：
+
+```python
+class GradeBook:
+    def __init__(self):
+        self.students = []
+        self.names = set()
+
+    def add_student(self, student):
+        if student.name in self.names:
+            return False
+        self.students.append(student)
+        self.names.add(student.name)
+        return True
+```
+
+这一步把集合用于“已出现数据”的快速判断。
+
+## 9. 完整版本
+```python
+class Student:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def is_passed(self):
+        return self.score >= 60
+
+    def level(self):
+        if self.score >= 90:
+            return "优秀"
+        elif self.score >= 60:
+            return "及格"
+        return "不及格"
+
+    def __str__(self):
+        return f"{self.name}: {self.score}"
+
+
+class GradeBook:
+    def __init__(self):
+        self.students = []
+        self.names = set()
+
+    def add_student(self, student):
+        if student.name in self.names:
+            return False
+        self.students.append(student)
+        self.names.add(student.name)
+        return True
+
+    def average_score(self):
+        if len(self.students) == 0:
+            return 0
+        total = 0
+        for student in self.students:
+            total += student.score
+        return total / len(self.students)
+
+    def passed_students(self):
+        result = []
+        for student in self.students:
+            if student.is_passed():
+                result.append(student)
+        return result
+
+    def level_counts(self):
+        counts = {}
+        for student in self.students:
+            level = student.level()
+            counts[level] = counts.get(level, 0) + 1
+        return counts
+
+
+book = GradeBook()
+book.add_student(Student("Amy", 95))
+book.add_student(Student("Bob", 80))
+book.add_student(Student("Cindy", 58))
+
+print("平均分:", book.average_score())
+print("等级统计:", book.level_counts())
+
+for student in book.passed_students():
+    print("及格:", student)
+```
+
+## 10. 设计复盘
+这个项目里每个类都有清晰职责：
+
+| 类 | 职责 |
+| :--- | :--- |
+| `Student` | 管理单个学生的数据和判断规则 |
+| `GradeBook` | 管理多个学生并完成统计 |
+
+数据结构也有分工：
+- 列表 `students` 保存对象顺序
+- 集合 `names` 防止重复
+- 字典 `counts` 统计等级人数
+
+## 11. 常见错误
+### 错误 1：GradeBook 继承 Student
+成绩册不是一种学生，所以不该继承。
+
+### 错误 2：把所有逻辑都写进一个类
+`Student` 不应该负责全班平均分；`GradeBook` 不应该负责单个学生等级细节。
+
+### 错误 3：空列表求平均分
+```python
+return total / len(self.students)
+```
+
+当没有学生时会除以 0，要提前处理。
+
+## 12. 升级任务
+继续扩展项目：
+1. 添加 `remove_student(name)`
+2. 添加 `top_student()`
+3. 添加 `update_score(name, score)`
+4. 添加 `to_dict()` 把对象转成字典
+5. 用菜单循环实现交互式成绩管理
+
+## 13. 本节总结
+GESP 4级的 OOP 不是只会写 `class`，而是能用类组织真实问题。
+
+必须掌握：
+- 单个对象负责自己的数据和行为
+- 管理类负责多个对象的集合与统计
+- 字典适合计数
+- 集合适合去重和快速判断
+- 列表适合保存多个对象
+- 继承不是万能，组合常常更合适
+"""
+)
+Quiz.objects.create(lesson=l4_2_6, question="Student 类最适合负责什么？", option_a="单个学生的数据和规则", option_b="全班所有统计", option_c="删除课程", option_d="启动服务器", correct_answer="A", explanation="Student 表示一名学生。")
+Quiz.objects.create(lesson=l4_2_6, question="GradeBook 和 Student 更适合是什么关系？", option_a="组合", option_b="继承", option_c="异常", option_d="字符串", correct_answer="A", explanation="成绩册有多个学生，不是一种学生。")
+Quiz.objects.create(lesson=l4_2_6, question="防止重复添加同名学生，最适合用？", option_a="集合", option_b="浮点数", option_c="递归", option_d="文件名", correct_answer="A", explanation="集合适合记录已出现姓名。")
+Quiz.objects.create(lesson=l4_2_6, question="统计等级人数适合用？", option_a="字典计数", option_b="只用 print", option_c="删除列表", option_d="异常捕获", correct_answer="A", explanation="等级作为键，人数作为值。")
+Quiz.objects.create(lesson=l4_2_6, question="average_score 需要先处理空列表，原因是？", option_a="避免除以 0", option_b="避免继承", option_c="避免集合去重", option_d="避免字符串拼接", correct_answer="A", explanation="没有学生时 len(self.students) 为 0。")
+Quiz.objects.create(lesson=l4_2_6, question="判断题：GradeBook 继承 Student 是合理设计。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="B", explanation="错误，成绩册不是一种学生。")
+Quiz.objects.create(lesson=l4_2_6, question="判断题：对象列表可以和循环、字典、集合一起使用。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这正是综合项目的价值。")
+Quiz.objects.create(lesson=l4_2_6, question="passed_students 中调用 student.is_passed() 的好处是？", option_a="及格规则集中在 Student 类", option_b="让代码不能运行", option_c="跳过所有对象", option_d="清空列表", correct_answer="A", explanation="对象自己的规则放在对象内部更清晰。")
 
 # ==========================================
 # Course 5: Python 应用进阶 - 数据分析与可视化
@@ -4376,6 +6727,67 @@ arr = np.array([1, 2, 3, 4])
 - 图像像素处理
 - 科学计算
 - 算法数据预处理
+
+## 5. 创建数组的常见方式
+```python
+import numpy as np
+
+a = np.array([1, 2, 3])
+b = np.zeros(5)
+c = np.ones(3)
+d = np.arange(0, 10, 2)
+```
+
+常见含义：
+- `array()`：把列表转换成数组
+- `zeros()`：创建全 0 数组
+- `ones()`：创建全 1 数组
+- `arange()`：生成等差数字序列，类似 `range`
+
+## 6. dtype：数组元素类型
+NumPy 数组通常要求元素类型统一。
+
+```python
+arr = np.array([1, 2, 3])
+print(arr.dtype)
+```
+
+如果数组中混入浮点数，NumPy 可能自动提升类型：
+
+```python
+arr = np.array([1, 2, 3.5])
+print(arr.dtype)
+```
+
+这和普通列表不同。列表可以同时放字符串、数字、布尔值，但数值计算时，统一类型更高效。
+
+## 7. 向量化思维
+NumPy 最重要的思维是：对整组数据一起运算，而不是手写循环。
+
+```python
+scores = np.array([80, 90, 100])
+print(scores + 5)
+```
+
+输出：
+
+```text
+[ 85  95 105]
+```
+
+如果用列表，需要写循环；NumPy 可以直接表达“每个元素都加 5”。
+
+## 8. 易错点
+- `np.array([1, 2, 3])` 不是普通列表
+- `arr + 10` 是逐元素加法，不是拼接
+- NumPy 常用别名是 `np`
+- 真实运行 NumPy 代码前，需要先安装 `numpy`
+
+## 9. 小练习
+创建一个成绩数组 `[70, 85, 90, 100]`，输出：
+1. 每个成绩加 5 分后的结果
+2. 数组的平均分
+3. 数组的数据类型
 """
 )
 Quiz.objects.create(lesson=l4a_1_1, question="NumPy 中最核心的数据对象通常是？", option_a="dict", option_b="tuple", option_c="ndarray", option_d="set", correct_answer="C", explanation="NumPy 的核心对象是 ndarray。")
@@ -4412,6 +6824,80 @@ print(arr * 2)     # [2 4 6]
 
 ## 4. 为什么这很重要？
 因为数据处理中经常要对一整列数据一起加减乘除，而不是一个个写循环。
+
+## 5. 一维数组和二维数组
+一维数组像一排数据：
+
+```python
+arr = np.array([10, 20, 30])
+```
+
+二维数组像表格：
+
+```python
+table = np.array([
+    [80, 90],
+    [70, 85],
+    [95, 100]
+])
+```
+
+`shape` 能告诉我们结构：
+
+```python
+print(arr.shape)    # (3,)
+print(table.shape)  # (3, 2)
+```
+
+`(3, 2)` 表示 3 行 2 列。
+
+## 6. 切片
+NumPy 支持类似列表的切片：
+
+```python
+arr = np.array([10, 20, 30, 40])
+print(arr[1:3])
+```
+
+二维数组可以按行列切片：
+
+```python
+print(table[0])      # 第 1 行
+print(table[:, 0])   # 第 1 列
+```
+
+`:` 表示“这一维全选”。
+
+## 7. 常见统计
+```python
+scores = np.array([80, 90, 100])
+
+print(scores.mean())
+print(scores.max())
+print(scores.min())
+print(scores.sum())
+```
+
+这些方法常用于成绩、销量、温度等数值数据分析。
+
+## 8. 易错点
+- `arr[0, 1]` 用于二维数组，表示第 0 行第 1 列
+- Python 索引仍然从 0 开始
+- `shape` 是属性，不是方法，不写 `shape()`
+- 数组维度越高，越要先看 `shape`
+
+## 9. 小练习
+给定二维数组：
+
+```python
+arr = np.array([[1, 2, 3], [4, 5, 6]])
+```
+
+请输出：
+1. 数组形状
+2. 第一行
+3. 第二列
+4. 所有元素乘以 10 后的结果
 """
 )
 Quiz.objects.create(lesson=l4a_1_2, question="shape=(2, 3) 通常表示？", option_a="2 行 3 列", option_b="3 行 2 列", option_c="2 个元素", option_d="3 个维度", correct_answer="A", explanation="二维数组中通常表示 2 行 3 列。")
@@ -4449,6 +6935,58 @@ df = pd.DataFrame({
 - 销售表
 - 考勤表
 - 统计结果表
+
+## 4. Series 更像“一列”
+```python
+scores = pd.Series([90, 85, 100])
+print(scores)
+```
+
+`Series` 可以理解成带索引的一列数据。
+
+## 5. DataFrame 更像“一张表”
+```python
+df = pd.DataFrame({
+    "name": ["Tom", "Amy", "Jack"],
+    "score": [90, 95, 82],
+    "passed": [True, True, True]
+})
+```
+
+每一列可以有自己的含义。你可以把它理解成 Python 里的迷你 Excel。
+
+## 6. 查看数据
+```python
+print(df.head())
+print(df.shape)
+print(df.columns)
+```
+
+常见含义：
+- `head()`：查看前几行
+- `shape`：查看行数和列数
+- `columns`：查看列名
+
+## 7. 为什么不用普通字典就够了？
+字典能表达表格，但 Pandas 提供更多表格操作：
+- 选列
+- 筛选行
+- 分组统计
+- 读取 CSV
+- 处理缺失值
+- 画图前整理数据
+
+## 8. 易错点
+- DataFrame 的每列长度要一致
+- 选列用 `df["列名"]`
+- `shape` 是属性，不是函数
+- Pandas 常用别名是 `pd`
+
+## 9. 小练习
+创建一张包含 `name`、`age`、`score` 三列的 DataFrame，输出：
+1. 前 5 行
+2. 所有列名
+3. 表格形状
 """
 )
 Quiz.objects.create(lesson=l4a_2_1, question="Pandas 中最像“整张表”的对象是？", option_a="Series", option_b="DataFrame", option_c="tuple", option_d="set", correct_answer="B", explanation="DataFrame 就像一张表。")
@@ -4485,6 +7023,74 @@ df["score"].min()
 - 看某一列
 - 找满足条件的数据
 - 算平均值、最大值、最小值
+
+## 5. 选多列
+选择一列时使用一个列名：
+
+```python
+df["score"]
+```
+
+选择多列时，里面要再放一个列表：
+
+```python
+df[["name", "score"]]
+```
+
+注意这里是两层方括号。
+
+## 6. 条件筛选的过程
+```python
+df["score"] >= 60
+```
+
+这一步会得到一列布尔值：
+
+```text
+True
+False
+True
+```
+
+再把它放回 `df[...]`，就能筛选出满足条件的行：
+
+```python
+passed = df[df["score"] >= 60]
+```
+
+## 7. 多条件筛选
+Pandas 中多个条件要加括号：
+
+```python
+good = df[(df["score"] >= 80) & (df["age"] <= 15)]
+```
+
+常用符号：
+- `&` 表示并且
+- `|` 表示或者
+- 每个条件外面都要加括号
+
+## 8. 基础统计速查
+```python
+df["score"].mean()
+df["score"].max()
+df["score"].min()
+df["score"].sum()
+df["score"].count()
+```
+
+## 9. 易错点
+- Pandas 多条件筛选不能直接用 `and` / `or`
+- 多条件必须加括号
+- `df["score"]` 返回一列，不是单个数字
+- `mean()` 会忽略空值，但初学阶段先保证数据完整
+
+## 10. 小练习
+给定成绩表，完成：
+1. 输出 `name` 和 `score` 两列
+2. 筛选出及格学生
+3. 计算平均分
+4. 找出最高分
 """
 )
 Quiz.objects.create(lesson=l4a_2_2, question="df['score'] 通常表示？", option_a="选择 score 这一列", option_b="删除 score 列", option_c="给 score 赋值", option_d="创建新表", correct_answer="A", explanation="这是最常见的选列方式。")
@@ -4521,6 +7127,42 @@ plt.bar(["Tom", "Amy"], [90, 95])
 ## 4. 什么时候用哪种图？
 - 看趋势：折线图
 - 看比较：柱状图
+
+## 5. 折线图完整示例
+```python
+import matplotlib.pyplot as plt
+
+days = [1, 2, 3, 4, 5]
+temps = [20, 22, 21, 25, 24]
+
+plt.plot(days, temps)
+plt.show()
+```
+
+折线图重点表达“变化”，横轴通常是时间、次数、阶段。
+
+## 6. 柱状图完整示例
+```python
+names = ["Tom", "Amy", "Jack"]
+scores = [90, 95, 82]
+
+plt.bar(names, scores)
+plt.show()
+```
+
+柱状图重点表达“比较”，横轴通常是类别。
+
+## 7. plt.show() 的作用
+`plt.show()` 用来显示图表。很多环境中，如果不写它，图可能不会弹出来。
+
+## 8. 易错点
+- `plot(x, y)` 中 x 和 y 的长度要一致
+- `bar(names, scores)` 中类别和数值要一一对应
+- 画图前通常要先导入 `matplotlib.pyplot as plt`
+- 图表不是越复杂越好，能说明问题最重要
+
+## 9. 小练习
+用折线图展示 5 次考试成绩变化；再用柱状图比较 3 名同学的成绩。
 """
 )
 Quiz.objects.create(lesson=l4a_3_1, question="想观察成绩随时间的变化趋势，通常用哪种图？", option_a="折线图", option_b="柱状图", option_c="饼图", option_d="散点图", correct_answer="A", explanation="趋势最适合折线图。")
@@ -4553,6 +7195,46 @@ plt.legend()
 
 ## 4. 好图表的标准
 不仅要“能画”，更要“表达清楚”。
+
+## 5. 图例 legend 怎么用
+当一张图里有多条线时，需要给每条线设置 `label`：
+
+```python
+plt.plot([1, 2, 3], [80, 85, 90], label="Tom")
+plt.plot([1, 2, 3], [70, 88, 92], label="Amy")
+plt.legend()
+```
+
+`legend()` 会显示图例，让读者知道每条线代表谁。
+
+## 6. 设置颜色和标记
+```python
+plt.plot([1, 2, 3], [80, 85, 90], color="red", marker="o")
+```
+
+初学阶段不必追求花哨，但可以知道：
+- `color` 控制颜色
+- `marker` 控制点的样式
+
+## 7. 保存图片
+```python
+plt.savefig("score.png")
+```
+
+如果要把分析结果发给别人，保存图片很有用。
+
+## 8. 易错点
+- 标题和坐标轴不是装饰，是帮助读者理解
+- 图例必须配合 `label` 才有意义
+- 保存图片通常要在 `show()` 前调用
+- 中文显示可能需要额外字体设置，本课先关注图表结构
+
+## 9. 小练习
+画出两名同学三次考试成绩变化图，要求包含：
+1. 标题
+2. 横轴名称
+3. 纵轴名称
+4. 图例
 """
 )
 Quiz.objects.create(lesson=l4a_3_2, question="title() 主要用来？", option_a="设置图表标题", option_b="删除图像", option_c="保存文件", option_d="创建数组", correct_answer="A", explanation="title 用来设置图表标题。")
@@ -4594,6 +7276,58 @@ plt.bar(df["name"], df["score"])
 
 ## 4. 为什么放在算法前？
 因为你会先看到“Python 解决真实问题”的样子，再进入更抽象的算法学习，会更有动力。
+
+## 5. 从原始数据到结论
+真实数据分析不只是写代码，而是按步骤得到结论：
+1. 准备数据
+2. 检查数据
+3. 筛选或清洗
+4. 统计指标
+5. 用图表表达
+6. 写出结论
+
+例如：平均分是多少？谁最高？有多少人不及格？图表是否显示某种趋势？
+
+## 6. 完整示例
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.DataFrame({
+    "name": ["Tom", "Amy", "Lily", "Jack"],
+    "score": [90, 95, 58, 76]
+})
+
+passed = df[df["score"] >= 60]
+print("平均分:", df["score"].mean())
+print("及格人数:", len(passed))
+
+plt.bar(df["name"], df["score"])
+plt.title("Score Report")
+plt.xlabel("Name")
+plt.ylabel("Score")
+plt.show()
+```
+
+## 7. 可以继续升级什么？
+- 从 CSV 文件读取成绩表
+- 增加是否及格列
+- 按分数排序
+- 输出最高分学生
+- 保存图表到图片
+
+## 8. 易错点
+- 先处理数据，再画图
+- 图表必须对应真实数据列
+- 不要只输出数字，还要说明数字代表什么
+- 变量名要表达含义，例如 `passed` 比 `x` 更清楚
+
+## 9. 综合练习
+用 DataFrame 保存 5 名同学成绩，完成：
+1. 输出平均分
+2. 筛选不及格学生
+3. 按成绩画柱状图
+4. 给图表加标题和坐标轴
 """
 )
 Quiz.objects.create(lesson=l4a_4_1, question="完整的数据分析流程中，通常先做什么？", option_a="先画图", option_b="先读取或准备数据", option_c="先删除数据", option_d="先写递归", correct_answer="B", explanation="分析之前要先有数据。")
@@ -4662,6 +7396,37 @@ l5_1_1 = create_lesson(
 - 单层循环常常是 `O(n)`
 - 双层嵌套循环常常是 `O(n^2)`
 - 每次减半的问题常常会出现 `O(log n)`
+
+## 8. 如何快速估算
+看代码时先找最主要的重复结构：
+
+```python
+for i in range(n):
+    print(i)
+```
+
+一层循环，约执行 `n` 次，是 `O(n)`。
+
+```python
+for i in range(n):
+    for j in range(n):
+        print(i, j)
+```
+
+两层嵌套，各执行 `n` 次，总体约 `n * n`，是 `O(n^2)`。
+
+## 9. 小练习
+判断下面代码复杂度：
+
+```python
+for i in range(n):
+    print(i)
+
+for j in range(n):
+    print(j)
+```
+
+答案是 `O(n)`，不是 `O(2n)`，因为常数系数会被忽略。
 """
 )
 Quiz.objects.create(lesson=l5_1_1, question="访问列表索引 a[i] 的时间复杂度？", option_a="O(1)", option_b="O(n)", option_c="O(log n)", option_d="O(n^2)", correct_answer="A", explanation="数组索引访问是常数时间。")
@@ -4722,6 +7487,33 @@ copy_nums = nums[:]
 - 新建大容器，空间通常会增大
 - 只用少数变量，空间通常较小
 - 复杂度分析不只有时间，也有空间
+
+## 7. 原地算法
+如果算法直接在原列表上修改，不额外创建同规模列表，通常叫原地算法。
+
+```python
+arr = [3, 1, 2]
+arr[0], arr[1] = arr[1], arr[0]
+```
+
+这种操作只用了少量额外变量，空间复杂度通常看作 `O(1)`。
+
+## 8. 递归调用栈
+递归即使没有创建列表，也会占用调用栈空间。
+
+```python
+def f(n):
+    if n == 0:
+        return
+    f(n - 1)
+```
+
+调用深度是 `n`，所以空间复杂度可能是 `O(n)`。
+
+## 9. 小练习
+判断下面哪段代码额外空间更大：
+1. 只用变量 `total` 累加
+2. 新建列表保存每个中间结果
 """
 )
 Quiz.objects.create(lesson=l5_1_2, question="空间复杂度主要关注什么？", option_a="代码有多少行", option_b="程序运行时额外占用多少内存", option_c="电脑内存总大小", option_d="文件体积", correct_answer="B", explanation="空间复杂度看的是运行时额外空间。")
@@ -4781,6 +7573,43 @@ def bubble_sort(arr):
 冒泡排序最重要的学习价值不是“以后常用”，而是让你第一次真正理解：
 - 排序是怎么通过重复比较逐步完成的
 - 双重循环为什么常常对应 `O(n^2)`
+
+## 8. 手动跟踪一轮
+以 `[3, 1, 4, 2]` 为例：
+
+```text
+[3, 1, 4, 2]
+比较 3 和 1，交换 -> [1, 3, 4, 2]
+比较 3 和 4，不换 -> [1, 3, 4, 2]
+比较 4 和 2，交换 -> [1, 3, 2, 4]
+```
+
+第一轮结束后，最大值 `4` 已经到最后。
+
+## 9. 优化版本
+```python
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            break
+    return arr
+```
+
+`swapped` 用来记录这一轮有没有发生交换。如果完全没有交换，说明已经有序。
+
+## 10. 易错点
+- 内层循环上界是 `n - i - 1`，避免访问 `arr[j + 1]` 越界
+- 交换要同时完成：`arr[j], arr[j + 1] = arr[j + 1], arr[j]`
+- 冒泡排序默认是原地排序，会修改原列表
+
+## 11. 小练习
+给定 `[5, 1, 4, 2, 8]`，手写第一轮冒泡后的结果，再写代码验证。
 """
 )
 Quiz.objects.create(lesson=l5_2_1, question="冒泡排序的时间复杂度？", option_a="O(n)", option_b="O(n^2)", option_c="O(n log n)", option_d="O(1)", correct_answer="B", explanation="双重循环。")
@@ -4840,6 +7669,46 @@ def binary_search(arr, target):
 - 只能在有序数据上用
 - 每次排除一半范围
 - 速度快的原因来自“减半”
+
+## 7. 手动跟踪
+在 `[1, 3, 5, 7, 9]` 中查找 `7`：
+
+```text
+left=0, right=4, mid=2, arr[mid]=5
+5 < 7，所以去右边，left=3
+
+left=3, right=4, mid=3, arr[mid]=7
+找到，返回 3
+```
+
+## 8. 循环条件为什么是 left <= right
+当 `left == right` 时，搜索区间里还有一个元素，仍然需要检查。
+
+如果写成：
+
+```python
+while left < right:
+```
+
+可能漏掉最后一个元素。
+
+## 9. 找不到时发生什么
+当目标不存在，左右指针最终会交错：
+
+```text
+left > right
+```
+
+这说明搜索区间已经空了，因此返回 `-1`。
+
+## 10. 易错点
+- 忘记数组必须有序
+- `mid` 要用整除 `//`
+- 更新边界时要写 `mid + 1` 或 `mid - 1`
+- 如果只写 `left = mid`，可能陷入死循环
+
+## 11. 小练习
+改造二分查找：如果找到了目标，返回下标；如果没找到，返回 `"not found"`。
 """
 )
 Quiz.objects.create(lesson=l5_2_2, question="二分查找的前提条件？", option_a="数组无序", option_b="数组有序", option_c="数组必须全正数", option_d="数组长度为偶数", correct_answer="B", explanation="必须有序。")
@@ -4887,6 +7756,44 @@ def selection_sort(arr):
 选择排序的关键在于：
 - 当前轮要确定“当前位置应该放谁”
 - 找最小值是核心动作
+
+## 6. 手动跟踪
+以 `[64, 25, 12, 22, 11]` 为例：
+
+第一轮在整个数组中找最小值 `11`，放到第 0 位：
+
+```text
+[11, 25, 12, 22, 64]
+```
+
+第二轮只在剩余部分 `[25, 12, 22, 64]` 中找最小值 `12`，放到第 1 位：
+
+```text
+[11, 12, 25, 22, 64]
+```
+
+每轮结束，前面就多一个确定位置。
+
+## 7. 为什么交换次数少
+选择排序每一轮最多交换一次。冒泡排序可能一轮交换很多次。
+
+所以虽然二者时间复杂度常同为 `O(n^2)`，但在交换成本很高的场景，选择排序的思路仍有学习价值。
+
+## 8. 稳定性提示
+普通选择排序通常不是稳定排序。因为一次交换可能改变相等元素的相对顺序。
+
+初学阶段先记住：
+- 冒泡排序稳定
+- 插入排序稳定
+- 选择排序通常不稳定
+
+## 9. 易错点
+- `min_index` 每轮开始要设为 `i`
+- 内层循环从 `i + 1` 开始
+- 交换要在内层循环结束后做，不是每发现更小就立即交换
+
+## 10. 小练习
+给定 `[3, 1, 2]`，写出每一轮选择排序后的数组。
 """
 )
 Quiz.objects.create(lesson=l5_2_3, question="选择排序每一轮主要做什么？", option_a="把最大值冒到最后", option_b="从未排序部分选出最小值", option_c="随机交换", option_d="二分查找", correct_answer="B", explanation="选择排序每轮找出最小值放到当前位。")
@@ -4934,6 +7841,45 @@ def insertion_sort(arr):
 ## 6. 本节总结
 插入排序适合理解“局部有序逐步扩张”的思路。  
 在数据本来就接近有序时，它往往比冒泡、选择更自然。
+
+## 7. 手动跟踪
+以 `[5, 2, 4, 6]` 为例：
+
+先认为第一个元素 `[5]` 已经有序。
+
+处理 `2`：
+
+```text
+[5, 2, 4, 6] -> [2, 5, 4, 6]
+```
+
+处理 `4`：
+
+```text
+[2, 5, 4, 6] -> [2, 4, 5, 6]
+```
+
+处理 `6`：
+
+```text
+[2, 4, 5, 6]
+```
+
+## 8. 为什么接近有序时表现好
+如果数组本来就接近有序，`while arr[j] > key` 很快就会停止，需要移动的元素少。
+
+例如 `[1, 2, 3, 5, 4]` 只需要把 `4` 插入到正确位置。
+
+## 9. 稳定性
+插入排序通常是稳定的。只要判断条件使用 `arr[j] > key`，相等元素不会越过彼此。
+
+## 10. 易错点
+- `key` 要先保存当前元素，否则移动元素时会丢失
+- `while` 中要同时判断 `j >= 0`
+- 最后插入位置是 `j + 1`
+
+## 11. 小练习
+给定 `[4, 3, 2, 1]`，手动写出插入排序每轮结果。
 """
 )
 Quiz.objects.create(lesson=l5_2_4, question="插入排序的核心思路是？", option_a="每轮找最小值", option_b="把当前元素插入到前面有序部分", option_c="每次减半", option_d="随机交换", correct_answer="B", explanation="插入排序维护前缀有序。")
@@ -4975,6 +7921,94 @@ def fact(n):
     if n == 1: return 1  # 基准
     return n * fact(n-1) # 递归
 ```
+
+## 3. 调用过程展开
+计算 `fact(4)` 时：
+
+```text
+fact(4)
+= 4 * fact(3)
+= 4 * 3 * fact(2)
+= 4 * 3 * 2 * fact(1)
+= 4 * 3 * 2 * 1
+= 24
+```
+
+递归不是魔法，本质是函数一层一层调用，直到遇到基准情况，再一层一层返回结果。
+
+## 4. 递归必须向基准靠近
+下面代码有问题：
+
+```python
+def count_down(n):
+    print(n)
+    count_down(n)
+```
+
+它永远没有变小，也没有停止条件，会导致 `RecursionError`。
+
+正确写法：
+
+```python
+def count_down(n):
+    if n == 0:
+        return
+    print(n)
+    count_down(n - 1)
+```
+
+## 5. 递归和栈
+每一次函数调用都会压入调用栈。
+
+```text
+fact(4)
+  fact(3)
+    fact(2)
+      fact(1)
+```
+
+所以递归代码虽然短，但会占用额外栈空间。递归太深时，Python 会报递归深度错误。
+
+## 6. 什么时候适合递归？
+适合递归的问题通常有“自己包含自己”的结构：
+- 阶乘
+- 斐波那契
+- 汉诺塔
+- 树形结构遍历
+- 嵌套列表展开
+
+不适合递归的情况：
+- 只是普通重复次数，用循环更清楚
+- 数据量极大，递归层数可能太深
+
+## 7. 递归 vs 循环
+```python
+def sum_loop(n):
+    total = 0
+    for i in range(1, n + 1):
+        total += i
+    return total
+
+def sum_rec(n):
+    if n == 1:
+        return 1
+    return n + sum_rec(n - 1)
+```
+
+两者都能求和。循环更节省栈空间；递归更贴近某些问题的数学定义。
+
+## 8. 易错点
+- 忘记基准情况
+- 递归参数没有变化
+- 基准情况写错，例如 `n == 0` 和 `n == 1` 混淆
+- 以为递归一定比循环快
+
+## 9. 小练习
+写递归函数 `sum_to(n)`，返回 `1 + 2 + ... + n`。
+
+提示：
+- `sum_to(1)` 返回 1
+- `sum_to(n)` 返回 `n + sum_to(n - 1)`
 """
 )
 Quiz.objects.create(lesson=l6_1_1, question="递归函数必须包含？", option_a="循环", option_b="基准情况", option_c="全局变量", option_d="数组", correct_answer="B", explanation="否则会死循环（栈溢出）。")
@@ -5009,6 +8043,88 @@ stack.append("A")
 stack.append("B")
 print(stack.pop()) # "B"
 ```
+
+## 3. 栈顶是什么？
+栈顶就是最后进入、最先出去的位置。
+
+```python
+stack = []
+stack.append("A")
+stack.append("B")
+stack.append("C")
+
+print(stack[-1])   # 查看栈顶 C
+print(stack.pop()) # 弹出 C
+```
+
+## 4. 空栈不能 pop
+```python
+stack = []
+stack.pop()  # IndexError
+```
+
+更稳妥：
+
+```python
+if stack:
+    item = stack.pop()
+else:
+    print("栈为空")
+```
+
+## 5. 栈的常见应用
+- 浏览器后退
+- 撤销操作
+- 函数调用栈
+- 括号匹配
+- 深度优先搜索 DFS
+
+## 6. 括号匹配示例
+```python
+def is_valid(s):
+    stack = []
+    pairs = {")": "(", "]": "[", "}": "{"}
+
+    for ch in s:
+        if ch in "([{":
+            stack.append(ch)
+        elif ch in ")]}":
+            if not stack or stack.pop() != pairs[ch]:
+                return False
+
+    return len(stack) == 0
+```
+
+思路：
+1. 左括号入栈
+2. 右括号出现时，弹出栈顶检查是否匹配
+3. 最后栈为空才说明全部匹配
+
+## 7. 栈和递归的关系
+递归调用本质上依赖调用栈。每深入一层递归，就像把一个任务压入栈；每返回一次，就像弹出栈顶任务。
+
+## 8. 易错点
+- `pop()` 会删除并返回元素
+- 空栈 `pop()` 会报错
+- 栈只关心栈顶，不关心中间元素
+- 用列表模拟栈时，推荐在末尾 `append/pop`
+
+## 9. 小练习
+用栈反转字符串：
+
+```python
+text = "python"
+stack = []
+
+for ch in text:
+    stack.append(ch)
+
+result = ""
+while stack:
+    result += stack.pop()
+
+print(result)
+```
 """
 )
 Quiz.objects.create(lesson=l6_2_1, question="栈的特点是？", option_a="先进先出", option_b="后进先出", option_c="随机进出", option_d="先进后出", correct_answer="B", explanation="LIFO。")
@@ -5040,6 +8156,87 @@ q = deque()
 q.append("A") # 入队
 q.append("B")
 print(q.popleft()) # "A" - 出队
+```
+
+## 3. 为什么不用 list.pop(0)
+列表头部删除需要移动后面所有元素：
+
+```python
+lst = [1, 2, 3, 4]
+lst.pop(0)
+```
+
+当列表很长时，这会比较慢。`deque.popleft()` 更适合队列。
+
+## 4. 入队和出队
+```python
+from collections import deque
+
+q = deque()
+q.append("task1")
+q.append("task2")
+q.append("task3")
+
+print(q.popleft())  # task1
+print(q.popleft())  # task2
+```
+
+先进入的 `task1` 先出去，这就是 FIFO。
+
+## 5. 队列常见应用
+- 排队叫号
+- 打印任务
+- 消息处理
+- 广度优先搜索 BFS
+- 游戏事件队列
+
+## 6. BFS 直觉
+队列适合一层一层处理问题。
+
+```python
+from collections import deque
+
+q = deque(["A"])
+visited = set()
+
+while q:
+    node = q.popleft()
+    if node in visited:
+        continue
+    visited.add(node)
+    print(node)
+```
+
+先进入队列的节点会先被处理，因此 BFS 可以按距离从近到远探索。
+
+## 7. deque 是双端队列
+`deque` 不只可以当普通队列，也支持两端操作：
+
+```python
+q.append("right")
+q.appendleft("left")
+q.pop()
+q.popleft()
+```
+
+普通队列只强调一端进、一端出；双端队列更灵活。
+
+## 8. 易错点
+- 队列是 FIFO，栈是 LIFO
+- `popleft()` 来自 `deque`，普通 list 没有这个方法
+- `list.pop(0)` 能用但不适合大量数据
+- 空队列 `popleft()` 会报错
+
+## 9. 小练习
+模拟排队叫号：
+
+```python
+from collections import deque
+
+line = deque(["Alice", "Bob", "Cindy"])
+while line:
+    person = line.popleft()
+    print("请", person, "办理业务")
 ```
 """
 )
@@ -5086,6 +8283,70 @@ Python 自带了一个轻量级的 IDE 叫 IDLE。它有两个窗口：
 
 ## 3. 你的第一个挑战
 在 IDLE 中输入代码并运行。确保你安装了 Python 3。
+
+## 4. Shell 和文件运行的区别
+Shell 适合快速试验：
+
+```python
+>>> 2 + 3
+5
+```
+
+但完整程序应该写进 `.py` 文件：
+
+```python
+print("Hello Head First Python")
+```
+
+Shell 像草稿纸，文件像正式作业。
+
+## 5. 出错不可怕
+初学时最常见的是语法错误：
+
+```python
+print("Hello"
+```
+
+这会报 `SyntaxError`，意思是 Python 看不懂这行代码结构。
+
+读错误信息时先看：
+- 错误类型
+- 出错行号
+- 箭头指向哪里
+
+## 6. 内置函数 BIF
+BIF 是 Built-in Function，表示 Python 自带函数。例如：
+
+```python
+print("Hello")
+len("Python")
+type(123)
+```
+
+这些函数不需要导入模块，可以直接使用。
+
+## 7. 小练习
+在 Shell 中分别运行：
+1. `print("Python")`
+2. `len("Python")`
+3. `type(3.14)`
+
+观察每条输出。
+
+## 8. 从 Shell 走向脚本
+Shell 适合立即看到结果，但脚本文件更适合保存和复用。
+
+建议学习节奏：
+1. 在 Shell 里试一行
+2. 确认能运行
+3. 放进 `.py` 文件
+4. 保存并运行完整程序
+
+## 9. 学习习惯
+每次写完代码后问自己：
+- 这行代码输入是什么？
+- 输出是什么？
+- 如果写错一个符号，会报什么错？
 """
 )
 Quiz.objects.create(lesson=l7_1_1, question="IDLE 的 Python Shell 主要用于？", option_a="编写大型项目", option_b="测试代码片段 (REPL)", option_c="浏览网页", option_d="画图", correct_answer="B", explanation="Shell 是 Read-Eval-Print-Loop 环境。")
@@ -5135,6 +8396,54 @@ right_this_minute = datetime.today().minute
 if right_this_minute % 2 != 0:
     print("This minute is a little odd")
 ```
+
+## 4. 判断奇偶的两种方式
+书中常用列表保存奇数分钟：
+
+```python
+odds = [1, 3, 5, 7, 9]
+if right_this_minute in odds:
+    print("odd")
+```
+
+也可以用取模：
+
+```python
+if right_this_minute % 2 != 0:
+    print("odd")
+```
+
+取模 `%` 表示求余数。一个数除以 2 余数不为 0，就是奇数。
+
+## 5. import 的意义
+```python
+from datetime import datetime
+```
+
+意思是从 `datetime` 模块中导入 `datetime` 类。导入后才能调用：
+
+```python
+datetime.today()
+```
+
+## 6. 随机暂停
+如果配合 `time.sleep()` 和 `random.randint()`，程序可以隔一段随机时间检查一次分钟数。
+
+```python
+import time
+import random
+
+time.sleep(random.randint(1, 5))
+```
+
+## 7. 易错点
+- `=` 是赋值，`==` 是比较
+- `if` 后面要写冒号
+- `if` 代码块必须缩进
+- `datetime` 是标准库，不需要额外安装
+
+## 8. 小练习
+改写程序：如果当前分钟是偶数，输出 `"Even minute"`；如果是奇数，输出 `"Odd minute"`。
 """
 )
 Quiz.objects.create(lesson=l7_1_2, question="如何获取当前时间的分钟数？", option_a="datetime.minute()", option_b="datetime.today().minute", option_c="time.minute", option_d="clock.minute", correct_answer="B", explanation="使用 datetime.today() 获取当前时间对象。")
@@ -5149,17 +8458,26 @@ Quiz.objects.create(lesson=l7_1_2, question="time.sleep() 的参数单位是？"
 Quiz.objects.create(lesson=l7_1_2, question="range(1, 10, 2) 生成的最后一个数是？", option_a="10", option_b="9", option_c="8", option_d="11", correct_answer="B", explanation="生成 1, 3, 5, 7, 9。")
 
 # Chapter 2: List Data
-ch7_2, _ = Chapter.objects.get_or_create(course=c7, title="第2章：列表数据 (List Data)", defaults={'order': 2})
+ch7_2 = create_chapter(c7, title="第2章：列表项目实践 (List Data)", order=2, previous_titles=["第2章：列表数据 (List Data)"])
 
 # 2.1 Creating Lists
 l7_2_1 = create_lesson(
-    chapter=ch7_2, title="2.1 列表初探：电影列表", order=1, lesson_type='code',
+    chapter=ch7_2, title="2.1 项目实践：电影列表建模", previous_titles=["2.1 列表初探：电影列表"], order=1, lesson_type='code',
     code_challenge_prompt="""# 创建一个列表 movies，包含以下电影：
 # "The Holy Grail", "The Life of Brian", "The Meaning of Life"
 movies = ["The Holy Grail", "The Life of Brian", "The Meaning of Life"]
 print(movies[1])
 """,
-    content="""# 2.1 列表初探
+    content="""# 2.1 项目实践：电影列表建模
+
+## 0. 和 GESP 2级列表有什么不同？
+GESP 2级讲列表的定义、索引、增删改查。
+
+Head First Python 这一章不再按考点讲列表，而是用“电影数据”做项目练习：
+- 用列表保存一组真实数据
+- 理解列表里可以混合不同类型
+- 从数据出发思考如何组织程序
+- 为后面的嵌套列表和递归函数铺垫
 
 ## 1. 一切皆对象
 在 Python 中，变量不需要声明类型。你可以把任何东西赋值给变量。
@@ -5174,6 +8492,64 @@ movies = ["The Holy Grail", "The Life of Brian", "The Meaning of Life"]
 ## 3. 访问列表
 使用索引（从 0 开始）来访问列表中的元素。
 `movies[1]` 会返回 "The Life of Brian"。
+
+## 4. 修改列表元素
+列表是可变的，可以直接修改某个位置：
+
+```python
+movies[0] = "New Movie"
+```
+
+字符串不可变，列表可变，这是 Python 中很重要的区别。
+
+## 5. 负数索引
+```python
+movies[-1]
+```
+
+表示最后一个元素。负数索引从右往左数：
+- `-1`：最后一个
+- `-2`：倒数第二个
+
+## 6. 混合类型列表
+```python
+movie = ["The Holy Grail", 1975, "Comedy"]
+```
+
+Python 列表可以放不同类型的数据。但如果数据有明确字段，后面会学习用字典表达得更清楚。
+
+## 7. 易错点
+- 索引从 0 开始
+- `len(movies)` 返回元素个数，不是最后一个索引
+- 最后一个索引是 `len(movies) - 1`
+- 访问不存在的索引会 `IndexError`
+
+## 8. 小练习
+创建一个电影列表，完成：
+1. 打印第一部电影
+2. 打印最后一部电影
+3. 修改第二部电影名
+4. 输出列表长度
+
+## 9. 列表和字符串的相似点
+列表和字符串都支持索引：
+
+```python
+name = "Python"
+movies = ["A", "B", "C"]
+
+print(name[0])
+print(movies[0])
+```
+
+不同点是：字符串不可变，列表可变。
+
+## 10. 小项目思维
+电影列表可以继续扩展：
+- 添加上映年份
+- 添加导演
+- 按顺序打印
+- 搜索某部电影是否存在
 """
 )
 Quiz.objects.create(lesson=l7_2_1, question="列表的索引是从几开始的？", option_a="1", option_b="0", option_c="-1", option_d="任意", correct_answer="B", explanation="Python 索引从 0 开始。")
@@ -5189,7 +8565,7 @@ Quiz.objects.create(lesson=l7_2_1, question="空列表 [] 的布尔值是？", o
 
 # 2.2 List Methods
 l7_2_2 = create_lesson(
-    chapter=ch7_2, title="2.2 列表操作：增删改", order=2, lesson_type='code',
+    chapter=ch7_2, title="2.2 项目实践：维护电影列表", previous_titles=["2.2 列表操作：增删改"], order=2, lesson_type='code',
     code_challenge_prompt="""# 1. 创建 movies 列表
 # 2. 使用 append 添加 "Terry Jones"
 # 3. 使用 pop 删除最后一个元素
@@ -5199,7 +8575,16 @@ print(movies)
 movies.pop()
 print(movies)
 """,
-    content="""# 2.2 列表操作
+    content="""# 2.2 项目实践：维护电影列表
+
+## 0. 和 GESP 2级列表操作有什么不同？
+这里不只是背 `append`、`pop`、`remove`。
+
+本节把这些方法放进“维护电影清单”的场景：
+- 添加新电影
+- 删除临时数据
+- 合并演员列表
+- 比较 `append` 和 `extend` 对项目数据结构的影响
 
 ## 1. 常用方法
 列表自带了很多好用的方法（Method）：
@@ -5211,6 +8596,62 @@ print(movies)
 
 ## 2. 混合类型
 Python 的列表可以装任何东西！数字、字符串，甚至是另一个列表。
+
+## 3. append 和 extend 的区别
+```python
+movies = ["A", "B"]
+movies.append(["C", "D"])
+print(movies)
+```
+
+结果是把整个列表作为一个元素加入：
+
+```text
+['A', 'B', ['C', 'D']]
+```
+
+`extend()` 会把另一个列表里的元素逐个加入：
+
+```python
+movies = ["A", "B"]
+movies.extend(["C", "D"])
+print(movies)
+```
+
+结果：
+
+```text
+['A', 'B', 'C', 'D']
+```
+
+## 4. pop 和 remove 的区别
+```python
+movies.pop()
+movies.remove("A")
+```
+
+- `pop()` 按位置删除，默认删除最后一个，并返回被删元素
+- `remove(x)` 按值删除，删除第一个等于 `x` 的元素
+
+## 5. del 语句
+```python
+del movies[0]
+```
+
+`del` 可以按索引删除，也可以删除切片。
+
+## 6. 易错点
+- `append()` 会把参数当成一个整体
+- `remove()` 找不到元素会 `ValueError`
+- `insert(0, x)` 会移动后续元素
+- 很多列表方法会原地修改列表，返回值可能是 `None`
+
+## 7. 小练习
+用列表保存 3 个电影名，完成：
+1. 末尾添加 1 个电影
+2. 开头插入 1 个电影
+3. 删除最后一个电影
+4. 删除指定电影名
 """
 )
 Quiz.objects.create(lesson=l7_2_2, question="pop() 方法默认删除哪个元素？", option_a="第一个", option_b="最后一个", option_c="随机一个", option_d="指定的一个", correct_answer="B", explanation="默认删除末尾元素。")
@@ -5226,7 +8667,7 @@ Quiz.objects.create(lesson=l7_2_2, question="del list[0] 的作用是？", optio
 
 # 2.3 Nested Lists
 l7_2_3 = create_lesson(
-    chapter=ch7_2, title="2.3 嵌套列表与循环", order=3, lesson_type='code',
+    chapter=ch7_2, title="2.3 项目实践：嵌套列表与递归遍历", previous_titles=["2.3 嵌套列表与循环"], order=3, lesson_type='code',
     code_challenge_prompt="""# 遍历嵌套列表
 movies = ["The Holy Grail", 1975, ["Terry Jones", 91]]
 for item in movies:
@@ -5236,7 +8677,15 @@ for item in movies:
     else:
         print(item)
 """,
-    content="""# 2.3 嵌套列表与循环
+    content="""# 2.3 项目实践：嵌套列表与递归遍历
+
+## 0. 和普通列表遍历有什么不同？
+GESP 2级主要处理一层列表。
+
+Head First 这里开始处理“列表里面还有列表”的真实结构。重点不只是循环，而是：
+- 判断数据类型
+- 处理多层嵌套
+- 为递归函数 `print_lol` 做准备
 
 ## 1. 列表里的列表
 列表可以包含其他列表。
@@ -5250,6 +8699,49 @@ movies = ["The Holy Grail", 1975, ["Terry Jones", 91]]
 
 ## 3. isinstance()
 `isinstance(item, list)` 用来检查一个变量是否是列表类型。
+
+## 4. 为什么需要类型判断
+嵌套列表中，普通元素和子列表需要不同处理：
+
+```python
+for item in movies:
+    if isinstance(item, list):
+        for nested_item in item:
+            print(nested_item)
+    else:
+        print(item)
+```
+
+如果不判断类型，程序只能把内部列表整体打印出来。
+
+## 5. 任意深度怎么办
+如果嵌套层级不固定，手写多层 `for` 会很难维护。更自然的方式是递归。
+
+```python
+def print_items(items):
+    for item in items:
+        if isinstance(item, list):
+            print_items(item)
+        else:
+            print(item)
+```
+
+这为后面的 `print_lol` 函数做铺垫。
+
+## 6. 易错点
+- `isinstance(item, list)` 返回布尔值
+- `for` 默认只遍历最外层
+- `len(["A", ["B", "C"]])` 是 2，不是 3
+- 多层索引用多个方括号：`data[0][1]`
+
+## 7. 小练习
+给定：
+
+```python
+items = ["A", ["B", "C"], ["D", ["E"]]]
+```
+
+尝试写代码打印每个字符串。先用嵌套循环，再思考为什么递归更合适。
 """
 )
 Quiz.objects.create(lesson=l7_2_3, question="isinstance(x, list) 的作用是？", option_a="将 x 转为列表", option_b="判断 x 是否为列表", option_c="创建新列表", option_d="删除列表", correct_answer="B", explanation="类型检查。")
@@ -5265,11 +8757,11 @@ Quiz.objects.create(lesson=l7_2_3, question="for 循环可以遍历嵌套列表�
 
 
 # Chapter 3: Structured Data
-ch7_3, _ = Chapter.objects.get_or_create(course=c7, title="第3章：结构化数据 (Structured Data)", defaults={'order': 3})
+ch7_3 = create_chapter(c7, title="第3章：结构化项目数据 (Structured Data)", order=3, previous_titles=["第3章：结构化数据 (Structured Data)"])
 
 # 3.1 Dictionaries
 l7_3_1 = create_lesson(
-    chapter=ch7_3, title="3.1 字典：更好的数据结构", order=1, lesson_type='code',
+    chapter=ch7_3, title="3.1 项目实践：电影信息字典", previous_titles=["3.1 字典：更好的数据结构"], order=1, lesson_type='code',
     code_challenge_prompt="""# 创建一个字典表示电影信息
 movie = {
     "title": "The Holy Grail",
@@ -5278,7 +8770,12 @@ movie = {
 }
 print(movie["year"])
 """,
-    content="""# 3.1 字典：更好的数据结构
+    content="""# 3.1 项目实践：电影信息字典
+
+## 0. 和前面字典课程有什么不同？
+GESP 2级讲“用名字找数据”，GESP 4级讲“嵌套、计数、建模”。
+
+Head First 这里把字典放进电影项目中：从列表的“位置含义”升级到字典的“字段含义”，让数据更像真实对象。
 
 ## 1. 列表的问题
 用列表存储数据时，我们必须记住索引的含义（索引 0 是标题？索引 1 是年份？）。这很麻烦。
@@ -5294,6 +8791,48 @@ movie = {
 
 ## 3. 键值对
 字典由 Key: Value 对组成。Key 必须是唯一的。
+
+## 4. 修改和新增
+```python
+movie["year"] = 1979
+movie["rating"] = 9.0
+```
+
+如果键已存在，就是修改；如果键不存在，就是新增。
+
+## 5. 遍历字典
+```python
+for key, value in movie.items():
+    print(key, value)
+```
+
+`items()` 会同时给出键和值。
+
+## 6. get 安全访问
+```python
+print(movie.get("director", "unknown"))
+```
+
+如果键不存在，返回默认值，不会报 `KeyError`。
+
+## 7. 嵌套结构
+```python
+movie = {
+    "title": "The Holy Grail",
+    "actors": ["Graham Chapman", "John Cleese"]
+}
+```
+
+字典的值可以是列表，这让它适合表达更真实的数据。
+
+## 8. 易错点
+- 空 `{}` 是字典，不是集合
+- 键必须不可变
+- `in` 默认判断键，不判断值
+- 重复键会被后面的值覆盖
+
+## 9. 小练习
+创建一个电影字典，包含 `title`、`year`、`actors`。输出电影名和演员数量。
 """
 )
 Quiz.objects.create(lesson=l7_3_1, question="字典使用什么符号定义？", option_a="[]", option_b="()", option_c="{}", option_d="<>", correct_answer="C", explanation="大括号 {}。")
@@ -5308,11 +8847,11 @@ Quiz.objects.create(lesson=l7_3_1, question="字典的键可以是元组吗？",
 Quiz.objects.create(lesson=l7_3_1, question="{} 代表什么？", option_a="空列表", option_b="空元组", option_c="空字典", option_d="空集合", correct_answer="C", explanation="{} 默认表示空字典，空集合需要用 set()。")
 
 # Chapter 4: Code Reuse
-ch7_4, _ = Chapter.objects.get_or_create(course=c7, title="第4章：代码复用 (Code Reuse)", defaults={'order': 4})
+ch7_4 = create_chapter(c7, title="第4章：项目代码复用 (Code Reuse)", order=4, previous_titles=["第4章：代码复用 (Code Reuse)"])
 
 # 4.1 Functions
 l7_4_1 = create_lesson(
-    chapter=ch7_4, title="4.1 函数：print_lol", order=1, lesson_type='code',
+    chapter=ch7_4, title="4.1 项目实践：print_lol 递归函数", previous_titles=["4.1 函数：print_lol"], order=1, lesson_type='code',
     code_challenge_prompt="""# 定义一个递归函数 print_lol 打印嵌套列表
 def print_lol(the_list):
     for item in the_list:
@@ -5324,7 +8863,12 @@ def print_lol(the_list):
 movies = ["The Holy Grail", 1975, ["Terry Jones", 91]]
 print_lol(movies)
 """,
-    content="""# 4.1 函数：print_lol
+    content="""# 4.1 项目实践：print_lol 递归函数
+
+## 0. 和 GESP 函数课程有什么不同？
+GESP 3级讲函数定义、返回值、参数和作用域。
+
+Head First 这里用一个真实函数 `print_lol` 解决嵌套列表输出问题。重点是把函数作为“项目工具”，而不是孤立语法点。
 
 ## 1. 不要重复代码 (DRY)
 如果你发现自己在复制粘贴代码，你就应该写一个函数。
@@ -5339,6 +8883,44 @@ def print_lol(the_list):
 ## 3. 递归 (Recursion)
 函数调用自身。这对于处理**任意深度**的嵌套列表非常有用。
 我们在 `print_lol` 中调用 `print_lol` 来处理子列表。
+
+## 4. print_lol 的完整版本
+```python
+def print_lol(the_list):
+    for item in the_list:
+        if isinstance(item, list):
+            print_lol(item)
+        else:
+            print(item)
+```
+
+函数名来自 “print list of lists”，也就是打印列表里的列表。
+
+## 5. 为什么函数让代码更好
+函数的价值：
+- 给一段逻辑起名字
+- 避免重复代码
+- 让主程序更清楚
+- 方便测试和复用
+
+## 6. 参数和调用
+```python
+print_lol(movies)
+```
+
+`movies` 是实参，传入函数；`the_list` 是形参，在函数内部接收它。
+
+## 7. 基准情况在哪里
+`print_lol` 的基准情况不是单独写的 `if n == 1`，而是遇到普通元素时直接打印，不再递归。
+
+## 8. 易错点
+- 函数定义后不会自动运行，必须调用
+- 递归必须让问题越来越小或越来越接近普通元素
+- 忘记缩进会改变函数体范围
+- 没写 `return` 的函数默认返回 `None`
+
+## 9. 小练习
+改造 `print_lol`：增加一个参数 `level`，打印嵌套层级缩进。
 """
 )
 Quiz.objects.create(lesson=l7_4_1, question="DRY 原则的意思是？", option_a="Do Repeat Yourself", option_b="Don't Repeat Yourself", option_c="Do Right Yesterday", option_d="Data Ready Yet", correct_answer="B", explanation="不要重复造轮子。")
@@ -5354,9 +8936,14 @@ Quiz.objects.create(lesson=l7_4_1, question="定义函数时参数列表里的�
 
 # 4.2 Modules
 l7_4_2 = create_lesson(
-    chapter=ch7_4, title="4.2 模块：nester.py", order=2, lesson_type='text',
+    chapter=ch7_4, title="4.2 项目实践：封装 nester.py 模块", previous_titles=["4.2 模块：nester.py"], order=2, lesson_type='text',
     code_challenge_prompt="# 假设我们将 print_lol 保存到了 nester.py\n# import nester\n# nester.print_lol(movies)",
-    content="""# 4.2 模块：nester.py
+    content="""# 4.2 项目实践：封装 nester.py 模块
+
+## 0. 和 GESP 模块课程有什么不同？
+GESP 3级讲 `import`、`from...import` 和模块拆分原则。
+
+Head First 这里把 `print_lol` 真的封装成 `nester.py`，重点是完成一次“从函数到可复用模块”的项目化迁移。
 
 ## 1. 什么是模块？
 模块就是一个包含 Python 代码的文件（.py）。
@@ -5368,6 +8955,49 @@ l7_4_2 = create_lesson(
 ## 3. 导入模块
 使用 `import nester`。
 调用函数时需要加上命名空间：`nester.print_lol(movies)`。
+
+## 4. 模块的好处
+如果所有代码都写在一个文件里，很快会变乱。
+
+模块可以帮助我们：
+- 按功能拆分代码
+- 在多个程序中复用函数
+- 降低主程序复杂度
+- 更容易维护和测试
+
+## 5. import 的几种写法
+```python
+import nester
+nester.print_lol(movies)
+```
+
+```python
+from nester import print_lol
+print_lol(movies)
+```
+
+```python
+import nester as ns
+ns.print_lol(movies)
+```
+
+## 6. 命名空间
+`nester.print_lol` 中的 `nester` 就是命名空间。它能避免不同模块里同名函数互相冲突。
+
+## 7. 不推荐 import *
+```python
+from nester import *
+```
+
+这种写法会把模块里的名字都导入当前文件，容易造成变量名冲突。学习阶段可以见过，但实战中少用。
+
+## 8. 易错点
+- 模块文件名不要和标准库同名，例如不要叫 `random.py`
+- 导入自己写的模块时，文件通常要在同一目录或 Python 能找到的路径中
+- 修改模块后，有些交互环境需要重启才能重新加载
+
+## 9. 小练习
+把 `print_lol` 保存到 `nester.py`，再写一个 `main.py` 导入并调用它。
 """
 )
 Quiz.objects.create(lesson=l7_4_2, question="导入模块的关键字是？", option_a="load", option_b="include", option_c="import", option_d="use", correct_answer="C", explanation="import。")
@@ -5430,6 +9060,53 @@ print(content)
 - `read()`：一次读完整个文件
 - `readline()`：读一行
 - `readlines()`：读成多行列表
+
+## 5. 逐行遍历文件
+大文件不适合一次性读入内存，可以逐行处理：
+
+```python
+with open("notes.txt", "r", encoding="utf-8") as f:
+    for line in f:
+        print(line.strip())
+```
+
+`strip()` 可以去掉行尾换行符和多余空白。
+
+## 6. 文件路径
+```python
+open("notes.txt")
+```
+
+表示在当前工作目录下找文件。若文件不在当前目录，需要写相对路径或绝对路径。
+
+## 7. 异常处理
+读取不存在的文件会报错：
+
+```python
+FileNotFoundError
+```
+
+可以用 `try-except` 处理：
+
+```python
+try:
+    with open("notes.txt", "r", encoding="utf-8") as f:
+        print(f.read())
+except FileNotFoundError:
+    print("文件不存在")
+```
+
+## 8. 易错点
+- 读取文件前要确认路径正确
+- 中文文本建议指定 `encoding="utf-8"`
+- `read()` 读完整文件，文件很大时要谨慎
+- `with open` 比手动 `close()` 更安全
+
+## 9. 小练习
+读取一个文本文件，统计：
+1. 一共有多少行
+2. 一共有多少个字符
+3. 哪些行包含关键词 `"Python"`
 """
 )
 Quiz.objects.create(lesson=l7_5_1, question="open('a.txt', 'r') 中 'r' 表示？", option_a="写入", option_b="读取", option_c="追加", option_d="删除", correct_answer="B", explanation="'r' 是 read，表示读取模式。")
@@ -5477,6 +9154,46 @@ with open("log.txt", "a", encoding="utf-8") as f:
 写文件时要想清楚：
 - 是要覆盖旧内容？
 - 还是保留旧内容继续追加？
+
+## 6. write 不会自动换行
+```python
+with open("log.txt", "a", encoding="utf-8") as f:
+    f.write("第一行")
+    f.write("第二行")
+```
+
+结果可能会连在一起：
+
+```text
+第一行第二行
+```
+
+如果需要换行，要自己加 `\n`：
+
+```python
+f.write("第一行\n")
+```
+
+## 7. writelines
+```python
+lines = ["A\n", "B\n", "C\n"]
+with open("out.txt", "w", encoding="utf-8") as f:
+    f.writelines(lines)
+```
+
+`writelines()` 不会自动给每个元素加换行符。
+
+## 8. 覆盖风险
+`"w"` 模式会清空旧文件内容。写日志、历史记录、打卡记录时，一般用 `"a"` 更安全。
+
+## 9. 易错点
+- `write()` 只能写字符串，写数字前要 `str()`
+- `"w"` 会覆盖，`"a"` 会追加
+- 换行要自己写 `\n`
+- 文件夹不存在时，写文件也会报错
+
+## 10. 小练习
+写一个程序，把三条学习记录逐行追加到 `study_log.txt`。
 """
 )
 Quiz.objects.create(lesson=l7_5_2, question="open('a.txt', 'w') 中 'w' 模式表示？", option_a="读取", option_b="写入并可能覆盖原内容", option_c="追加", option_d="只读", correct_answer="B", explanation="'w' 会写入文件，旧内容可能被覆盖。")
@@ -5528,6 +9245,49 @@ with open("study_log.txt", "r", encoding="utf-8") as f:
 
 ## 5. 为什么它适合初学者？
 因为这是非常真实的编程任务：把程序结果保存下来，而不是只打印在屏幕上。
+
+## 6. 加上时间戳
+日志最好记录时间：
+
+```python
+from datetime import datetime
+
+task = "完成文件操作练习"
+now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+with open("study_log.txt", "a", encoding="utf-8") as f:
+    f.write(f"{now} - {task}\n")
+```
+
+## 7. 读取并编号显示
+```python
+with open("study_log.txt", "r", encoding="utf-8") as f:
+    for index, line in enumerate(f, start=1):
+        print(index, line.strip())
+```
+
+`enumerate()` 可以在遍历时同时得到编号。
+
+## 8. 统计日志数量
+```python
+with open("study_log.txt", "r", encoding="utf-8") as f:
+    lines = f.readlines()
+
+print("记录条数:", len(lines))
+```
+
+## 9. 易错点
+- 追加日志用 `"a"`，不要误用 `"w"`
+- 写入时记得加换行
+- 读取前确认文件已经存在
+- 日志内容如果来自用户输入，要先检查是否为空
+
+## 10. 综合升级
+把学习日志程序升级成菜单：
+1. 输入 `1` 添加日志
+2. 输入 `2` 查看日志
+3. 输入 `3` 统计日志条数
+4. 输入 `0` 退出程序
 """
 )
 Quiz.objects.create(lesson=l7_5_3, question="学习日志项目中，先把任务保存下来更适合用哪种操作？", option_a="读取", option_b="追加写入", option_c="删除", option_d="排序", correct_answer="B", explanation="日志通常使用追加写入。")
@@ -5536,5 +9296,306 @@ Quiz.objects.create(lesson=l7_5_3, question="学习日志最适合说明文件�
 Quiz.objects.create(lesson=l7_5_3, question="下面哪种场景最像学习日志项目？", option_a="记录签到信息", option_b="只打印 Hello", option_c="画流程图", option_d="定义空元组", correct_answer="A", explanation="签到、打卡、日志都属于记录型文件应用。")
 Quiz.objects.create(lesson=l7_5_3, question="判断题：文件操作让程序结果不只停留在屏幕输出上。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，文件可以保存结果。")
 Quiz.objects.create(lesson=l7_5_3, question="判断题：日志型小项目适合帮助初学者理解文件读写。", option_a="正确", option_b="错误", option_c="", option_d="", correct_answer="A", explanation="正确，这种场景直观且实用。")
+
+SUPPLEMENTAL_LESSON_GUIDES = [
+    ("GESP 1级：编程启蒙", "1.1 什么是 Python？", "把 Python 看成“让计算机按步骤做事”的工具，能区分代码、解释器、输出和文件。",
+     ["Python 程序通常写在 `.py` 文件中，由解释器逐行执行。", "`print()` 是最基础的输出工具，括号和引号必须使用英文符号。", "程序报错时先读最后一行，再回到对应代码位置检查。", "同一段代码每次运行都按从上到下的顺序执行。"],
+     ["把 `Print` 当成 `print`，忽略大小写。", "把中文括号、中文引号写进代码。", "看到报错就重写全部代码，而不是定位第一处错误。"],
+     "写 3 行 `print()`：输出姓名、年龄、今天学到的一个关键词，然后故意删掉一个引号观察报错。",
+     "做一个“课程欢迎卡”：用多行输出打印课程名、学习目标、今日任务。"),
+    ("GESP 1级：编程启蒙", "1.2 变量与命名规则", "理解变量是给数据起名字，重点掌握命名规则、赋值方向和变量覆盖。",
+     ["赋值语句右边先计算，结果再绑定到左边变量名。", "变量名可以包含字母、数字、下划线，但不能以数字开头。", "变量名要表达含义，`score` 比 `s` 更适合保存成绩。", "同一个变量重新赋值后，旧值会被新值替代。"],
+     ["把 `=` 理解成数学里的“永远相等”。", "使用 `class`、`if`、`for` 等关键字当变量名。", "变量名拼写前后不一致，例如 `score` 和 `socre`。"],
+     "创建 `name`、`age`、`score` 三个变量并输出一句完整介绍。",
+     "设计一个“购物小票”程序：变量保存商品名、单价、数量，输出总价。"),
+    ("GESP 1级：编程启蒙", "1.3 基本数据类型", "能判断整数、浮点数、字符串、布尔值各自适合保存什么数据，并理解类型会影响运算结果。",
+     ["`int` 表示整数，适合人数、次数、编号。", "`float` 表示小数，适合身高、价格、平均分。", "`str` 表示文本，哪怕内容是数字，只要加引号就是字符串。", "`bool` 只有 `True` 和 `False`，常用于条件判断。"],
+     ["把 `'123'` 当成数字直接做加法。", "把 `True` 写成 `true`，忘记首字母大写。", "输出类型时只看内容，不用 `type()` 验证。"],
+     "分别创建四种类型变量，用 `type()` 输出它们的类型。",
+     "做一个“学生资料卡”：姓名是字符串，年龄是整数，身高是小数，是否通过测验是布尔值。"),
+    ("GESP 1级：编程启蒙", "1.4 输入与输出", "掌握程序与用户互动的最小闭环：输入、保存、处理、输出。",
+     ["`input()` 得到的永远是字符串。", "需要数学计算时，要用 `int()` 或 `float()` 转换输入。", "`print()` 可以输出多个值，逗号会自动加空格。", "提示语要写清楚，让用户知道该输入什么。"],
+     ["忘记转换类型，导致 `'12' + '3'` 得到 `'123'`。", "把提示语写在 `print()` 里，却没有真正接收输入。", "变量输入后没有输出检查，难以及时发现错误。"],
+     "输入姓名和年龄，输出“你好，某某，你今年某岁”。",
+     "做一个“明年年龄计算器”：输入年龄，转换为整数后输出明年的年龄。"),
+    ("GESP 1级：编程启蒙", "2.1 算术运算符", "理解每个算术运算符的含义，尤其能区分除法、整除、取余和幂运算。",
+     ["`/` 的结果通常是浮点数，`//` 表示整除。", "`%` 表示余数，常用于判断奇偶和周期问题。", "`**` 表示乘方，例如 `2 ** 3` 是 8。", "复杂表达式要用括号表达意图，不只依赖优先级。"],
+     ["把 `^` 当成乘方符号。", "把 `//` 理解成四舍五入。", "忘记取余结果范围：`a % b` 的结果小于 `b`。"],
+     "输入两个整数，输出和、差、积、商、整除结果和余数。",
+     "做一个“秒数转换器”：输入总秒数，输出分钟数和剩余秒数。"),
+    ("GESP 1级：编程启蒙", "2.2 比较与逻辑运算符", "能用比较表达式得到布尔值，再用 `and`、`or`、`not` 组合多个条件。",
+     ["比较运算的结果是 `True` 或 `False`。", "`and` 要两边都为真才为真。", "`or` 只要一边为真就为真。", "`not` 会把真假反过来，常用于“不满足某条件”。"],
+     ["把 `=` 写成比较用的 `==`。", "把自然语言的“并且/或者”混用，导致条件过宽或过窄。", "比较链太长时不加括号，自己也读不清。"],
+     "输入成绩，判断是否在 0 到 100 之间，并判断是否及格。",
+     "做一个“入场资格判断”：年龄不少于 12 且有门票才能进入。"),
+    ("GESP 1级：编程启蒙", "2.3 运算符优先级", "能预测表达式的计算顺序，并主动用括号降低阅读难度。",
+     ["括号优先级最高。", "乘除取余通常先于加减。", "比较运算通常在算术运算之后计算。", "逻辑运算中 `not`、`and`、`or` 有先后顺序。"],
+     ["只靠记忆优先级，不用括号表达需求。", "把程序计算顺序和从左到右阅读顺序混为一谈。", "在含逻辑运算的表达式里忽略短路现象。"],
+     "手算并运行验证：`3 + 4 * 2 > 10 and not False`。",
+     "改写三个复杂表达式：加括号后让同学一眼看出你的意图。"),
+    ("GESP 1级：编程启蒙", "3.1 分支结构 (if-elif-else)", "能根据条件让程序走不同路线，理解缩进决定代码属于哪个分支。",
+     ["`if` 是第一条判断，`elif` 是继续判断，`else` 是前面都不满足时执行。", "每个分支后的代码必须缩进。", "条件表达式结果必须能判断真假。", "多个范围判断要注意顺序，从特殊情况到一般情况更安全。"],
+     ["忘记冒号。", "缩进不一致，导致语句不在预期分支里。", "把多个独立 `if` 误当成互斥分支。"],
+     "输入分数，输出优秀、良好、及格或继续努力。",
+     "做一个“温度建议程序”：根据温度输出穿衣建议，并处理异常范围。"),
+    ("GESP 1级：编程启蒙", "4.1 For 循环与 range", "掌握固定次数循环，能用 `range()` 控制开始、结束和步长。",
+     ["`for` 适合次数明确或要遍历序列的任务。", "`range(stop)` 从 0 到 `stop - 1`。", "`range(start, stop, step)` 可以设置起点和步长。", "循环变量每轮自动变化，不需要自己加一。"],
+     ["以为 `range(1, 5)` 包含 5。", "在循环里修改循环变量，以为能改变下一轮。", "循环体缩进错误，只重复了一部分代码。"],
+     "用 `for` 输出 1 到 10 的平方。",
+     "做一个“九九乘法表”的前 3 行，再扩展到完整表。"),
+    ("GESP 1级：编程启蒙", "4.2 While 循环", "理解 `while` 适合条件未满足就持续执行的场景，并能避免死循环。",
+     ["`while` 每轮开始前都会重新判断条件。", "循环变量通常要在循环前初始化，在循环内更新。", "`while` 适合输入校验、菜单、猜数字等未知次数任务。", "设计循环时要先想清楚终止条件。"],
+     ["忘记更新变量造成死循环。", "条件写反，循环一次也不执行。", "把 `while True` 当成万能写法，却没有 `break` 出口。"],
+     "让用户反复输入密码，直到输入 `123456` 才结束。",
+     "做一个菜单程序：输入 1 打招呼，输入 0 退出，其他输入给出提示。"),
+    ("GESP 1级：编程启蒙", "4.3 break 与 continue", "能控制循环提前结束或跳过本轮，知道它们只影响所在的最近一层循环。",
+     ["`break` 直接结束当前循环。", "`continue` 跳过本轮剩余语句，进入下一轮。", "二者常和 `if` 配合使用。", "嵌套循环中只影响离它最近的一层。"],
+     ["把 `continue` 当成结束整个循环。", "在 `continue` 后面写必须执行的更新语句。", "嵌套循环里误以为一个 `break` 能跳出所有层。"],
+     "输出 1 到 20 中不是 3 的倍数的数字，遇到 17 时停止。",
+     "做一个“输入过滤器”：用户输入空字符串就跳过，输入 `q` 就退出。"),
+
+    ("GESP 2级：逻辑进阶", "1.1 列表的定义与索引", "从“多个变量”升级到“一个有顺序的容器”，能用索引读取和修改元素。",
+     ["列表用方括号保存多个值。", "索引从 0 开始，最后一个元素也可以用 `-1`。", "列表是可变对象，元素能被修改。", "读取元素前要确认索引没有越界。"],
+     ["把第一个元素当成索引 1。", "混淆列表长度和最后一个索引。", "多个变量引用同一个列表时，修改会互相影响。"],
+     "创建成绩列表，输出最高分、最低分和最后一名同学的分数。",
+     "做一个“待办清单”：用列表保存任务，并修改其中一项。"),
+    ("GESP 2级：逻辑进阶", "1.2 列表的增删改查", "掌握列表作为动态数据集合的维护方式，理解不同方法对原列表的影响。",
+     ["`append()` 在末尾添加一个元素。", "`extend()` 把另一个序列的元素逐个加入。", "`insert()` 可以指定插入位置。", "`pop()` 删除并返回元素，`remove()` 按值删除。"],
+     ["把 `append([1, 2])` 误认为会加入两个元素。", "遍历列表时同时删除元素，导致跳项。", "不区分按位置删除和按值删除。"],
+     "维护一个社团名单：添加、插入、删除、查询某个名字是否存在。",
+     "做一个“购物车”：支持添加商品、删除最后一件商品、显示商品数量。"),
+    ("GESP 2级：逻辑进阶", "2.1 字符串常用方法", "把字符串当作不可变文本序列，能用方法完成清洗、查找、替换和判断。",
+     ["`strip()` 去除首尾空白。", "`lower()` 和 `upper()` 常用于统一大小写。", "`replace()` 返回新字符串，不会原地修改。", "`split()` 把字符串拆成列表，`join()` 把列表合成字符串。"],
+     ["以为字符串方法会直接修改原字符串。", "忘记保存方法返回值。", "把 `split()` 的结果继续当字符串使用。"],
+     "清洗用户输入：去空格、统一小写、判断是否包含关键词。",
+     "做一个“姓名规范化”程序：把逗号分隔的姓名整理成统一格式。"),
+    ("GESP 2级：逻辑进阶", "2.2 字符与编码 (ASCII)", "理解字符在计算机中有编号，能用 `ord()` 和 `chr()` 连接字符与数字。",
+     ["`ord('A')` 得到字符编码。", "`chr(65)` 得到对应字符。", "数字字符、字母字符、真正的数字是三类概念。", "ASCII 顺序能帮助比较英文字母大小。"],
+     ["把字符 `'9'` 和数字 `9` 混为一谈。", "以为所有中文都属于 ASCII。", "不知道大小写字母编码不同。"],
+     "输出 `A` 到 `Z` 的编码，并找出小写字母和大写字母编码差。",
+     "做一个“字符分类器”：判断输入字符是数字、大写字母还是小写字母。"),
+    ("GESP 2级：逻辑进阶", "2.3 字符串切片与格式化输出", "能用切片取出子串，并用格式化输出让结果更清晰。",
+     ["切片格式是 `s[start:end:step]`，不包含 `end`。", "省略起点表示从开头开始，省略终点表示到结尾。", "负数索引适合从右侧取字符。", "f-string 能把变量直接嵌入字符串。"],
+     ["以为切片包含右端点。", "步长为负时还按正向思考。", "拼接数字和字符串时忘记转换或格式化。"],
+     "从身份证样例字符串中切出年份、月份、日期。",
+     "做一个“成绩报告”：用 f-string 输出姓名、分数、等级。"),
+    ("GESP 2级：逻辑进阶", "2.4 综合实战：整理学生成绩字符串", "把字符串拆分、清洗、转换和统计串成完整数据处理流程。",
+     ["先观察原始数据格式，再决定分隔符。", "清洗空格后再转换类型。", "转换前可以先判断字符串是否像数字。", "最终输出要兼顾正确性和可读性。"],
+     ["没处理多余空格就直接比较。", "只写出单个步骤，缺少完整流程。", "把异常数据直接丢进 `int()` 导致程序中断。"],
+     "把 `Tom:90, Jack:82, Lucy:95` 整理成姓名列表和分数列表。",
+     "升级为“班级成绩报告”：输出平均分、最高分学生和不及格名单。"),
+    ("GESP 2级：逻辑进阶", "3.1 元组 Tuple：不能随意修改的序列", "理解元组适合保存固定结构数据，能区分不可变容器和可变容器。",
+     ["元组用圆括号创建，单元素元组需要逗号。", "元组支持索引、切片和遍历。", "元组本身不可修改，但里面的可变对象可能能改。", "固定坐标、日期、返回值常用元组。"],
+     ["写 `(1)` 以为是单元素元组。", "把不可变理解成里面任何对象都不能变化。", "需要频繁增删时仍使用元组。"],
+     "用元组保存一个点 `(x, y)`，计算它到原点的距离平方。",
+     "用元组保存学生记录 `(name, score)`，遍历并输出及格学生。"),
+    ("GESP 2级：逻辑进阶", "3.2 字典 Dictionary：用名字找数据", "掌握键值对模型，能用字典表达有字段含义的数据。",
+     ["字典用键找到值，键必须唯一。", "`in` 判断的是键是否存在。", "`get()` 可以给缺省值，减少 `KeyError`。", "字典适合表示对象属性或统计表。"],
+     ["把字典当成有固定顺序的列表来读。", "查询不存在的键时不做保护。", "键和值的位置写反。"],
+     "用字典保存一名学生的姓名、年龄、分数，并输出一句介绍。",
+     "做一个“单词计数器”：统计一句话里每个词出现次数。"),
+    ("GESP 2级：逻辑进阶", "3.3 集合 Set：自动去重的容器", "理解集合用于去重和关系判断，重点掌握交并差。",
+     ["集合中的元素不重复。", "`add()` 添加元素，`discard()` 删除时更安全。", "`&` 求交集，`|` 求并集，`-` 求差集。", "集合不强调顺序，不能用索引访问。"],
+     ["以为集合输出顺序固定。", "用 `{}` 创建空集合，实际得到空字典。", "把 `remove()` 用在可能不存在的元素上导致报错。"],
+     "输入两个兴趣列表，转成集合后求共同兴趣和各自独有兴趣。",
+     "做一个“报名去重”程序：统计实际报名人数和重复报名姓名。"),
+    ("GESP 2级：逻辑进阶", "3.4 列表、元组、字典、集合怎么选？", "能根据数据是否有顺序、是否可变、是否需要键、是否去重来选择容器。",
+     ["列表适合有顺序且会变化的数据。", "元组适合固定结构数据。", "字典适合按名称查找字段。", "集合适合去重和关系运算。"],
+     ["所有数据都用列表，导致含义不清。", "需要按键查找时仍遍历列表。", "需要保留顺序时误用集合。"],
+     "给出 8 个场景，为每个场景选择最合适的容器并说明原因。",
+     "重构学生信息：从多个列表改成列表嵌套字典。"),
+    ("GESP 2级：逻辑进阶", "3.5 综合实战：班级选课信息整理", "综合使用列表、字典、集合整理真实班级数据。",
+     ["用列表保存多名学生。", "用字典保存每个学生的姓名和课程。", "用集合统计不重复课程。", "用循环汇总报名人数和课程热度。"],
+     ["数据结构一开始设计不清，后面统计困难。", "把学生名和课程名放在平行列表里，容易错位。", "统计前没有先去重。"],
+     "整理 5 名学生的选课记录，输出所有课程、每门课人数。",
+     "升级为“推荐课程”：找出报名人数最多的课程和只被一人选择的课程。"),
+
+    ("GESP 3级：函数与模块", "1.1 函数定义与返回值", "把重复代码封装成可复用函数，理解返回值用于把结果交还给调用者。",
+     ["`def` 定义函数，函数体通过缩进确定。", "参数是输入，返回值是输出。", "`return` 会结束函数并交回结果。", "函数名要表达动作或计算目标。"],
+     ["把 `print()` 当成返回值。", "函数只写定义不调用。", "多个返回路径中有些忘记 `return`。"],
+     "写 `is_pass(score)`，返回成绩是否及格，再用 `print()` 输出结果。",
+     "做一个“成绩等级函数”：输入分数，返回 A/B/C/D。"),
+    ("GESP 3级：函数与模块", "1.2 局部变量与全局变量", "理解变量作用域，能判断变量在哪些位置能被访问。",
+     ["函数内部创建的变量通常是局部变量。", "函数外部创建的变量是全局变量。", "优先通过参数传入数据，而不是依赖全局变量。", "`global` 能修改全局变量，但初学阶段应少用。"],
+     ["在函数外访问函数内部变量。", "同名局部变量遮蔽全局变量却没意识到。", "用全局变量传递所有数据，导致函数难复用。"],
+     "写两个函数，分别使用参数和全局变量完成同一计算，比较可读性。",
+     "重构一个依赖全局 `score` 的函数，让它改为接收参数。"),
+    ("GESP 3级：函数与模块", "1.3 参数传递与函数调用", "掌握位置参数、关键字参数和默认参数，让函数调用更清晰。",
+     ["位置参数按顺序匹配。", "关键字参数按名字匹配。", "默认参数让常用值可以省略。", "可变对象做默认参数容易产生共享状态问题。"],
+     ["调用时参数数量不匹配。", "位置参数和关键字参数顺序混乱。", "把列表作为默认参数并在函数里修改。"],
+     "写 `make_card(name, level=1)`，用默认参数生成学习卡片。",
+     "做一个“报名函数”：支持姓名、课程、是否加急三个参数。"),
+    ("GESP 3级：函数与模块", "2.1 元组进阶：解包、返回值与不可变数据", "从基础元组升级到多返回值、解包和固定数据建模。",
+     ["函数可以返回元组来表达多个结果。", "元组解包能把多个位置的值分给多个变量。", "`a, b = b, a` 是常见交换写法。", "元组可作为字典键，适合坐标类数据。"],
+     ["解包变量数量和元素数量不一致。", "把元组不可变误解为不能遍历。", "返回多个值后没有接收，导致结果丢失。"],
+     "写 `min_max(nums)`，返回最小值和最大值，并用解包接收。",
+     "做一个“坐标统计”：用 `(x, y)` 作为键记录每个位置出现次数。"),
+    ("GESP 3级：函数与模块", "2.2 异常处理 try-except", "理解异常处理用于应对可预见错误，让程序不因单个错误直接崩溃。",
+     ["`try` 放可能出错的代码。", "`except` 捕获指定异常并处理。", "精准捕获比一把抓更安全。", "`else` 和 `finally` 可用于成功后逻辑和收尾。"],
+     ["把所有错误都用裸 `except` 吃掉。", "异常处理范围太大，看不出哪行可能出错。", "捕获异常后不给用户可理解提示。"],
+     "让用户输入整数，输入错误时提示并重新输入。",
+     "做一个“安全除法函数”：处理除数为 0 和输入不是数字两类问题。"),
+    ("GESP 3级：函数与模块", "3.1 什么是模块 import", "理解模块是 `.py` 文件级别的代码组织方式，能用 `import` 复用现成能力。",
+     ["一个 Python 文件就是一个模块。", "`import math` 后要用 `math.sqrt()` 访问函数。", "模块能减少重复代码。", "导入模块时会执行模块顶层代码。"],
+     ["导入后直接写 `sqrt()`，忘记模块名前缀。", "模块文件名和标准库重名。", "把测试代码放在模块顶层导致导入时运行。"],
+     "导入 `math`，计算 3、4、5 三个数的平方根。",
+     "新建一个工具模块，放入一个加法函数，再在主文件中导入使用。"),
+    ("GESP 3级：函数与模块", "3.2 from...import 与 as 别名", "掌握不同导入方式的取舍，让代码短但不失清晰。",
+     ["`from math import sqrt` 可以直接用 `sqrt()`。", "`as` 能给长模块名或冲突名称起别名。", "导入少量明确函数时可以用 `from`。", "多人项目中可读性比少打几个字更重要。"],
+     ["过度使用 `from module import *`。", "别名太短导致别人看不懂。", "两个模块函数同名时被后导入的覆盖。"],
+     "分别用 `import math`、`from math import sqrt`、`import math as m` 完成同一计算。",
+     "整理一段混乱导入代码，说明每种导入方式为什么这样选。"),
+    ("GESP 3级：函数与模块", "3.3 自定义模块与代码拆分", "能把工具函数从主程序中拆出去，形成清晰的文件边界。",
+     ["主程序负责流程，工具模块负责可复用函数。", "拆模块前先看哪些函数会被多处使用。", "`if __name__ == '__main__'` 可避免测试代码在导入时运行。", "模块名要短、清楚、避免与库重名。"],
+     ["把所有函数都塞进一个文件。", "循环导入导致模块互相依赖。", "拆分后路径和运行目录没有搞清楚。"],
+     "把成绩计算函数拆到 `score_tools.py`，主程序只负责输入输出。",
+     "给工具模块加 3 个小测试调用，并用主入口保护它们。"),
+    ("GESP 3级：函数与模块", "3.4 综合实战：制作成绩工具箱", "把函数、异常处理、模块拆分组合成一个可复用的小工具箱。",
+     ["先定义清晰函数：平均分、最高分、等级判断。", "输入转换要有异常处理。", "工具函数尽量返回结果，不直接打印。", "主程序负责把结果组织成报告。"],
+     ["函数之间职责重叠。", "一边计算一边打印，导致难测试。", "遇到异常数据没有跳过或提示策略。"],
+     "实现 `average(scores)`、`level(score)`、`summary(scores)` 三个函数。",
+     "把工具箱拆成模块，并写一个菜单程序调用这些函数。"),
+
+    ("Python 应用进阶：数据分析与可视化", "1.1 NumPy 与 ndarray 入门", "理解 ndarray 是批量数值计算容器，适合处理同类型数据。",
+     ["NumPy 数组支持向量化运算。", "数组通常要求元素类型统一。", "`shape` 描述数组维度。", "列表适合通用数据，数组适合数值计算。"],
+     ["把 ndarray 当普通列表逐个循环处理。", "忽略数据类型导致整数和小数结果不符合预期。", "不知道一维数组和二维数组的区别。"],
+     "创建一组成绩数组，整体加 5 分并计算平均分。",
+     "比较列表循环加分和 ndarray 向量化加分的写法差异。"),
+    ("Python 应用进阶：数据分析与可视化", "1.2 数组形状、索引与运算", "能读懂二维数组的行列结构，并进行切片、广播和统计。",
+     ["二维数组索引常写作 `arr[row, col]`。", "`reshape()` 改变形状但元素总数要一致。", "广播让数组和标量或兼容形状数组一起运算。", "常用统计包括 `sum`、`mean`、`max`、`min`。"],
+     ["把行列顺序写反。", "reshape 后元素数量不匹配。", "广播失败时不看两个数组的形状。"],
+     "创建 3 行 4 列成绩表，计算每名学生总分和每科平均分。",
+     "把一维 12 个数重塑为 3x4，再提取第 2 行和第 3 列。"),
+    ("Python 应用进阶：数据分析与可视化", "2.1 Series 与 DataFrame", "理解 Series 是一列带索引的数据，DataFrame 是多列组成的表格。",
+     ["Series 适合表示一维数据。", "DataFrame 的列通常有字段名。", "索引帮助定位行，列名帮助定位字段。", "表格思维是后续筛选、统计和可视化的基础。"],
+     ["把 DataFrame 当成二维列表，忽略列名。", "索引和普通数据列混淆。", "创建表格时各列长度不一致。"],
+     "创建学生成绩 DataFrame，包含姓名、班级、语文、数学三列。",
+     "新增总分列，并按总分从高到低查看前 3 名。"),
+    ("Python 应用进阶：数据分析与可视化", "2.2 选列、筛选与基础统计", "能从表格中选出需要的列和行，再完成基础统计。",
+     ["`df['列名']` 选择一列。", "布尔条件可筛选行。", "`mean()`、`max()`、`value_counts()` 是高频统计方法。", "统计前要确认数据类型正确。"],
+     ["筛选条件少写括号。", "把单列 Series 和多列 DataFrame 混用。", "字符串数字没有转换就计算平均值。"],
+     "筛选数学成绩不低于 90 的学生，并计算他们的平均总分。",
+     "按班级统计人数和平均分，找出平均分最高的班级。"),
+    ("Python 应用进阶：数据分析与可视化", "3.1 折线图与柱状图", "知道不同图表适合表达不同关系，能用 Matplotlib 画基础图。",
+     ["折线图适合趋势变化。", "柱状图适合类别对比。", "画图前先整理 x 轴和 y 轴数据。", "图表要服务问题，不是为了好看而画。"],
+     ["类别对比误用折线图。", "x 和 y 长度不一致。", "图画出来没有标题和坐标含义。"],
+     "用折线图展示一周学习时长变化，用柱状图展示各科成绩。",
+     "把同一组数据画成两种图，说明哪种更适合回答问题。"),
+    ("Python 应用进阶：数据分析与可视化", "3.2 标题、坐标轴与图例", "让图表从“能画出来”升级到“别人能读懂”。",
+     ["标题说明图表回答的问题。", "坐标轴标签说明单位和含义。", "图例用于区分多条线或多组数据。", "中文显示可能需要配置字体。"],
+     ["图表没有单位，读者无法判断大小。", "多条线没有图例。", "标题只写“图1”，没有表达结论。"],
+     "给成绩柱状图添加标题、x/y 轴标签和图例。",
+     "把图表标题改成一句结论，例如“数学平均分高于语文”。"),
+    ("Python 应用进阶：数据分析与可视化", "4.1 用 Pandas + Matplotlib 分析成绩表", "完成一次从表格读取、清洗、统计到可视化的完整数据分析流程。",
+     ["先检查数据列和缺失值。", "再新增总分、平均分等分析列。", "用筛选和分组回答具体问题。", "最后用图表展示最关键结论。"],
+     ["还没明确问题就开始画图。", "统计结果没核对就直接下结论。", "图表和文字结论不一致。"],
+     "用一个成绩表找出最高分学生、各科平均分和不及格名单。",
+     "生成一页分析报告：包含 3 个统计值、1 张图和 3 条文字结论。"),
+
+    ("GESP 5级：算法基础", "1.1 时间复杂度 Big O", "理解复杂度描述算法随数据规模增长的趋势，而不是某台电脑跑了几秒。",
+     ["只保留增长最快的项。", "常数系数通常忽略。", "`O(1)`、`O(log n)`、`O(n)`、`O(n^2)` 是常见等级。", "嵌套循环往往带来乘法级增长。"],
+     ["用一次运行时间直接判断复杂度。", "把两个顺序循环误判成 `O(n^2)`。", "只看代码行数，不看循环次数和数据规模。"],
+     "分析 5 段循环代码的复杂度，并写出理由。",
+     "把双重循环统计改成字典计数，比较复杂度变化。"),
+    ("GESP 5级：算法基础", "1.2 空间复杂度与复杂度估算", "能估算算法额外占用的存储空间，并区分输入空间和辅助空间。",
+     ["空间复杂度关注额外变量、数组、字典等。", "原始输入通常不算额外空间。", "递归调用栈也会占空间。", "时间和空间常有取舍关系。"],
+     ["只数变量个数，不考虑列表长度随 n 增长。", "忽略递归深度。", "为了省空间写出难读且易错的代码。"],
+     "判断 4 个函数分别是 `O(1)` 还是 `O(n)` 空间。",
+     "尝试用集合加速查找，再说明为什么空间增加但时间减少。"),
+    ("GESP 5级：算法基础", "2.1 冒泡排序 Bubble Sort", "理解相邻元素比较交换，最大值会一轮一轮“冒”到末尾。",
+     ["每轮会把未排序部分的最大值放到右侧。", "内层循环范围会逐轮缩小。", "可以用标记优化已经有序的情况。", "冒泡排序时间复杂度通常是 `O(n^2)`。"],
+     ["每轮结束后仍比较已经排好的尾部。", "交换条件方向写反。", "忘记一轮无交换就可以提前结束。"],
+     "手动追踪 `[5, 1, 4, 2]` 的每一轮变化。",
+     "加入 `swapped` 标记，比较有序数组时的循环次数。"),
+    ("GESP 5级：算法基础", "2.2 二分查找 Binary Search", "掌握在有序数据中不断缩小一半范围的查找思想。",
+     ["二分查找前提是数据有序。", "`left` 和 `right` 表示当前可能区间。", "比较中间值后丢弃不可能的一半。", "循环条件和边界更新决定是否漏查。"],
+     ["在无序列表上使用二分。", "`mid` 更新后边界没有排除已检查位置。", "循环条件写错导致死循环或漏掉最后一个元素。"],
+     "在有序列表中查找目标，打印每次的 `left`、`mid`、`right`。",
+     "写一个返回插入位置的二分版本，为插入排序做准备。"),
+    ("GESP 5级：算法基础", "2.3 选择排序 Selection Sort", "理解每轮从未排序部分选择最小值，放到当前位置。",
+     ["外层循环确定要放置的位置。", "内层循环寻找最小值下标。", "每轮最多交换一次。", "选择排序比较次数稳定，时间复杂度是 `O(n^2)`。"],
+     ["找到最小值后忘记保存下标。", "内层循环从错误位置开始。", "把选择排序和冒泡排序的相邻交换混淆。"],
+     "手动追踪 `[3, 1, 4, 2]`，写出每轮最小值下标。",
+     "改写为从大到小排序，观察比较条件如何变化。"),
+    ("GESP 5级：算法基础", "2.4 插入排序 Insertion Sort", "理解把当前元素插入到左侧已经有序的区域中。",
+     ["左侧区域始终保持有序。", "当前值向左比较并移动更大的元素。", "近乎有序的数据上插入排序表现较好。", "最坏时间复杂度仍是 `O(n^2)`。"],
+     ["移动元素时覆盖了待插入值。", "while 边界写错访问负索引。", "把插入位置和当前扫描位置混淆。"],
+     "手动追踪 `[4, 2, 3, 1]` 的插入过程。",
+     "用插入排序整理一组按时间接近有序的打卡记录。"),
+
+    ("GESP 6级：进阶数据结构与递归", "1.1 递归基础 Recursion", "理解递归是函数调用自己，必须有明确的终止条件和规模缩小。",
+     ["递归函数至少包含终止条件。", "每次递归调用都要让问题变小。", "递归调用会形成调用栈。", "递归适合树形、分治、回溯等结构。"],
+     ["没有终止条件导致无限递归。", "问题规模没有变小。", "只会写递归公式，不会跟踪返回过程。"],
+     "写阶乘函数，并画出 `factorial(4)` 的调用和返回过程。",
+     "用递归求列表元素和，再改成循环版比较。"),
+    ("GESP 6级：进阶数据结构与递归", "2.1 栈 Stack", "掌握后进先出结构，能把栈用于括号匹配、撤销和递归模拟。",
+     ["栈的核心操作是 push、pop、peek。", "后放进去的元素先出来。", "Python 列表的 `append()` 和 `pop()` 可模拟栈。", "空栈 pop 会报错，操作前要判断。"],
+     ["把栈和队列的出入顺序混淆。", "没检查空栈就弹出。", "用列表头部 `pop(0)` 模拟栈，效率和语义都不清晰。"],
+     "用栈判断字符串括号是否成对匹配。",
+     "实现一个简单撤销功能：输入操作入栈，撤销时弹出最近操作。"),
+    ("GESP 6级：进阶数据结构与递归", "2.2 队列 Queue", "掌握先进先出结构，能把队列用于排队、任务调度和层序遍历。",
+     ["队列从一端进入，从另一端离开。", "先进来的元素先处理。", "`collections.deque` 比列表 `pop(0)` 更适合队列。", "队列常用于 BFS 和按顺序处理任务。"],
+     ["用普通列表头部删除处理大量数据，效率低。", "把队列和栈的顺序记反。", "循环处理队列时忘记终止条件。"],
+     "用 `deque` 模拟 5 名学生排队办理业务。",
+     "做一个任务队列：添加任务、处理任务、查看剩余任务数量。"),
+
+    ("Head First Python", "1.1 快速入门与 IDLE", "把交互式尝试和脚本保存区分开，理解初学阶段如何快速验证代码。",
+     ["交互式环境适合短实验。", "脚本文件适合保存完整程序。", "运行前先保存文件。", "小步运行能更快定位错误。"],
+     ["只在交互式里写代码，无法复用。", "改了文件却没有重新运行。", "报错时不看行号。"],
+     "在交互式里尝试 3 个表达式，再保存成 `.py` 文件运行。",
+     "做一个“实验记录”：把今天验证过的 5 个表达式写进脚本并注释结果。"),
+    ("Head First Python", "1.2 实战：奇数分钟检测 (odd.py)", "从真实小脚本理解输入、时间、条件判断和输出如何配合。",
+     ["项目要先明确输入来源和输出目标。", "时间相关代码适合用标准库。", "判断奇偶可以用 `% 2`。", "小脚本也要保持变量名清楚。"],
+     ["只复制代码，不理解每个变量来源。", "把字符串分钟数直接取余。", "条件分支没有覆盖偶数情况。"],
+     "写一个程序判断当前分钟是奇数还是偶数。",
+     "升级为“学习提醒”：奇数分钟提醒练习，偶数分钟提醒复盘。"),
+    ("Head First Python", "2.1 项目实践：电影列表建模", "把列表放入项目场景，理解数据顺序、字段含义和后续维护成本。",
+     ["列表能快速保存一组同类或相关数据。", "位置本身没有字段名，需要靠约定解释。", "电影项目中列表可保存标题、年份、演员。", "当数据字段变多时要考虑字典或对象。"],
+     ["用索引表达含义但没有注释。", "列表里混合太多类型导致难维护。", "修改顺序后旧索引含义失效。"],
+     "用列表保存三部电影，并输出第二部电影。",
+     "把单部电影从列表表示改成字典表示，比较可读性。"),
+    ("Head First Python", "2.2 项目实践：维护电影列表", "练习在项目中维护列表，让增删改查服务具体数据变化。",
+     ["添加新电影用 `append()`。", "删除临时数据可用 `pop()`。", "合并演员列表要区分 `append` 和 `extend`。", "维护数据前先明确操作意图。"],
+     ["删除时索引写错导致删错电影。", "把整个演员列表作为一个元素追加。", "没有打印检查操作后的列表。"],
+     "维护一个电影待看片单：添加、删除、替换一部电影。",
+     "加入菜单循环，让用户选择添加电影或查看清单。"),
+    ("Head First Python", "2.3 项目实践：嵌套列表与递归遍历", "处理真实项目中多层数据，理解普通循环为什么不够。",
+     ["嵌套列表表示数据中还有子数据。", "遍历时要判断元素是否还是列表。", "递归适合处理层数不固定的结构。", "输出嵌套数据时要保持层级清晰。"],
+     ["只写一层循环，漏掉内部列表。", "判断类型时写错 `isinstance()`。", "递归没有终止条件。"],
+     "遍历包含演员列表的电影数据，把所有非列表元素打印出来。",
+     "给递归打印函数增加缩进参数，显示层级结构。"),
+    ("Head First Python", "3.1 项目实践：电影信息字典", "把项目数据从“靠位置理解”升级为“靠字段名理解”。",
+     ["字典字段名让数据含义更清楚。", "电影标题、年份、演员表适合作为键值对。", "列表可以保存多个电影字典。", "字段缺失时要用 `get()` 或默认值处理。"],
+     ["键名拼写不统一。", "把多个电影字段拆成平行列表。", "访问不存在的键导致 `KeyError`。"],
+     "用字典表示一部电影，并输出标准介绍句。",
+     "做一个电影库：列表中保存多个电影字典，筛选 2000 年后的电影。"),
+    ("Head First Python", "4.1 项目实践：print_lol 递归函数", "把函数作为项目工具，解决嵌套列表打印问题。",
+     ["函数封装重复遍历逻辑。", "递归让函数能处理任意深度列表。", "参数名要表达输入数据含义。", "项目工具函数应尽量独立、可复用。"],
+     ["函数里写死外部变量名。", "递归调用忘记传子列表。", "一边打印一边修改原数据。"],
+     "实现 `print_lol(the_list)`，打印嵌套列表中的所有普通元素。",
+     "给函数增加 `level` 参数，按层级缩进输出。"),
+    ("Head First Python", "4.2 项目实践：封装 nester.py 模块", "从单个函数升级为可导入模块，理解代码复用的文件边界。",
+     ["模块文件名就是导入名。", "把 `print_lol` 放入 `nester.py` 后可在多个脚本复用。", "模块中的测试代码要用主入口保护。", "清晰模块名能降低使用成本。"],
+     ["模块名和变量名冲突。", "导入模块时测试代码自动运行。", "修改模块后忘记重新运行主程序。"],
+     "创建 `nester.py`，在另一个文件中导入并调用 `print_lol`。",
+     "给模块添加一个参数控制是否显示缩进。"),
+    ("Head First Python", "5.1 读取文本文件：open 与 read", "理解文件读取让程序能使用长期保存的数据。",
+     ["`open()` 打开文件，`read()` 读取全部内容。", "`with open` 能自动关闭文件。", "读取中文文件应指定 `encoding='utf-8'`。", "大文件更适合逐行读取。"],
+     ["路径写错找不到文件。", "读取后忘记关闭文件。", "不指定编码导致中文乱码。"],
+     "读取一个文本文件并输出前 3 行。",
+     "做一个“单词统计”：读取文件内容，统计某个关键词出现次数。"),
+    ("Head First Python", "5.2 写入与追加：write、w 模式、a 模式", "掌握写文件和追加文件的区别，避免误覆盖数据。",
+     ["`w` 模式会重写文件内容。", "`a` 模式会在末尾追加。", "`write()` 不会自动换行。", "写入非字符串前要转换。"],
+     ["写日志时误用 `w` 导致旧记录丢失。", "忘记加 `\\n`，多条记录挤在一行。", "写入数字时没有转成字符串。"],
+     "写入三条学习记录，并再次运行观察 `w` 和 `a` 的区别。",
+     "做一个“每日打卡”文件，每次运行都追加当前日期和任务。"),
+    ("Head First Python", "5.3 综合实战：学习日志文件", "把读取、追加、编号显示和统计组合成一个可用小项目。",
+     ["日志项目体现持久化：程序关闭后数据仍在。", "添加记录用追加模式。", "查看记录用读取模式。", "统计记录数可用逐行遍历或 `readlines()`。"],
+     ["查看日志前没有判断文件是否存在。", "追加时没有换行。", "菜单输入没有处理非法选项。"],
+     "实现添加日志、查看日志、统计条数三个功能。",
+     "加入日期过滤：只显示今天的学习记录。"),
+]
+
+apply_lesson_supplements(SUPPLEMENTAL_LESSON_GUIDES)
 
 print("所有课程创建完成！")

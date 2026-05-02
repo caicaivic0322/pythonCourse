@@ -108,21 +108,51 @@ class CourseSeedContentTests(APITestCase):
 
         course3 = Course.objects.get(title='GESP 3级：函数与模块')
         lesson_311 = Lesson.objects.get(chapter__course=course3, title='1.1 函数定义与返回值')
+        lesson_321 = Lesson.objects.get(chapter__course=course3, title='2.1 元组进阶：解包、返回值与不可变数据')
         lesson_322 = Lesson.objects.get(chapter__course=course3, title='2.2 异常处理 try-except')
         lesson_333 = Lesson.objects.get(chapter__course=course3, title='3.3 自定义模块与代码拆分')
         self.assertIn('## 4. return 与 print 的区别', lesson_311.content)
+        self.assertIn('## 0. 和 GESP 2级有什么不同？', lesson_321.content)
         self.assertIn('## 4. 精准捕获 vs 一把抓', lesson_322.content)
         self.assertIn('## 5. 为什么不要把所有函数都塞进 main.py', lesson_333.content)
 
         course4 = Course.objects.get(title='GESP 4级：数据结构进阶')
-        lesson_411 = Lesson.objects.get(chapter__course=course4, title='1.1 字典 Dictionary')
-        lesson_412 = Lesson.objects.get(chapter__course=course4, title='1.2 集合 Set')
+        lesson_411 = Lesson.objects.get(chapter__course=course4, title='1.1 字典进阶：嵌套、计数与数据建模')
+        lesson_412 = Lesson.objects.get(chapter__course=course4, title='1.2 集合进阶：关系运算与去重策略')
         lesson_421 = Lesson.objects.get(chapter__course=course4, title='2.1 类与对象基础')
         lesson_422 = Lesson.objects.get(chapter__course=course4, title='2.2 构造函数 __init__')
-        self.assertIn('## 4. 键是否存在时的处理', lesson_411.content)
-        self.assertIn('## 4. add、discard 与 remove', lesson_412.content)
-        self.assertIn('## 5. 属性和方法的区别', lesson_421.content)
-        self.assertIn('## 3. 为什么要在 __init__ 里初始化', lesson_422.content)
+        lesson_423 = Lesson.objects.get(chapter__course=course4, title='2.3 封装：把数据和规则放进类里')
+        lesson_424 = Lesson.objects.get(chapter__course=course4, title='2.4 继承与方法重写')
+        lesson_425 = Lesson.objects.get(chapter__course=course4, title='2.5 类属性、实例属性与对象列表')
+        lesson_426 = Lesson.objects.get(chapter__course=course4, title='2.6 综合项目：学生成绩管理系统')
+        self.assertIn('## 0. 和 GESP 2级有什么不同？', lesson_411.content)
+        self.assertIn('## 8. 计数问题：字典高频应用', lesson_411.content)
+        self.assertIn('## 0. 和 GESP 2级有什么不同？', lesson_412.content)
+        self.assertIn('## 10. 综合练习：班级选课分析', lesson_412.content)
+        self.assertIn('## 5. self 到底是什么？', lesson_421.content)
+        self.assertIn('## 9. 易错点', lesson_421.content)
+        self.assertIn('## 3. 参数和属性不要混淆', lesson_422.content)
+        self.assertIn('## 10. 综合练习：BankAccount', lesson_422.content)
+        self.assertIn('## 2. 用方法保护修改规则', lesson_423.content)
+        self.assertIn('## 4. super() 调用父类', lesson_424.content)
+        self.assertIn('## 7. 用对象列表完成统计', lesson_425.content)
+        self.assertIn('## 7. 用字典统计等级人数', lesson_426.content)
+        self.assertEqual(lesson_423.quizzes.count(), 8)
+        self.assertEqual(lesson_426.quizzes.count(), 8)
+        self.assertEqual(
+            Lesson.objects.filter(chapter__course=course4, chapter__title='第2章：面向对象编程 OOP').count(),
+            6,
+        )
+
+        head_first = Course.objects.get(title='Head First Python')
+        hf_list = Lesson.objects.get(chapter__course=head_first, title='2.1 项目实践：电影列表建模')
+        hf_dict = Lesson.objects.get(chapter__course=head_first, title='3.1 项目实践：电影信息字典')
+        hf_fn = Lesson.objects.get(chapter__course=head_first, title='4.1 项目实践：print_lol 递归函数')
+        hf_module = Lesson.objects.get(chapter__course=head_first, title='4.2 项目实践：封装 nester.py 模块')
+        self.assertIn('## 0. 和 GESP 2级列表有什么不同？', hf_list.content)
+        self.assertIn('## 0. 和前面字典课程有什么不同？', hf_dict.content)
+        self.assertIn('## 0. 和 GESP 函数课程有什么不同？', hf_fn.content)
+        self.assertIn('## 0. 和 GESP 模块课程有什么不同？', hf_module.content)
 
         course5 = Course.objects.get(title='GESP 5级：算法基础')
         chapter51 = Chapter.objects.get(course=course5, title='第1章：算法复杂度')
@@ -142,3 +172,34 @@ class CourseSeedContentTests(APITestCase):
         self.assertIn('## 4. 为什么必须有序', lesson_522.content)
         self.assertIn('## 4. 和冒泡排序有什么区别', lesson_523.content)
         self.assertIn('## 4. 为什么叫“插入”', lesson_524.content)
+
+        course6 = Course.objects.get(title='GESP 6级：进阶数据结构与递归')
+        lesson_611 = Lesson.objects.get(chapter__course=course6, title='1.1 递归基础 Recursion')
+        lesson_621 = Lesson.objects.get(chapter__course=course6, title='2.1 栈 Stack')
+        lesson_622 = Lesson.objects.get(chapter__course=course6, title='2.2 队列 Queue')
+        self.assertIn('递归是函数调用自己', lesson_611.content)
+        self.assertIn('括号匹配、撤销和递归模拟', lesson_621.content)
+        self.assertIn('排队、任务调度和层序遍历', lesson_622.content)
+
+        data_course = Course.objects.get(title='Python 应用进阶：数据分析与可视化')
+        data_lesson = Lesson.objects.get(chapter__course=data_course, title='2.1 Series 与 DataFrame')
+        hf_file_project = Lesson.objects.get(chapter__course=head_first, title='5.3 综合实战：学习日志文件')
+        self.assertIn('DataFrame 是多列组成的表格', data_lesson.content)
+        self.assertIn('添加日志、查看日志、统计条数', hf_file_project.content)
+
+        supplemented_lessons = Lesson.objects.exclude(chapter__course=course4)
+        self.assertGreaterEqual(supplemented_lessons.count(), 50)
+        for lesson in supplemented_lessons:
+            self.assertEqual(
+                lesson.content.count('## 补充：本节知识点扩展'),
+                1,
+                lesson.title,
+            )
+            self.assertGreaterEqual(len(lesson.content), 1800, lesson.title)
+
+        for lesson in Lesson.objects.filter(chapter__course=course4):
+            self.assertEqual(lesson.content.count('## 补充：本节知识点扩展'), 0, lesson.title)
+
+        runpy.run_path(str(seed_path), run_name='__main__')
+        lesson_611.refresh_from_db()
+        self.assertEqual(lesson_611.content.count('## 补充：本节知识点扩展'), 1)

@@ -13,3 +13,4 @@ python manage.py migrate
 
 # Seed/Update course data (Safe operation)
 python seed_gesp_courses.py
+python seed_exams.py

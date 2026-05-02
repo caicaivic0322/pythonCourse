@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     # Local
     'users',
     'courses',
+    'exams',
 ]
 
 MIDDLEWARE = [
@@ -81,7 +82,17 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ]
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '20/minute',       # 未登录用户：每分钟 20 次
+        'user': '60/minute',       # 登录用户：每分钟 60 次
+        'login': '5/minute',       # 登录接口：每分钟 5 次（防暴力破解）
+        'exam_submit': '3/minute', # 考试提交：每分钟 3 次（防刷分）
+    },
 }
 
 CSRF_TRUSTED_ORIGINS = _as_list(
